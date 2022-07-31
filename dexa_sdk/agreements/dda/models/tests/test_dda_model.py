@@ -13,13 +13,13 @@ from ..dda_model import (
     EventSchema,
     Proof,
     ProofSchema,
-    DataExchangeAgreement,
-    DataExchangeAgreementSchema
+    DataDisclosureAgreement,
+    DataDisclosureAgreementSchema
 )
 
 
-class TestDexaModel(AsyncTestCase):
-    """Tests for DEXA Model"""
+class TestDDAModel(AsyncTestCase):
+    """Tests for DDA Model"""
 
     async def setUp(self) -> None:
         self.console = Console()
@@ -184,8 +184,8 @@ class TestDexaModel(AsyncTestCase):
 
         assert len(result_json) == 147
 
-    async def test_data_exchange_agreement(self) -> None:
-        """Test data exchange agreement model and schema"""
+    async def test_data_disclosure_agreement(self) -> None:
+        """Test data disclosure agreement model and schema"""
 
         data_controller = DataController(
             did="did:abc",
@@ -240,7 +240,7 @@ class TestDexaModel(AsyncTestCase):
             proof_value="x.y.z"
         )
 
-        data_exchange_agreement = DataExchangeAgreement(
+        data_disclosure_agreement = DataDisclosureAgreement(
             context="schema.org",
             id="abc123",
             version="0.0.1",
@@ -260,28 +260,28 @@ class TestDexaModel(AsyncTestCase):
             proof=[proof]
         )
 
-        dexa_schema = DataExchangeAgreementSchema()
+        dexa_schema = DataDisclosureAgreementSchema()
 
-        result = dexa_schema.dump(data_exchange_agreement)
+        result = dexa_schema.dump(data_disclosure_agreement)
 
-        assert result["context"] == data_exchange_agreement.context
-        assert result["id"] == data_exchange_agreement.id
-        assert result["version"] == data_exchange_agreement.version
-        assert result["template_id"] == data_exchange_agreement.template_id
-        assert result["template_version"] == data_exchange_agreement.template_version
-        assert result["language"] == data_exchange_agreement.language
-        assert result["data_controller"]["did"] == data_exchange_agreement.data_controller.did
-        assert result["agreement_period"] == data_exchange_agreement.agreement_period
-        assert result["data_sharing_restrictions"]["data_retention_period"] == data_exchange_agreement.data_sharing_restrictions.data_retention_period
-        assert result["purpose"] == data_exchange_agreement.purpose
-        assert result["purpose_description"] == data_exchange_agreement.purpose_description
-        assert result["lawful_basis"] == data_exchange_agreement.lawful_basis
-        assert result["personal_data"][0]["attribute_id"] == data_exchange_agreement.personal_data[0].attribute_id
-        assert result["code_of_conduct"] == data_exchange_agreement.code_of_conduct
-        assert result["data_using_service"]["did"] == data_exchange_agreement.data_using_service.did
-        assert result["event"][0]["id"] == data_exchange_agreement.event[0].id
-        assert result["proof"][0]["id"] == data_exchange_agreement.proof[0].id
+        assert result["context"] == data_disclosure_agreement.context
+        assert result["id"] == data_disclosure_agreement.id
+        assert result["version"] == data_disclosure_agreement.version
+        assert result["template_id"] == data_disclosure_agreement.template_id
+        assert result["template_version"] == data_disclosure_agreement.template_version
+        assert result["language"] == data_disclosure_agreement.language
+        assert result["data_controller"]["did"] == data_disclosure_agreement.data_controller.did
+        assert result["agreement_period"] == data_disclosure_agreement.agreement_period
+        assert result["data_sharing_restrictions"]["data_retention_period"] == data_disclosure_agreement.data_sharing_restrictions.data_retention_period
+        assert result["purpose"] == data_disclosure_agreement.purpose
+        assert result["purpose_description"] == data_disclosure_agreement.purpose_description
+        assert result["lawful_basis"] == data_disclosure_agreement.lawful_basis
+        assert result["personal_data"][0]["attribute_id"] == data_disclosure_agreement.personal_data[0].attribute_id
+        assert result["code_of_conduct"] == data_disclosure_agreement.code_of_conduct
+        assert result["data_using_service"]["did"] == data_disclosure_agreement.data_using_service.did
+        assert result["event"][0]["id"] == data_disclosure_agreement.event[0].id
+        assert result["proof"][0]["id"] == data_disclosure_agreement.proof[0].id
 
-        result_json = dexa_schema.dumps(data_exchange_agreement)
+        result_json = dexa_schema.dumps(data_disclosure_agreement)
 
         assert len(result_json) == 1352

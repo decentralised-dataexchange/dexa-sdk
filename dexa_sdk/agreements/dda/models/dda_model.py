@@ -168,8 +168,8 @@ class ProofSchema(Schema):
     proof_value = fields.Str()
 
 
-class DataExchangeAgreement:
-    """Data exchange agreement model"""
+class DataDisclosureAgreement:
+    """Data disclosure agreement model"""
 
     def __init__(self,
                  context: str,
@@ -209,8 +209,8 @@ class DataExchangeAgreement:
         self.proof = proof
 
 
-class DataExchangeAgreementSchema(Schema):
-    """Data exchange agreement schema"""
+class DataDisclosureAgreementSchema(Schema):
+    """Data disclosure agreement schema"""
     context = fields.Str()
     id = fields.Str()
     version = fields.Str()
