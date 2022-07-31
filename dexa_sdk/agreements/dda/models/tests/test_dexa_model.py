@@ -1,6 +1,6 @@
 from asynctest import TestCase as AsyncTestCase
 from rich.console import Console
-from ..dexa_model import (
+from ..dda_model import (
     DataController,
     DataControllerSchema,
     DataSharingRestrictions,
