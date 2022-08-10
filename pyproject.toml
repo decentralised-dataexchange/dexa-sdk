@@ -7,14 +7,22 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-marshmallow = "^3.17.0"
 asynctest = "^0.13.0"
 pytest = "^7.1.2"
 green = "^3.4.2"
 rich = "^12.5.1"
+merkletools = "^1.0.3"
+jcs = "^0.2.1"
+merklelib = "^1.0"
+semver = "^2.13.0"
+loguru = "^0.6.0"
+pydantic = "^1.9.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"
+ipykernel = "^6.15.1"
+pylint = "^2.14.5"
+flake8 = "^5.0.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
