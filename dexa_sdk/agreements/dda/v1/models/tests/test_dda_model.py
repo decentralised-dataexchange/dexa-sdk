@@ -1,28 +1,17 @@
 from asynctest import TestCase as AsyncTestCase
-from rich.console import Console
 from ..dda_model import (
     DataController,
-    DataControllerSchema,
     DataSharingRestrictions,
-    DataSharingRestrictionsSchema,
     DataUsingService,
-    DataUsingServiceSchema,
     PersonalData,
-    PersonalDataSchema,
     Event,
-    EventSchema,
     Proof,
-    ProofSchema,
     DataDisclosureAgreement,
-    DataDisclosureAgreementSchema
 )
 
 
 class TestDDAModel(AsyncTestCase):
     """Tests for DDA Model"""
-
-    async def setUp(self) -> None:
-        self.console = Console()
 
     async def test_data_controller(self) -> None:
         """Test data controller model and schema"""
@@ -35,19 +24,13 @@ class TestDDAModel(AsyncTestCase):
             industry_sector="retail"
         )
 
-        dc_schema = DataControllerSchema()
-
-        result = dc_schema.dump(data_controller)
+        result = data_controller.dict()
 
         assert result["did"] == data_controller.did
         assert result["name"] == data_controller.name
         assert result["legal_id"] == data_controller.legal_id
         assert result["url"] == data_controller.url
         assert result["industry_sector"] == data_controller.industry_sector
-
-        result_json = dc_schema.dumps(data_controller)
-
-        assert len(result_json) == 107
 
     async def test_data_sharing_restrictions(self) -> None:
         """Test data sharing restrictions model and schema"""
@@ -56,25 +39,23 @@ class TestDDAModel(AsyncTestCase):
             policy_url="alice.com/policy.html",
             jurisdiction="EU",
             industry_sector="Retail",
-            data_retention_period="365",
+            data_retention_period=365,
             geographic_restriction="EU",
             storage_location="EU"
         )
 
-        dsr_schema = DataSharingRestrictionsSchema()
-
-        result = dsr_schema.dump(data_sharing_restrictions)
+        result = data_sharing_restrictions.dict()
 
         assert result["policy_url"] == data_sharing_restrictions.policy_url
         assert result["jurisdiction"] == data_sharing_restrictions.jurisdiction
-        assert result["industry_sector"] == data_sharing_restrictions.industry_sector
-        assert result["data_retention_period"] == data_sharing_restrictions.data_retention_period
-        assert result["geographic_restriction"] == data_sharing_restrictions.geographic_restriction
-        assert result["storage_location"] == data_sharing_restrictions.storage_location
-
-        result_json = dsr_schema.dumps(data_sharing_restrictions)
-
-        assert len(result_json) == 180
+        assert result["industry_sector"] == \
+            data_sharing_restrictions.industry_sector
+        assert result["data_retention_period"] == \
+            data_sharing_restrictions.data_retention_period
+        assert result["geographic_restriction"] == \
+            data_sharing_restrictions.geographic_restriction
+        assert result["storage_location"] == \
+            data_sharing_restrictions.storage_location
 
     async def test_personal_data(self) -> None:
         """Test personal data model and schema"""
@@ -86,18 +67,13 @@ class TestDDAModel(AsyncTestCase):
             attribute_category="personal_data"
         )
 
-        pd_schema = PersonalDataSchema()
-
-        result = pd_schema.dump(personal_data)
+        result = personal_data.dict()
 
         assert result["attribute_id"] == personal_data.attribute_id
         assert result["attribute_name"] == personal_data.attribute_name
-        assert result["attribute_sensitive"] == personal_data.attribute_sensitive
+        assert result["attribute_sensitive"] == \
+            personal_data.attribute_sensitive
         assert result["attribute_category"] == personal_data.attribute_category
-
-        result_json = pd_schema.dumps(personal_data)
-
-        assert len(result_json) == 121
 
     async def test_data_using_service(self) -> None:
         """Test data using service model and schema"""
@@ -115,9 +91,7 @@ class TestDDAModel(AsyncTestCase):
             signature_contact="alice"
         )
 
-        dus_schema = DataUsingServiceSchema()
-
-        result = dus_schema.dump(data_using_service)
+        result = data_using_service.dict()
 
         assert result["did"] == data_using_service.did
         assert result["name"] == data_using_service.name
@@ -128,11 +102,8 @@ class TestDDAModel(AsyncTestCase):
         assert result["jurisdiction"] == data_using_service.jurisdiction
         assert result["withdrawal"] == data_using_service.withdrawal
         assert result["privacy_rights"] == data_using_service.privacy_rights
-        assert result["signature_contact"] == data_using_service.signature_contact
-
-        result_json = dus_schema.dumps(data_using_service)
-
-        assert len(result_json) == 276
+        assert result["signature_contact"] == \
+            data_using_service.signature_contact
 
     async def test_event(self) -> None:
         """Test event model and schema"""
@@ -144,18 +115,12 @@ class TestDDAModel(AsyncTestCase):
             state="accept"
         )
 
-        event_schema = EventSchema()
-
-        result = event_schema.dump(event)
+        result = event.dict()
 
         assert result["id"] == event.id
         assert result["timestamp"] == event.timestamp
         assert result["did"] == event.did
         assert result["state"] == event.state
-
-        result_json = event_schema.dumps(event)
-
-        assert len(result_json) == 80
 
     async def test_proof(self) -> None:
         """Test proof model and schema"""
@@ -169,9 +134,7 @@ class TestDDAModel(AsyncTestCase):
             proof_value="x.y.z"
         )
 
-        proof_schema = ProofSchema()
-
-        result = proof_schema.dump(proof)
+        result = proof.dict()
 
         assert result["id"] == proof.id
         assert result["type"] == proof.type
@@ -179,10 +142,6 @@ class TestDDAModel(AsyncTestCase):
         assert result["verification_method"] == proof.verification_method
         assert result["proof_purpose"] == proof.proof_purpose
         assert result["proof_value"] == proof.proof_value
-
-        result_json = proof_schema.dumps(proof)
-
-        assert len(result_json) == 147
 
     async def test_data_disclosure_agreement(self) -> None:
         """Test data disclosure agreement model and schema"""
@@ -199,7 +158,7 @@ class TestDDAModel(AsyncTestCase):
             policy_url="alice.com/policy.html",
             jurisdiction="EU",
             industry_sector="Retail",
-            data_retention_period="365",
+            data_retention_period=365,
             geographic_restriction="EU",
             storage_location="EU"
         )
@@ -241,14 +200,14 @@ class TestDDAModel(AsyncTestCase):
         )
 
         data_disclosure_agreement = DataDisclosureAgreement(
-            context="schema.org",
+            context=["schema.org", "abc.org"],
             id="abc123",
             version="0.0.1",
             template_id="abc123",
             template_version="0.0.1",
             language="en",
             data_controller=data_controller,
-            agreement_period="365",
+            agreement_period=365,
             data_sharing_restrictions=data_sharing_restrictions,
             purpose="some purpose",
             purpose_description="description of the purpose",
@@ -260,28 +219,36 @@ class TestDDAModel(AsyncTestCase):
             proof=[proof]
         )
 
-        dexa_schema = DataDisclosureAgreementSchema()
+        result = data_disclosure_agreement.dict(by_alias=True)
 
-        result = dexa_schema.dump(data_disclosure_agreement)
-
-        assert result["context"] == data_disclosure_agreement.context
+        assert result["@context"] == data_disclosure_agreement.context
         assert result["id"] == data_disclosure_agreement.id
         assert result["version"] == data_disclosure_agreement.version
         assert result["template_id"] == data_disclosure_agreement.template_id
-        assert result["template_version"] == data_disclosure_agreement.template_version
+        assert result["template_version"] == \
+            data_disclosure_agreement.template_version
         assert result["language"] == data_disclosure_agreement.language
-        assert result["data_controller"]["did"] == data_disclosure_agreement.data_controller.did
-        assert result["agreement_period"] == data_disclosure_agreement.agreement_period
-        assert result["data_sharing_restrictions"]["data_retention_period"] == data_disclosure_agreement.data_sharing_restrictions.data_retention_period
-        assert result["purpose"] == data_disclosure_agreement.purpose
-        assert result["purpose_description"] == data_disclosure_agreement.purpose_description
-        assert result["lawful_basis"] == data_disclosure_agreement.lawful_basis
-        assert result["personal_data"][0]["attribute_id"] == data_disclosure_agreement.personal_data[0].attribute_id
-        assert result["code_of_conduct"] == data_disclosure_agreement.code_of_conduct
-        assert result["data_using_service"]["did"] == data_disclosure_agreement.data_using_service.did
-        assert result["event"][0]["id"] == data_disclosure_agreement.event[0].id
-        assert result["proof"][0]["id"] == data_disclosure_agreement.proof[0].id
-
-        result_json = dexa_schema.dumps(data_disclosure_agreement)
-
-        assert len(result_json) == 1352
+        assert result["data_controller"]["did"] == \
+            data_disclosure_agreement.data_controller.did
+        assert result["agreement_period"] == \
+            data_disclosure_agreement.agreement_period
+        assert result["data_sharing_restrictions"]["data_retention_period"] \
+            == data_disclosure_agreement\
+            .data_sharing_restrictions\
+            .data_retention_period
+        assert result["purpose"] == \
+            data_disclosure_agreement.purpose
+        assert result["purpose_description"] == \
+            data_disclosure_agreement.purpose_description
+        assert result["lawful_basis"] == \
+            data_disclosure_agreement.lawful_basis
+        assert result["personal_data"][0]["attribute_id"] == \
+            data_disclosure_agreement.personal_data[0].attribute_id
+        assert result["code_of_conduct"] == \
+            data_disclosure_agreement.code_of_conduct
+        assert result["data_using_service"]["did"] == \
+            data_disclosure_agreement.data_using_service.did
+        assert result["event"][0]["id"] == \
+            data_disclosure_agreement.event[0].id
+        assert result["proof"][0]["id"] == \
+            data_disclosure_agreement.proof[0].id
