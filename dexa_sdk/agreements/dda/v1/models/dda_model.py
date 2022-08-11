@@ -1,8 +1,11 @@
 import typing
-from pydantic import BaseModel, Field
+from pydantic import Field
+from merklelib import MerkleTree
+from .base import DataDisclosureAgreementBase
+from .....storage.merkletree import build_merkle_tree_from_pydantic_base_model
 
 
-class DataController(BaseModel):
+class DataController(DataDisclosureAgreementBase):
     # This is the DID of the data source preparing the agreement
     did: str
 
@@ -19,8 +22,11 @@ class DataController(BaseModel):
     # Industry sector that the DS belongs to
     industry_sector: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.data_controller."
 
-class DataSharingRestrictions(BaseModel):
+
+class DataSharingRestrictions(DataDisclosureAgreementBase):
 
     # URL to the privacy policy document of the data source organisation
     policy_url: str
@@ -48,8 +54,11 @@ class DataSharingRestrictions(BaseModel):
     # data is stored by the data source
     storage_location: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.data_sharing_restrictions."
 
-class PersonalData(BaseModel):
+
+class PersonalData(DataDisclosureAgreementBase):
 
     # Identifier of the attribute
     attribute_id: str
@@ -66,8 +75,11 @@ class PersonalData(BaseModel):
     # [values based on W3C DPV-DP]
     attribute_category: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.personal_data."
 
-class DataUsingService(BaseModel):
+
+class DataUsingService(DataDisclosureAgreementBase):
 
     # This is the DID of the data using service signing the agreement
     did: str
@@ -104,8 +116,11 @@ class DataUsingService(BaseModel):
     # signing the data disclosure agreement
     signature_contact: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.data_using_service."
 
-class Event(BaseModel):
+
+class Event(DataDisclosureAgreementBase):
 
     # Event identifier
     id: str
@@ -120,8 +135,11 @@ class Event(BaseModel):
     # offer/accept/reject/terminate/fetch-data
     state: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.event."
 
-class Proof(BaseModel):
+
+class Proof(DataDisclosureAgreementBase):
     # Proof identifier
     id: str
 
@@ -140,11 +158,14 @@ class Proof(BaseModel):
     # Proof value
     proof_value: str
 
+    class Config:
+        __dda_field_jsonpath__ = "$.proof."
 
-class DataDisclosureAgreement(BaseModel):
+
+class DataDisclosureAgreement(DataDisclosureAgreementBase):
 
     # Defines the context of this document. E.g. the link the JSON-LD
-    context: typing.Union[typing.List[str], str] = Field(alias="@context")
+    context: typing.List[str] = Field(alias="@context")
 
     # Identifier to the data disclosure agreement instance
     # addressed to a specific DUS
@@ -216,3 +237,24 @@ class DataDisclosureAgreement(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+        __dda_field_jsonpath__ = "$."
+
+    def to_merkle_tree(self) -> MerkleTree:
+        """Get <MerkleTree> representation"""
+
+        # Build <MerkleTree>
+        mt = build_merkle_tree_from_pydantic_base_model(
+            self,
+            dict_fields=[
+                "data_controller",
+                "data_sharing_restrictions",
+                "data_using_service"
+            ],
+            list_fields=[
+                "context",
+                "personal_data",
+                "event",
+                "proof"
+            ]
+        )
+        return mt
