@@ -1,14 +1,13 @@
-import typing
 import jcs
 import ast
-from collections import OrderedDict
+import typing
 
 
-def jcs_rfc8785(data: dict) -> bytes:
+def jcs_rfc8785(data: typing.Union[list, dict]) -> bytes:
     """JSON canonicalisation schema as per IETF RFC 8785"""
     return jcs.canonicalize(data)
 
 
-def jcs_bytes_to_ordered_dict(data: bytes) -> typing.OrderedDict:
-    """Convert JCS bytes to OrderedDict"""
-    return OrderedDict(ast.literal_eval(data.decode()))
+def jcs_bytes_to_pyobject(data: bytes) -> typing.Any:
+    """Convert JCS bytes to <dict, list e.t.c>"""
+    return ast.literal_eval(data.decode())
