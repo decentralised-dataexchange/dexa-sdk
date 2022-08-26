@@ -1,11 +1,9 @@
 import typing
-from pydantic import Field
-from merklelib import MerkleTree
-from .base import DataDisclosureAgreementBase
-from .....storage.merkletree import build_merkle_tree_from_pydantic_base_model
+from pydantic import Field, BaseModel
+from .base import DataDisclosureAgreementBaseModel
 
 
-class DataController(DataDisclosureAgreementBase):
+class DataControllerModel(DataDisclosureAgreementBaseModel):
     # This is the DID of the data source preparing the agreement
     did: str
 
@@ -14,22 +12,19 @@ class DataController(DataDisclosureAgreementBase):
 
     # This is the legal ID to the data source.
     # E.g. Swedish Organisation Number
-    legal_id: str
+    legal_id: str = Field(alias="legalId")
 
     # This is the data source organisation URL
     url: str
 
     # Industry sector that the DS belongs to
-    industry_sector: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.data_controller."
+    industry_sector: str = Field(alias="industrySector")
 
 
-class DataSharingRestrictions(DataDisclosureAgreementBase):
+class DataSharingRestrictionsModel(DataDisclosureAgreementBaseModel):
 
     # URL to the privacy policy document of the data source organisation
-    policy_url: str
+    policy_url: str = Field(alias="policyUrl")
 
     # The jurisdiction associated with the data source exposing
     # the personal data that the privacy regulation is followed.
@@ -39,47 +34,41 @@ class DataSharingRestrictions(DataDisclosureAgreementBase):
 
     # The sector to which the data source restricts the use of data
     # by any data using services. If no restriction, leave blank
-    industry_sector: str
+    industry_sector: str = Field(alias="industrySector")
 
     # The amount of time that the data source holds onto
     # any personal data, in seconds.
-    data_retention_period: int
+    data_retention_period: int = Field(alias="dataRetentionPeriod")
 
     # The country or economic union is restricted from
     # processing personal data.[value based on W3C
     # Location and Jurisdiction] for the data source
-    geographic_restriction: str
+    geographic_restriction: str = Field(alias="geographicRestriction")
 
     # The geographic location where the personal
     # data is stored by the data source
-    storage_location: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.data_sharing_restrictions."
+    storage_location: str = Field(alias="storageLocation")
 
 
-class PersonalData(DataDisclosureAgreementBase):
+class PersonalDataModel(DataDisclosureAgreementBaseModel):
 
     # Identifier of the attribute
-    attribute_id: str
+    attribute_id: str = Field(alias="attributeId")
 
     # Name of the attributes that is being shared
-    attribute_name: str
+    attribute_name: str = Field(alias="attributeName")
 
     # Defines the sensitivity of the data as per PII
-    attribute_sensitive: str
+    attribute_sensitive: str = Field(alias="attributeSensitive")
 
     # An explicit list of personal data categories to be shared.
     # The categories shall be defined using language meaningful to
     # the users and consistent with the purposes of the processing.
     # [values based on W3C DPV-DP]
-    attribute_category: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.personal_data."
+    attribute_category: str = Field(alias="attributeCategory")
 
 
-class DataUsingService(DataDisclosureAgreementBase):
+class DataUsingServiceModel(DataDisclosureAgreementBaseModel):
 
     # This is the DID of the data using service signing the agreement
     did: str
@@ -88,16 +77,16 @@ class DataUsingService(DataDisclosureAgreementBase):
     name: str
 
     # The legal ID of the data using service
-    legal_id: str
+    legal_id: str = Field(alias="legalId")
 
     # This is the data using service organisation URL
     url: str
 
     # Industry sector that the DUS belongs to
-    industry_sector: str
+    industry_sector: str = Field(alias="industrySector")
 
     # The purpose for which the data is being used by the DUS
-    usage_purposes: str
+    usage_purposes: str = Field(alias="usagePurposes")
 
     # The jurisdiction associated with the data using service
     # consuming personal data that the privacy regulation is followed.
@@ -110,36 +99,14 @@ class DataUsingService(DataDisclosureAgreementBase):
 
     # Reference to information on how to exercise
     # privacy rights (ex. erasure, objection, withdrawal, copy)
-    privacy_rights: str
+    privacy_rights: str = Field(alias="privacyRights")
 
     # The responsible entity or person in the organisation
     # signing the data disclosure agreement
-    signature_contact: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.data_using_service."
+    signature_contact: str = Field(alias="signatureContact")
 
 
-class Event(DataDisclosureAgreementBase):
-
-    # Event identifier
-    id: str
-
-    # Event timestamp (ISO 8601 UTC)
-    timestamp: str
-
-    # Should match the data_using_service did
-    did: str
-
-    # The various available states are:
-    # offer/accept/reject/terminate/fetch-data
-    state: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.event."
-
-
-class Proof(DataDisclosureAgreementBase):
+class ProofModel(DataDisclosureAgreementBaseModel):
     # Proof identifier
     id: str
 
@@ -150,50 +117,51 @@ class Proof(DataDisclosureAgreementBase):
     created: str
 
     # Should match the data_using_service did
-    verification_method: str
+    verification_method: str = Field(alias="verificationMethod")
 
     # Contract agreement (Type inferred from JSON-LD spec)
-    proof_purpose: str
+    proof_purpose: str = Field(alias="proofPurpose")
 
     # Proof value
-    proof_value: str
-
-    class Config:
-        __dda_field_jsonpath__ = "$.proof."
+    proof_value: str = Field(alias="proofValue")
 
 
-class DataDisclosureAgreement(DataDisclosureAgreementBase):
+class DataDisclosureAgreementModel(DataDisclosureAgreementBaseModel):
 
     # Defines the context of this document. E.g. the link the JSON-LD
-    context: typing.List[str] = Field(alias="@context")
+    context: typing.Union[typing.List[str], str] = Field(alias="@context")
 
     # Identifier to the data disclosure agreement instance
     # addressed to a specific DUS
-    id: str
+    id: str = Field(alias="@id")
+
+    # Type of the agreement
+    type: typing.List[str] = Field(alias="@type")
 
     # Version number of the data disclosure agreement
     version: str
 
     # Identifier to the template of the data disclosure agreement
-    template_id: str
+    template_id: str = Field(alias="templateId")
 
     # Version number of the data disclosure agreement template
-    template_version: str
+    template_version: str = Field(alias="templateVersion")
 
     # language used. If not present default language is English
     language: str
 
     # Encapsulates the data controller data
-    data_controller: DataController
+    data_controller: DataControllerModel = Field(alias="dataController")
 
     # Duration of the agreement after which the
     # data disclosure agreement expires
-    agreement_period: int
+    agreement_period: int = Field(alias="agreementPeriod")
 
     # Used by the DS to configure any data sharing restrictions
     # towards the DUS. This could reuse the
     # data agreement policy parameters as is.
-    data_sharing_restrictions: DataSharingRestrictions
+    data_sharing_restrictions: DataSharingRestrictionsModel = Field(
+        alias="dataSharingRestrictions")
 
     # Describes the purpose for which the data source shares
     # personal data as described in the
@@ -202,59 +170,39 @@ class DataDisclosureAgreement(DataDisclosureAgreementBase):
 
     # Additional description of the purpose
     # for which the data source shares personal data
-    purpose_description: str
+    purpose_description: str = Field(
+        alias="purposeDescription")
 
     # Indicate the lawful basis for sharing personal data.
     # These can be consent, legal obligation, contract, vital interest,
     # public task or legitimate_interest. [values based on W3C DPV legal basis]
-    lawful_basis: str
+    lawful_basis: str = Field(
+        alias="lawfulBasis")
 
     # Encapsulates the attributes shared by the data source
-    personal_data: typing.List[PersonalData]
+    personal_data: typing.List[PersonalDataModel] = Field(
+        alias="personalData")
 
     # The code of conduct is followed by the data source.
     # This provides the proper application of privacy regulation
     # taking into account specific features within a sector.
     # The code of conduct shall reference the name of the code of conduct
     # and with a publicly accessible reference.
-    code_of_conduct: str
+    code_of_conduct: str = Field(
+        alias="codeOfConduct")
 
     # The data using services that have signed up for consuming data.
     # This get populated after the data disclosure agreement
     # is proposed by the data using service
-    data_using_service: DataUsingService
-
-    # Encapsulates the data disclosure agreement lifecycle event data.
-    # For e.g. data disclosure agreement Offer, Accept, Reject, Terminate etc.
-    event: typing.List[Event]
+    data_using_service: DataUsingServiceModel = Field(
+        alias="dataUsingService")
 
     # Encapsulates the event signatures that allows anyone (e.g. an auditor)
     # to verify the authencity and source of the data disclosure agreement.
     # Its uses linked data proofs as per W3C and contains a set of attributes
     # that represent a Linked Data digital proof
     # and the parameters required to verify it.
-    proof: typing.List[Proof]
+    proof: typing.Optional[ProofModel]
 
-    class Config:
-        allow_population_by_field_name = True
-        __dda_field_jsonpath__ = "$."
-
-    def to_merkle_tree(self) -> MerkleTree:
-        """Get <MerkleTree> representation"""
-
-        # Build <MerkleTree>
-        mt = build_merkle_tree_from_pydantic_base_model(
-            self,
-            dict_fields=[
-                "data_controller",
-                "data_sharing_restrictions",
-                "data_using_service"
-            ],
-            list_fields=[
-                "context",
-                "personal_data",
-                "event",
-                "proof"
-            ]
-        )
-        return mt
+    proof_chain: typing.Optional[typing.List[ProofModel]] = Field(
+        alias="proofChain")
