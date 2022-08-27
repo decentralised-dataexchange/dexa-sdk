@@ -108,8 +108,13 @@ class TestDDAContainer(AsyncTestCase):
 
     @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
                        ".containers.DataDisclosureAgreementContainer.nquads"))
-    @async_mock.patch(("dexa_sdk.jsonld.core"
-                       ".jsonld_context_fingerprint"))
+    # jsonld_context_fingerprint is originally defined at dexa_sdk.jsonld.core
+    # but since the function is imported in to the module and
+    # not the global scope, we have to patch at module level.
+    # (Pattern B as described in the below article)
+    # http://bhfsteve.blogspot.com/2012/06/patching-tip-using-mocks-in-python-unit.html
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
+                       ".containers.dda_container.jsonld_context_fingerprint"))
     async def test_data_disclosure_agreement_did_mydata(
             self,
             mock_jsonld_context_fingerprint,
