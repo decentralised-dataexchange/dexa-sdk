@@ -2,10 +2,10 @@ import typing
 import base64
 from pyld import jsonld
 from merklelib import MerkleTree
-from .dda_models import DataDisclosureAgreementModel
-from .....did_mydata.core import DidMyData
-from .....jsonld.core import jsonld_context_fingerprint
-from .....storage.utils.json import jcs_rfc8785
+from ..dda_models import DataDisclosureAgreementModel
+from ......did_mydata.core import DidMyData
+from ......jsonld.core import jsonld_context_fingerprint
+from ......storage.utils.json import jcs_rfc8785
 
 
 class DataDisclosureAgreementContainer:

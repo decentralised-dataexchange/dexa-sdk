@@ -1,8 +1,8 @@
 from asynctest import TestCase as AsyncTestCase
 from asynctest import mock as async_mock
 from merklelib import MerkleTree
-from ..base import DataDisclosureAgreementContainer
-from ..dda_models import (
+from ..dda_container import DataDisclosureAgreementContainer
+from ...dda_models import (
     DataControllerModel,
     DataDisclosureAgreementModel,
     DataSharingRestrictionsModel,
@@ -76,7 +76,7 @@ class TestDDAContainer(AsyncTestCase):
             self.data_disclosure_agreement)
 
     @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".base.DataDisclosureAgreementContainer.nquads"))
+                       ".containers.DataDisclosureAgreementContainer.nquads"))
     async def test_data_disclosure_agreement_merkletree(self,
                                                         mock_nquads) -> None:
         """Test data disclosure agreement merkle tree"""
@@ -107,7 +107,7 @@ class TestDDAContainer(AsyncTestCase):
         assert len(nquads) == 1
 
     @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".base.DataDisclosureAgreementContainer.nquads"))
+                       ".containers.DataDisclosureAgreementContainer.nquads"))
     @async_mock.patch(("dexa_sdk.jsonld.core"
                        ".jsonld_context_fingerprint"))
     async def test_data_disclosure_agreement_did_mydata(
