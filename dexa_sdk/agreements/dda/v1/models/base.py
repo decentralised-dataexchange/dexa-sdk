@@ -1,40 +1,24 @@
 import typing
 import base64
 from pyld import jsonld
-from pydantic import BaseModel, PrivateAttr
 from merklelib import MerkleTree
+from .dda_models import DataDisclosureAgreementModel
 from .....did_mydata.core import DidMyData
 from .....jsonld.core import jsonld_context_fingerprint
 from .....storage.utils.json import jcs_rfc8785
 
 
-class DataDisclosureAgreementBaseModel(BaseModel):
+class DataDisclosureAgreementContainer:
     """
-    Base class for Data Disclosure Agreement models
+    Container class for data disclosure agreements.
     """
-    class Config:
-        allow_population_by_field_name = True
 
-    # Store the merkle tree
-    _merkle_tree: MerkleTree = PrivateAttr()
+    def __init__(self, dda: DataDisclosureAgreementModel):
 
-    # Store the did:mydata identifier
-    _mydata_did: str = PrivateAttr()
-
-    def __init__(self, **data):
-        super().__init__(**data)
-
-        # Initialise with default values.
+        # Set class attributes
+        self._dda = dda
         self._merkle_tree = None
         self._mydata_did = None
-
-    def to_json(self) -> str:
-        """Generate a JSON representation of the document model."""
-        return super().json(by_alias=True, exclude_none=True)
-
-    def to_dict(self) -> dict:
-        """Generate a dictionary representation of the document model."""
-        return super().dict(by_alias=True, exclude_none=True)
 
     def nquads(self) -> typing.List[str]:
         """
@@ -49,7 +33,7 @@ class DataDisclosureAgreementBaseModel(BaseModel):
         config = {'algorithm': 'URDNA2015', 'format': 'application/n-quads'}
 
         # Obtains the dictionary representation of the document
-        doc = self.to_dict()
+        doc = self._dda.serialize()
 
         # Convert the doc to nquads statements
         normalized = jsonld.normalize(doc, config)
@@ -82,7 +66,7 @@ class DataDisclosureAgreementBaseModel(BaseModel):
 
     def jcs(self) -> bytes:
         """Canonicalise the agreement using JCS IETF RFC8785"""
-        return jcs_rfc8785(self.to_dict())
+        return jcs_rfc8785(self._dda.serialize())
 
     def base64(self) -> str:
         """
