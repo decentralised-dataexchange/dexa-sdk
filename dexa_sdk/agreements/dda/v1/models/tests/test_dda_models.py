@@ -1,5 +1,5 @@
 from asynctest import TestCase as AsyncTestCase
-from ..acapy_models import (
+from ..dda_models import (
     DataControllerModel,
     DataDisclosureAgreementModel,
     DataSharingRestrictionsModel,

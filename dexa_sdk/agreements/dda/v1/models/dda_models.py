@@ -1,7 +1,8 @@
 import typing
-from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from marshmallow import fields, EXCLUDE
 from .fields.context_field import ContextField
+from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
+
+from marshmallow import fields, EXCLUDE
 
 
 class DataControllerModel(BaseModel):
