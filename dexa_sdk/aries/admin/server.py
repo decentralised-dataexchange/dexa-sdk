@@ -9,7 +9,6 @@ from aiohttp import web
 from aiohttp_apispec import (
     docs,
     response_schema,
-    setup_aiohttp_apispec,
     validation_middleware,
 )
 import aiohttp_cors
@@ -17,6 +16,7 @@ import aiohttp_cors
 from marshmallow import fields, Schema
 
 from ..config.injection_context import InjectionContext
+from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
 
 from aries_cloudagent.core.plugin_registry import PluginRegistry
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
@@ -329,8 +329,11 @@ class AdminServer(BaseAdminServer):
         agent_label = self.context.settings.get("default_label")
         version_string = f"v{__version__}"
 
-        setup_aiohttp_apispec(
-            app=app, title=agent_label, version=version_string, swagger_path="/api/doc"
+        custom_setup_aiohttp_apispec(
+            app=app,
+            title=agent_label,
+            version=version_string,
+            swagger_path="/api/doc"
         )
         app.on_startup.append(self.on_startup)
 
