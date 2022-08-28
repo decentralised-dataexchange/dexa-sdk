@@ -1,6 +1,6 @@
 import typing
 from merklelib import MerkleTree
-from ..models.containers import DataDisclosureAgreementContainer
+from ..instances import DataDisclosureAgreementInstance
 
 
 class DuplicateDDAError(Exception):
@@ -17,7 +17,7 @@ class DDAVersionLeaf:
 
     def __init__(self,
                  *,
-                 dda_container: DataDisclosureAgreementContainer,
+                 dda_container: DataDisclosureAgreementInstance,
                  next_version_did: str = None,
                  previous_version_did: str = None) -> None:
         """Initialise DDA Version Leaf class"""
@@ -27,7 +27,7 @@ class DDAVersionLeaf:
         self._previous_version_did = previous_version_did
 
     @property
-    def dda_container(self) -> DataDisclosureAgreementContainer:
+    def dda_container(self) -> DataDisclosureAgreementInstance:
         """Returns data disclosure agreement container"""
         return self._dda_container
 
@@ -89,7 +89,7 @@ class DDAVersionsMerkleTree:
 
     def add_multiple(
         self,
-        dda_containers: typing.List[DataDisclosureAgreementContainer]
+        dda_containers: typing.List[DataDisclosureAgreementInstance]
     ) -> None:
         """Append multiple DDA to the merkle tree"""
         for dda_container in dda_containers:
@@ -97,7 +97,7 @@ class DDAVersionsMerkleTree:
 
     def add(
         self,
-        dda_container: DataDisclosureAgreementContainer
+        dda_container: DataDisclosureAgreementInstance
     ) -> None:
         """Append DDA to the merkle tree"""
 

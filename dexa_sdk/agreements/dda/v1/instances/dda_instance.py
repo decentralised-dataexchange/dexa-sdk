@@ -2,15 +2,15 @@ import typing
 import base64
 from pyld import jsonld
 from merklelib import MerkleTree
-from ..dda_models import DataDisclosureAgreementModel
-from ......did_mydata.core import DidMyData
-from ......jsonld.core import jsonld_context_fingerprint
-from ......storage.utils.json import jcs_rfc8785
+from ..models.dda_models import DataDisclosureAgreementModel
+from .....did_mydata.core import DidMyData
+from .....jsonld.core import jsonld_context_fingerprint
+from .....storage.utils.json import jcs_rfc8785
 
 
-class DataDisclosureAgreementContainer:
+class DataDisclosureAgreementInstance:
     """
-    Container class for data disclosure agreements.
+    Class for managing a data disclosure agreement instance
     """
 
     def __init__(self, dda: DataDisclosureAgreementModel, did: str = None):

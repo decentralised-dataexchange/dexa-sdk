@@ -1,8 +1,8 @@
 from asynctest import TestCase as AsyncTestCase
 from asynctest import mock as async_mock
 from merklelib import MerkleTree
-from ..dda_container import DataDisclosureAgreementContainer
-from ...dda_models import (
+from ..dda_instance import DataDisclosureAgreementInstance
+from ...models.dda_models import (
     DataControllerModel,
     DataDisclosureAgreementModel,
     DataSharingRestrictionsModel,
@@ -12,8 +12,8 @@ from ...dda_models import (
 )
 
 
-class TestDDAContainer(AsyncTestCase):
-    """Test data disclosure agreement container class"""
+class TestDDAInstance(AsyncTestCase):
+    """Test data disclosure agreement instance class"""
 
     async def setUp(self) -> None:
         self.data_disclosure_agreement = DataDisclosureAgreementModel(
@@ -72,11 +72,11 @@ class TestDDAContainer(AsyncTestCase):
             )
         )
 
-        self.dda_container = DataDisclosureAgreementContainer(
+        self.dda_container = DataDisclosureAgreementInstance(
             self.data_disclosure_agreement)
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.DataDisclosureAgreementContainer.nquads"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.DataDisclosureAgreementInstance.nquads"))
     async def test_data_disclosure_agreement_merkletree(self,
                                                         mock_nquads) -> None:
         """Test data disclosure agreement merkle tree"""
@@ -106,15 +106,15 @@ class TestDDAContainer(AsyncTestCase):
         assert isinstance(nquads, list)
         assert len(nquads) == 1
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.DataDisclosureAgreementContainer.nquads"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.DataDisclosureAgreementInstance.nquads"))
     # jsonld_context_fingerprint is originally defined at dexa_sdk.jsonld.core
     # but since the function is imported in to the module and
     # not the global scope, we have to patch at module level.
     # (Pattern B as described in the below article)
     # http://bhfsteve.blogspot.com/2012/06/patching-tip-using-mocks-in-python-unit.html
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.dda_container.jsonld_context_fingerprint"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.dda_instance.jsonld_context_fingerprint"))
     async def test_data_disclosure_agreement_did_mydata(
             self,
             mock_jsonld_context_fingerprint,

@@ -1,7 +1,7 @@
 from asynctest import TestCase as AsyncTestCase
 from asynctest import mock as async_mock
-from ..version_tree import DDAVersionLeaf, DDAVersionsMerkleTree
-from ...models.containers import DataDisclosureAgreementContainer
+from ..version_tree import DDAVersionsMerkleTree
+from ...instances import DataDisclosureAgreementInstance
 from ...models.dda_models import (
     DataControllerModel,
     DataDisclosureAgreementModel,
@@ -72,14 +72,14 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
             )
         )
 
-        self.dda_container = DataDisclosureAgreementContainer(
+        self.dda_container = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.DataDisclosureAgreementContainer.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.dda_container.jsonld_context_fingerprint"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.DataDisclosureAgreementInstance.nquads"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.dda_instance.jsonld_context_fingerprint"))
     async def test_add_single_dda_to_versions_merkle_tree(
         self,
         mock_jsonld_context_fingerprint,
@@ -102,10 +102,10 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
 
         assert len(versions_tree) == 1
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.DataDisclosureAgreementContainer.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.dda_container.jsonld_context_fingerprint"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.DataDisclosureAgreementInstance.nquads"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.dda_instance.jsonld_context_fingerprint"))
     async def test_add_two_dda_to_versions_merkle_tree(
         self,
         mock_jsonld_context_fingerprint,
@@ -124,13 +124,13 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
         ]
         versions_tree = DDAVersionsMerkleTree()
 
-        dda_container1 = DataDisclosureAgreementContainer(
+        dda_container1 = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
         versions_tree.add(dda_container1)
 
-        dda_container2 = DataDisclosureAgreementContainer(
+        dda_container2 = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
@@ -141,10 +141,10 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
             == versions_tree.current.mydata_did
         assert versions_tree.current.next_version_did is None
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.DataDisclosureAgreementContainer.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1.models"
-                       ".containers.dda_container.jsonld_context_fingerprint"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.DataDisclosureAgreementInstance.nquads"))
+    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
+                       ".instances.dda_instance.jsonld_context_fingerprint"))
     async def test_query_a_dda_version_by_merkle_root(
         self,
         mock_jsonld_context_fingerprint,
@@ -168,13 +168,13 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
 
         versions_tree = DDAVersionsMerkleTree()
 
-        dda_container1 = DataDisclosureAgreementContainer(
+        dda_container1 = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
         versions_tree.add(dda_container1)
 
-        dda_container2 = DataDisclosureAgreementContainer(
+        dda_container2 = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
