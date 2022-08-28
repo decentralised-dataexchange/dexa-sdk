@@ -1,11 +1,11 @@
 from asynctest import TestCase as AsyncTestCase
 from asynctest import create_autospec
-from ..dda_version_models import DDAVersionLeaf
-from ..containers import DataDisclosureAgreementContainer
+from ..version_tree import DDAVersionLeaf
+from ...models.containers import DataDisclosureAgreementContainer
 
 
 class TestDDAVersionLeaf(AsyncTestCase):
-    """Test DDA Version Leaf class"""
+    """Test DDA Version Leaf Class"""
 
     async def test_dda_version_leaf_class(self) -> None:
         MockDataDisclosureAgreementContainer = create_autospec(
