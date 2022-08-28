@@ -1,24 +1,28 @@
 import typing
-from .fields.context_field import ContextField
-from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-
 from marshmallow import fields, EXCLUDE
+from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
+from .fields.context_field import ContextField
 
 
 class DataControllerModel(BaseModel):
     """Data controller model class"""
+
     class Meta:
+        """Meta data"""
+
         # Schema class
         schema_class = "DataControllerSchema"
 
-    def __init__(self,
-                 *,
-                 did: str,
-                 name: str,
-                 legal_id: str,
-                 url: str,
-                 industry_sector: str,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        did: str,
+        name: str,
+        legal_id: str,
+        url: str,
+        industry_sector: str,
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -32,6 +36,7 @@ class DataControllerModel(BaseModel):
 
 class DataControllerSchema(BaseModelSchema):
     """Data controller schema class"""
+
     class Meta:
         # Model class
         model_class = "DataControllerModel"
@@ -58,19 +63,22 @@ class DataControllerSchema(BaseModelSchema):
 
 class DataSharingRestrictionsModel(BaseModel):
     """Data sharing restrictions model"""
+
     class Meta:
         # Schema class
         schema_class = "DataSharingRestrictionsSchema"
 
-    def __init__(self,
-                 *,
-                 policy_url: str,
-                 jurisdiction: str,
-                 industry_sector: str,
-                 data_retention_period: int,
-                 geographic_restriction: str,
-                 storage_location: str,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        policy_url: str,
+        jurisdiction: str,
+        industry_sector: str,
+        data_retention_period: int,
+        geographic_restriction: str,
+        storage_location: str,
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -85,6 +93,7 @@ class DataSharingRestrictionsModel(BaseModel):
 
 class DataSharingRestrictionsSchema(BaseModelSchema):
     """Data sharing restrictions schema"""
+
     class Meta:
         # Model class
         model_class = "DataSharingRestrictionsModel"
@@ -107,14 +116,12 @@ class DataSharingRestrictionsSchema(BaseModelSchema):
 
     # The amount of time that the data source holds onto
     # any personal data, in seconds.
-    data_retention_period = fields.Str(
-        data_key="dataRetentionPeriod", required=True)
+    data_retention_period = fields.Str(data_key="dataRetentionPeriod", required=True)
 
     # The country or economic union is restricted from
     # processing personal data.[value based on W3C
     # Location and Jurisdiction] for the data source
-    geographic_restriction = fields.Str(
-        data_key="geographicRestriction", required=True)
+    geographic_restriction = fields.Str(data_key="geographicRestriction", required=True)
 
     # The geographic location where the personal
     # data is stored by the data source
@@ -123,16 +130,19 @@ class DataSharingRestrictionsSchema(BaseModelSchema):
 
 class PersonalDataModel(BaseModel):
     """Personal data model class"""
+
     class Meta:
         schema_class = "PersonalDataSchema"
 
-    def __init__(self,
-                 *,
-                 attribute_id: str,
-                 attribute_name: str,
-                 attribute_sensitive: str = 'true',
-                 attribute_category: str = 'personalData',
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        attribute_id: str,
+        attribute_name: str,
+        attribute_sensitive: str = "true",
+        attribute_category: str = "personalData",
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -145,6 +155,7 @@ class PersonalDataModel(BaseModel):
 
 class PersonalDataSchema(BaseModelSchema):
     """Personal data schema"""
+
     class Meta:
         # Model class
         model_class = "PersonalDataModel"
@@ -170,23 +181,26 @@ class PersonalDataSchema(BaseModelSchema):
 
 class DataUsingServiceModel(BaseModel):
     """Data using service model"""
+
     class Meta:
         # Schema class
         schema_class = "DataUsingServiceSchema"
 
-    def __init__(self,
-                 *,
-                 did: str,
-                 name: str,
-                 legal_id: str,
-                 url: str,
-                 industry_sector: str,
-                 usage_purposes: str,
-                 jurisdiction: str,
-                 withdrawal: str,
-                 privacy_rights: str,
-                 signature_contact: str,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        did: str,
+        name: str,
+        legal_id: str,
+        url: str,
+        industry_sector: str,
+        usage_purposes: str,
+        jurisdiction: str,
+        withdrawal: str,
+        privacy_rights: str,
+        signature_contact: str,
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -205,6 +219,7 @@ class DataUsingServiceModel(BaseModel):
 
 class DataUsingServiceSchema(BaseModelSchema):
     """Data using service schema"""
+
     class Meta:
         # Model class
         model_class = "DataUsingServiceModel"
@@ -226,19 +241,22 @@ class DataUsingServiceSchema(BaseModelSchema):
 
 class ProofModel(BaseModel):
     """Proof model"""
+
     class Meta:
         # Schema class
         schema_class = "ProofSchema"
 
-    def __init__(self,
-                 *,
-                 id: str,
-                 type: str,
-                 created: str,
-                 verification_method: str,
-                 proof_purpose: str,
-                 proof_value: str,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        id: str,
+        type: str,
+        created: str,
+        verification_method: str,
+        proof_purpose: str,
+        proof_value: str,
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -253,6 +271,7 @@ class ProofModel(BaseModel):
 
 class ProofSchema(BaseModelSchema):
     """Proof schema"""
+
     class Meta:
         # Model class
         model_class = "ProofModel"
@@ -270,8 +289,7 @@ class ProofSchema(BaseModelSchema):
     created = fields.Str(data_key="created", required=True)
 
     # Should match the data_using_service did
-    verification_method = fields.Str(
-        data_key="verificationMethod", required=True)
+    verification_method = fields.Str(data_key="verificationMethod", required=True)
 
     # Contract agreement (Type inferred from JSON-LD spec)
     proof_purpose = fields.Str(data_key="proofPurpose", required=True)
@@ -282,31 +300,34 @@ class ProofSchema(BaseModelSchema):
 
 class DataDisclosureAgreementModel(BaseModel):
     """Data disclosure agreement model"""
+
     class Meta:
         # Schema class
         schema_class = "DataDisclosureAgreementSchema"
 
-    def __init__(self,
-                 *,
-                 context: typing.Union[str, typing.List[str]],
-                 id: str,
-                 type: typing.List[str],
-                 language: str,
-                 version: str,
-                 template_id: str,
-                 template_version: str,
-                 data_controller: DataControllerModel,
-                 agreement_period: int,
-                 data_sharing_restrictions: DataSharingRestrictionsModel,
-                 purpose: str,
-                 purpose_description: str,
-                 lawful_basis: str,
-                 personal_data: typing.List[PersonalDataModel],
-                 code_of_conduct: str,
-                 data_using_service: DataUsingServiceModel,
-                 proof: ProofModel = None,
-                 proofChain: typing.List[ProofModel] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        context: typing.Union[str, typing.List[str]],
+        id: str,
+        type: typing.List[str],
+        language: str,
+        version: str,
+        template_id: str = None,
+        template_version: str = None,
+        data_controller: DataControllerModel,
+        agreement_period: int,
+        data_sharing_restrictions: DataSharingRestrictionsModel,
+        purpose: str,
+        purpose_description: str,
+        lawful_basis: str,
+        personal_data: typing.List[PersonalDataModel],
+        code_of_conduct: str,
+        data_using_service: DataUsingServiceModel,
+        proof: ProofModel = None,
+        proof_chain: typing.List[ProofModel] = None,
+        **kwargs
+    ):
         # Call the parent constructor
         super().__init__(**kwargs)
 
@@ -328,11 +349,12 @@ class DataDisclosureAgreementModel(BaseModel):
         self.code_of_conduct = code_of_conduct
         self.data_using_service = data_using_service
         self.proof = proof
-        self.proofChain = proofChain
+        self.proof_chain = proof_chain
 
 
 class DataDisclosureAgreementSchema(BaseModelSchema):
     """Data disclosure agreement schema"""
+
     class Meta:
         # Model class
         model_class = "DataDisclosureAgreementModel"
@@ -354,18 +376,18 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     version = fields.Str(data_key="version", required=True)
 
     # Identifier to the template of the data disclosure agreement
-    template_id = fields.Str(data_key="templateId", required=True)
+    template_id = fields.Str(data_key="templateId", required=False)
 
     # Version number of the data disclosure agreement template
-    template_version = fields.Str(data_key="templateVersion", required=True)
+    template_version = fields.Str(data_key="templateVersion", required=False)
 
     # language used. If not present default language is English
     language = fields.Str(data_key="language", required=True)
 
     # Encapsulates the data controller data
-    data_controller = fields.Nested(DataControllerSchema,
-                                    data_key="dataController",
-                                    required=True)
+    data_controller = fields.Nested(
+        DataControllerSchema, data_key="dataController", required=True
+    )
 
     # Duration of the agreement after which the
     # data disclosure agreement expires
@@ -375,9 +397,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     # towards the DUS. This could reuse the
     # data agreement policy parameters as is.
     data_sharing_restrictions = fields.Nested(
-        DataSharingRestrictionsSchema,
-        data_key="dataSharingRestrictions",
-        required=True
+        DataSharingRestrictionsSchema, data_key="dataSharingRestrictions", required=True
     )
 
     # Describes the purpose for which the data source shares
@@ -387,8 +407,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     # Additional description of the purpose
     # for which the data source shares personal data
-    purpose_description = fields.Str(
-        data_key="purpose_description", required=True)
+    purpose_description = fields.Str(data_key="purpose_description", required=True)
 
     # Indicate the lawful basis for sharing personal data.
     # These can be consent, legal obligation, contract, vital interest,
@@ -397,9 +416,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     # Encapsulates the attributes shared by the data source
     personal_data = fields.List(
-        fields.Nested(PersonalDataSchema),
-        data_key="personalData",
-        required=True
+        fields.Nested(PersonalDataSchema), data_key="personalData", required=True
     )
 
     # The code of conduct is followed by the data source.
@@ -413,9 +430,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     # This get populated after the data disclosure agreement
     # is proposed by the data using service
     data_using_service = fields.Nested(
-        DataUsingServiceSchema,
-        data_key="dataUsingService",
-        required=True
+        DataUsingServiceSchema, data_key="dataUsingService", required=True
     )
 
     # Encapsulates the event signatures that allows anyone (e.g. an auditor)
@@ -423,14 +438,8 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     # Its uses linked data proofs as per W3C and contains a set of attributes
     # that represent a Linked Data digital proof
     # and the parameters required to verify it.
-    proof = fields.Nested(
-        ProofSchema,
-        data_key="proof",
-        required=False
-    )
+    proof = fields.Nested(ProofSchema, data_key="proof", required=False)
 
     proof_chain = fields.List(
-        fields.Nested(ProofSchema),
-        data_key="proofChain",
-        required=False
+        fields.Nested(ProofSchema), data_key="proofChain", required=False
     )
