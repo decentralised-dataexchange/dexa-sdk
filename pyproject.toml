@@ -27,6 +27,7 @@ marshmallow = "3.5.1"
 uvloop = "^0.16.0"
 MarkupSafe = "2.0.1"
 python3-indy = "^1.16.0"
+ipykernel = "^6.15.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"
