@@ -13,12 +13,12 @@ class DataDisclosureAgreementContainer:
     Container class for data disclosure agreements.
     """
 
-    def __init__(self, dda: DataDisclosureAgreementModel):
+    def __init__(self, dda: DataDisclosureAgreementModel, did: str = None):
 
         # Set class attributes
         self._dda = dda
         self._merkle_tree = None
-        self._mydata_did = None
+        self._mydata_did = did
 
     def nquads(self) -> typing.List[str]:
         """
@@ -105,12 +105,22 @@ class DataDisclosureAgreementContainer:
     def mydata_did(self) -> str:
         """Returns did:mydata identifier"""
         if not self._mydata_did:
-            self.generate_did()
+            return self.generate_did()
         return self._mydata_did
+
+    @mydata_did.setter
+    def mydata_did(self, did: str) -> None:
+        """Set did:mydata identifier"""
+        self._mydata_did = did
 
     @property
     def merkle_tree(self) -> MerkleTree:
         """Returns merkle tree"""
         if not self._merkle_tree:
-            self.build_merkle_tree()
+            return self.build_merkle_tree()
         return self._merkle_tree
+
+    @property
+    def merkle_root(self) -> str:
+        """Returns merkle root"""
+        return self.merkle_tree.merkle_root
