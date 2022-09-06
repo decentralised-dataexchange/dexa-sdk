@@ -258,7 +258,8 @@ class DataAgreementInstanceRecord(BaseRecord):
         # Fetch wallet from context
         wallet: IndyWallet = await context.inject(BaseWallet)
 
-        controller_did = await wallet.get_local_did(connection_record.my_did)
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
 
         # Signature options
         signature_options = {
