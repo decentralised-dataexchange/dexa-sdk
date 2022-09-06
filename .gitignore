@@ -162,3 +162,5 @@ cython_debug/
 .vscode/
 samples.ipynb
 sample.py
+examples/
+.DS_Store

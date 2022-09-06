@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Store and manage Data Exchange Agreements (DEXA)"
 authors = ["George J Padayatti <george.padayatti@igrant.io>"]
 license = "MIT"
+packages = [
+    { include = "dexa_sdk" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -22,12 +25,18 @@ rdflib = "^6.2.0"
 requests = ">=2.23.0, <2.24.0"
 py-multibase = "^1.0.3"
 py-multicodec = "^0.2.1"
-aries-cloudagent = "0.5.6"
 marshmallow = "3.5.1"
 uvloop = "^0.16.0"
 MarkupSafe = "2.0.1"
 python3-indy = "^1.16.0"
 ipykernel = "^6.15.1"
+acapy-patched = "^0.5.6"
+web3 = "^5.30.0"
+py-solc-x = "^1.1.1"
+validators = "^0.20.0"
+PyJWT = "^2.4.0"
+acapy-mydata-did-protocol = { path = "/Users/georgejpadayatti/decentralised-dataexchange/acapy-mydata-did-protocol", develop = true }
+dexa-protocol = { path = "/Users/georgejpadayatti/decentralised-dataexchange/dexa-protocol", develop = true }
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"
@@ -36,7 +45,8 @@ pylint = "^2.14.5"
 flake8 = "^5.0.4"
 setuptools = "^64.0.3"
 mypy = "^0.971"
-black = "^22.6.0"
+pdoc3 = "^0.10.0"
+black = "^22.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
