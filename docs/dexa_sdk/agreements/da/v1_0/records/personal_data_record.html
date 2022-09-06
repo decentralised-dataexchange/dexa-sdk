@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agreements.da.v1_0.records.personal_data_record API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agreements.da.v1_0.records.personal_data_record</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+from marshmallow import fields, EXCLUDE
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from aries_cloudagent.messaging.valid import UUIDFour
+from aries_cloudagent.config.injection_context import InjectionContext
+from ..models.da_models import (
+    DataAgreementPersonalDataModel,
+    DataAgreementPersonalDataRestrictionModel
+)
+from .....utils import bump_major_for_semver_string
+
+
+class PersonalDataRecord(BaseRecord):
+    &#34;&#34;&#34;Personal data record to be persisted in the storage&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;PersonalDataRecordSchema&#34;
+
+    # Record type
+    RECORD_TYPE = &#34;personal_data&#34;
+
+    # Record identifier
+    RECORD_ID_NAME = &#34;id&#34;
+
+    # Webhook topic name for this record type
+    WEBHOOK_TOPIC = None
+
+    # Record tags
+    TAG_NAMES = {
+        &#34;~data_agreement_template_id&#34;,
+        &#34;~data_agreement_template_version&#34;
+    }
+
+    def __init__(
+        self,
+        *,
+        id: str = None,
+        data_agreement_template_id: str = None,
+        data_agreement_template_version: str = None,
+        attribute_name: str = None,
+        attribute_sensitive: str = None,
+        attribute_category: dict = None,
+        attribute_description: str = &#34;false&#34;,
+        restrictions: typing.List[dict] = None,
+        **kwargs
+    ):
+        &#34;&#34;&#34;Initialise personal data record
+
+        Args:
+            id (str, optional): Personal data identifier. Defaults to None.
+            data_agreement_template_id (str, optional): Data agreement template identifier.
+                Defaults to None.
+            data_agreement_template_version (str, optional): Data agreement template version.
+                Defaults to None.
+            attribute_name (str, optional): Attribute name. Defaults to None.
+            attribute_sensitive (str, optional): Attribute sensitive. Defaults to None.
+            attribute_category (dict, optional): Attribute category. Defaults to None.
+            attribute_description (str, optional): Attribute description. Defaults to &#34;false&#34;.
+            restrictions (typing.List[dict], optional): Attribute restrictions. Defaults to None.
+        &#34;&#34;&#34;
+
+        # Pass identifier to parent class
+        super().__init__(id, **kwargs)
+
+        if not data_agreement_template_id:
+            raise TypeError(
+                &#34;Data agreement template identifier is not provided&#34;
+            )
+
+        # Set the record attributes
+        self.data_agreement_template_id = data_agreement_template_id
+        self.data_agreement_template_version = data_agreement_template_version
+        self.attribute_name = attribute_name
+        self.attribute_sensitive = attribute_sensitive
+        self.attribute_category = attribute_category
+        self.attribute_description = attribute_description
+        self.restrictions = restrictions
+
+    @property
+    def record_value(self) -&gt; dict:
+        &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+        return {
+            prop: getattr(self, prop)
+            for prop in (
+                &#34;data_agreement_template_id&#34;,
+                &#34;data_agreement_template_version&#34;,
+                &#34;attribute_name&#34;,
+                &#34;attribute_sensitive&#34;,
+                &#34;attribute_category&#34;,
+                &#34;attribute_description&#34;,
+                &#34;restrictions&#34;,
+            )
+        }
+
+    @property
+    def attribute_id(self):
+        &#34;&#34;&#34;Attribute identifier&#34;&#34;&#34;
+        return self._id
+
+    @classmethod
+    async def list_by_template_id(cls,
+                                  context: InjectionContext,
+                                  template_id: str,
+                                  template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+        &#34;&#34;&#34;List by template id and template version
+
+        Returns:
+            records (typing.List[PersonalDataRecord]): personal datas
+        &#34;&#34;&#34;
+        tag_filter = {
+            &#34;data_agreement_template_id&#34;: template_id,
+            &#34;data_agreement_template_version&#34;: template_version
+        }
+
+        records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
+
+        return records
+
+    @classmethod
+    async def batch_update_by_da_template_id(
+            cls,
+            context: InjectionContext,
+            template_id: str,
+            template_version: str,
+            pds: typing.List[dict]
+    ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+        &#34;&#34;&#34;Batch update by DA template id
+
+        Args:
+            template_id (str): template id
+            pds (typing.List[PersonalDataRecord]): personal datas
+        &#34;&#34;&#34;
+
+        template_version = bump_major_for_semver_string(template_version)
+
+        # Then no update is performed.
+        if len(pds) == 0:
+            return []
+
+        records = []
+        for pd in pds:
+
+            # Create new entry with updated version.
+            record = PersonalDataRecord(
+                data_agreement_template_id=template_id,
+                data_agreement_template_version=template_version,
+                attribute_name=pd.get(&#34;attributeName&#34;),
+                attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
+                attribute_category=pd.get(&#34;attributeCategory&#34;),
+                attribute_description=pd.get(&#34;attributeDescription&#34;),
+                restrictions=pd.get(&#34;restrictions&#34;)
+            )
+
+            await record.save(context)
+
+            records.append(record)
+
+        return records
+
+    def convert_record_to_pd_model(self) -&gt; DataAgreementPersonalDataModel:
+        &#34;&#34;&#34;Convert record to personal data model
+
+        Returns:
+            DataAgreementPersonalDataModel: Data agreement personal data model
+        &#34;&#34;&#34;
+
+        pd_model = DataAgreementPersonalDataModel(
+            attribute_id=self.attribute_id,
+            attribute_name=self.attribute_name,
+            attribute_sensitive=self.attribute_sensitive,
+            attribute_category=self.attribute_category,
+            attribute_description=self.attribute_description
+        )
+
+        restriction_models = []
+
+        if self.restrictions:
+            for restriction in self.restrictions:
+
+                restriction_model = DataAgreementPersonalDataRestrictionModel(
+                    schema_id=restriction.get(&#34;schemaId&#34;),
+                    cred_def_id=restriction.get(&#34;credDefId&#34;)
+                )
+
+                restriction_models.append(restriction_model)
+
+        pd_model.restrictions = restriction_models
+
+        return pd_model
+
+    @classmethod
+    async def build_and_save_record_from_pd_model(
+            cls,
+            context: InjectionContext,
+            template_id: str,
+            template_version: str,
+            pd_model: DataAgreementPersonalDataModel
+    ) -&gt; &#34;PersonalDataRecord&#34;:
+        &#34;&#34;&#34;Build personal data record from personal data model
+
+        Args:
+            pd_model (DataAgreementPersonalDataModel): Personal data model
+
+        Returns:
+            PersonalDataRecord: Personal data record
+        &#34;&#34;&#34;
+
+        pd_record = PersonalDataRecord(
+            id=pd_model.attribute_id,
+            data_agreement_template_id=template_id,
+            data_agreement_template_version=template_version,
+            attribute_name=pd_model.attribute_name,
+            attribute_sensitive=pd_model.attribute_sensitive,
+            attribute_category=pd_model.attribute_category,
+            attribute_description=pd_model.attribute_description,
+        )
+
+        restrictions = []
+
+        if pd_model.restrictions:
+            for restriction in pd_model.restrictions:
+                restrictions.append(restriction.serialize())
+
+        pd_record.restrictions = restrictions
+
+        await pd_record.save(context)
+
+        return pd_record
+
+
+class PersonalDataRecordSchema(BaseRecordSchema):
+    &#34;&#34;&#34;Personal data record schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = PersonalDataRecord
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # Attribute identifier
+    attribute_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data agreement template identifier
+    data_agreement_template_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data agreement template version
+    data_agreement_template_version = fields.Str(
+        required=True,
+    )
+
+    # Attribute name
+    attribute_name = fields.Str(
+        required=True
+    )
+
+    # Attribute sensitive
+    attribute_sensitive = fields.Bool(
+        required=False
+    )
+
+    # Attribute category
+    attribute_category = fields.Str(
+        required=False
+    )
+
+    # Attribute description
+    attribute_description = fields.Str(
+        required=False
+    )
+
+    # Restrictions
+    restrictions = fields.List(
+        fields.Dict(
+            keys=fields.Str,
+            values=fields.Str
+        ),
+        required=False
+    )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord"><code class="flex name class">
+<span>class <span class="ident">PersonalDataRecord</span></span>
+<span>(</span><span>*, id: str = None, data_agreement_template_id: str = None, data_agreement_template_version: str = None, attribute_name: str = None, attribute_sensitive: str = None, attribute_category: dict = None, attribute_description: str = 'false', restrictions: List[dict] = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Personal data record to be persisted in the storage</p>
+<p>Initialise personal data record</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Personal data identifier. Defaults to None.</dd>
+<dt><strong><code>data_agreement_template_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Data agreement template identifier.
+Defaults to None.</dd>
+<dt><strong><code>data_agreement_template_version</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Data agreement template version.
+Defaults to None.</dd>
+<dt><strong><code>attribute_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Attribute name. Defaults to None.</dd>
+<dt><strong><code>attribute_sensitive</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Attribute sensitive. Defaults to None.</dd>
+<dt><strong><code>attribute_category</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Attribute category. Defaults to None.</dd>
+<dt><strong><code>attribute_description</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Attribute description. Defaults to "false".</dd>
+<dt><strong><code>restrictions</code></strong> :&ensp;<code>typing.List[dict]</code>, optional</dt>
+<dd>Attribute restrictions. Defaults to None.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PersonalDataRecord(BaseRecord):
+    &#34;&#34;&#34;Personal data record to be persisted in the storage&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;PersonalDataRecordSchema&#34;
+
+    # Record type
+    RECORD_TYPE = &#34;personal_data&#34;
+
+    # Record identifier
+    RECORD_ID_NAME = &#34;id&#34;
+
+    # Webhook topic name for this record type
+    WEBHOOK_TOPIC = None
+
+    # Record tags
+    TAG_NAMES = {
+        &#34;~data_agreement_template_id&#34;,
+        &#34;~data_agreement_template_version&#34;
+    }
+
+    def __init__(
+        self,
+        *,
+        id: str = None,
+        data_agreement_template_id: str = None,
+        data_agreement_template_version: str = None,
+        attribute_name: str = None,
+        attribute_sensitive: str = None,
+        attribute_category: dict = None,
+        attribute_description: str = &#34;false&#34;,
+        restrictions: typing.List[dict] = None,
+        **kwargs
+    ):
+        &#34;&#34;&#34;Initialise personal data record
+
+        Args:
+            id (str, optional): Personal data identifier. Defaults to None.
+            data_agreement_template_id (str, optional): Data agreement template identifier.
+                Defaults to None.
+            data_agreement_template_version (str, optional): Data agreement template version.
+                Defaults to None.
+            attribute_name (str, optional): Attribute name. Defaults to None.
+            attribute_sensitive (str, optional): Attribute sensitive. Defaults to None.
+            attribute_category (dict, optional): Attribute category. Defaults to None.
+            attribute_description (str, optional): Attribute description. Defaults to &#34;false&#34;.
+            restrictions (typing.List[dict], optional): Attribute restrictions. Defaults to None.
+        &#34;&#34;&#34;
+
+        # Pass identifier to parent class
+        super().__init__(id, **kwargs)
+
+        if not data_agreement_template_id:
+            raise TypeError(
+                &#34;Data agreement template identifier is not provided&#34;
+            )
+
+        # Set the record attributes
+        self.data_agreement_template_id = data_agreement_template_id
+        self.data_agreement_template_version = data_agreement_template_version
+        self.attribute_name = attribute_name
+        self.attribute_sensitive = attribute_sensitive
+        self.attribute_category = attribute_category
+        self.attribute_description = attribute_description
+        self.restrictions = restrictions
+
+    @property
+    def record_value(self) -&gt; dict:
+        &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+        return {
+            prop: getattr(self, prop)
+            for prop in (
+                &#34;data_agreement_template_id&#34;,
+                &#34;data_agreement_template_version&#34;,
+                &#34;attribute_name&#34;,
+                &#34;attribute_sensitive&#34;,
+                &#34;attribute_category&#34;,
+                &#34;attribute_description&#34;,
+                &#34;restrictions&#34;,
+            )
+        }
+
+    @property
+    def attribute_id(self):
+        &#34;&#34;&#34;Attribute identifier&#34;&#34;&#34;
+        return self._id
+
+    @classmethod
+    async def list_by_template_id(cls,
+                                  context: InjectionContext,
+                                  template_id: str,
+                                  template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+        &#34;&#34;&#34;List by template id and template version
+
+        Returns:
+            records (typing.List[PersonalDataRecord]): personal datas
+        &#34;&#34;&#34;
+        tag_filter = {
+            &#34;data_agreement_template_id&#34;: template_id,
+            &#34;data_agreement_template_version&#34;: template_version
+        }
+
+        records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
+
+        return records
+
+    @classmethod
+    async def batch_update_by_da_template_id(
+            cls,
+            context: InjectionContext,
+            template_id: str,
+            template_version: str,
+            pds: typing.List[dict]
+    ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+        &#34;&#34;&#34;Batch update by DA template id
+
+        Args:
+            template_id (str): template id
+            pds (typing.List[PersonalDataRecord]): personal datas
+        &#34;&#34;&#34;
+
+        template_version = bump_major_for_semver_string(template_version)
+
+        # Then no update is performed.
+        if len(pds) == 0:
+            return []
+
+        records = []
+        for pd in pds:
+
+            # Create new entry with updated version.
+            record = PersonalDataRecord(
+                data_agreement_template_id=template_id,
+                data_agreement_template_version=template_version,
+                attribute_name=pd.get(&#34;attributeName&#34;),
+                attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
+                attribute_category=pd.get(&#34;attributeCategory&#34;),
+                attribute_description=pd.get(&#34;attributeDescription&#34;),
+                restrictions=pd.get(&#34;restrictions&#34;)
+            )
+
+            await record.save(context)
+
+            records.append(record)
+
+        return records
+
+    def convert_record_to_pd_model(self) -&gt; DataAgreementPersonalDataModel:
+        &#34;&#34;&#34;Convert record to personal data model
+
+        Returns:
+            DataAgreementPersonalDataModel: Data agreement personal data model
+        &#34;&#34;&#34;
+
+        pd_model = DataAgreementPersonalDataModel(
+            attribute_id=self.attribute_id,
+            attribute_name=self.attribute_name,
+            attribute_sensitive=self.attribute_sensitive,
+            attribute_category=self.attribute_category,
+            attribute_description=self.attribute_description
+        )
+
+        restriction_models = []
+
+        if self.restrictions:
+            for restriction in self.restrictions:
+
+                restriction_model = DataAgreementPersonalDataRestrictionModel(
+                    schema_id=restriction.get(&#34;schemaId&#34;),
+                    cred_def_id=restriction.get(&#34;credDefId&#34;)
+                )
+
+                restriction_models.append(restriction_model)
+
+        pd_model.restrictions = restriction_models
+
+        return pd_model
+
+    @classmethod
+    async def build_and_save_record_from_pd_model(
+            cls,
+            context: InjectionContext,
+            template_id: str,
+            template_version: str,
+            pd_model: DataAgreementPersonalDataModel
+    ) -&gt; &#34;PersonalDataRecord&#34;:
+        &#34;&#34;&#34;Build personal data record from personal data model
+
+        Args:
+            pd_model (DataAgreementPersonalDataModel): Personal data model
+
+        Returns:
+            PersonalDataRecord: Personal data record
+        &#34;&#34;&#34;
+
+        pd_record = PersonalDataRecord(
+            id=pd_model.attribute_id,
+            data_agreement_template_id=template_id,
+            data_agreement_template_version=template_version,
+            attribute_name=pd_model.attribute_name,
+            attribute_sensitive=pd_model.attribute_sensitive,
+            attribute_category=pd_model.attribute_category,
+            attribute_description=pd_model.attribute_description,
+        )
+
+        restrictions = []
+
+        if pd_model.restrictions:
+            for restriction in pd_model.restrictions:
+                restrictions.append(restriction.serialize())
+
+        pd_record.restrictions = restrictions
+
+        await pd_record.save(context)
+
+        return pd_record</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base_record.BaseRecord</li>
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_ID_NAME"><code class="name">var <span class="ident">RECORD_ID_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_TYPE"><code class="name">var <span class="ident">RECORD_TYPE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.TAG_NAMES"><code class="name">var <span class="ident">TAG_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.WEBHOOK_TOPIC"><code class="name">var <span class="ident">WEBHOOK_TOPIC</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.batch_update_by_da_template_id"><code class="name flex">
+<span>async def <span class="ident">batch_update_by_da_template_id</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, template_id: str, template_version: str, pds: List[dict]) ‑> List[<a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Batch update by DA template id</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>template id</dd>
+<dt><strong><code>pds</code></strong> :&ensp;<code>typing.List[<a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a>]</code></dt>
+<dd>personal datas</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def batch_update_by_da_template_id(
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pds: typing.List[dict]
+) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+    &#34;&#34;&#34;Batch update by DA template id
+
+    Args:
+        template_id (str): template id
+        pds (typing.List[PersonalDataRecord]): personal datas
+    &#34;&#34;&#34;
+
+    template_version = bump_major_for_semver_string(template_version)
+
+    # Then no update is performed.
+    if len(pds) == 0:
+        return []
+
+    records = []
+    for pd in pds:
+
+        # Create new entry with updated version.
+        record = PersonalDataRecord(
+            data_agreement_template_id=template_id,
+            data_agreement_template_version=template_version,
+            attribute_name=pd.get(&#34;attributeName&#34;),
+            attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
+            attribute_category=pd.get(&#34;attributeCategory&#34;),
+            attribute_description=pd.get(&#34;attributeDescription&#34;),
+            restrictions=pd.get(&#34;restrictions&#34;)
+        )
+
+        await record.save(context)
+
+        records.append(record)
+
+    return records</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.build_and_save_record_from_pd_model"><code class="name flex">
+<span>async def <span class="ident">build_and_save_record_from_pd_model</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, template_id: str, template_version: str, pd_model: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="../models/da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a>) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build personal data record from personal data model</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pd_model</code></strong> :&ensp;<code>DataAgreementPersonalDataModel</code></dt>
+<dd>Personal data model</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a></code></dt>
+<dd>Personal data record</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def build_and_save_record_from_pd_model(
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pd_model: DataAgreementPersonalDataModel
+) -&gt; &#34;PersonalDataRecord&#34;:
+    &#34;&#34;&#34;Build personal data record from personal data model
+
+    Args:
+        pd_model (DataAgreementPersonalDataModel): Personal data model
+
+    Returns:
+        PersonalDataRecord: Personal data record
+    &#34;&#34;&#34;
+
+    pd_record = PersonalDataRecord(
+        id=pd_model.attribute_id,
+        data_agreement_template_id=template_id,
+        data_agreement_template_version=template_version,
+        attribute_name=pd_model.attribute_name,
+        attribute_sensitive=pd_model.attribute_sensitive,
+        attribute_category=pd_model.attribute_category,
+        attribute_description=pd_model.attribute_description,
+    )
+
+    restrictions = []
+
+    if pd_model.restrictions:
+        for restriction in pd_model.restrictions:
+            restrictions.append(restriction.serialize())
+
+    pd_record.restrictions = restrictions
+
+    await pd_record.save(context)
+
+    return pd_record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.list_by_template_id"><code class="name flex">
+<span>async def <span class="ident">list_by_template_id</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, template_id: str, template_version: str) ‑> List[<a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>List by template id and template version</p>
+<h2 id="returns">Returns</h2>
+<p>records (typing.List[PersonalDataRecord]): personal datas</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def list_by_template_id(cls,
+                              context: InjectionContext,
+                              template_id: str,
+                              template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+    &#34;&#34;&#34;List by template id and template version
+
+    Returns:
+        records (typing.List[PersonalDataRecord]): personal datas
+    &#34;&#34;&#34;
+    tag_filter = {
+        &#34;data_agreement_template_id&#34;: template_id,
+        &#34;data_agreement_template_version&#34;: template_version
+    }
+
+    records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
+
+    return records</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.attribute_id"><code class="name">var <span class="ident">attribute_id</span></code></dt>
+<dd>
+<div class="desc"><p>Attribute identifier</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def attribute_id(self):
+    &#34;&#34;&#34;Attribute identifier&#34;&#34;&#34;
+    return self._id</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.record_value"><code class="name">var <span class="ident">record_value</span> : dict</code></dt>
+<dd>
+<div class="desc"><p>Accessor for JSON record value generated for this transaction record.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def record_value(self) -&gt; dict:
+    &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+    return {
+        prop: getattr(self, prop)
+        for prop in (
+            &#34;data_agreement_template_id&#34;,
+            &#34;data_agreement_template_version&#34;,
+            &#34;attribute_name&#34;,
+            &#34;attribute_sensitive&#34;,
+            &#34;attribute_category&#34;,
+            &#34;attribute_description&#34;,
+            &#34;restrictions&#34;,
+        )
+    }</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.convert_record_to_pd_model"><code class="name flex">
+<span>def <span class="ident">convert_record_to_pd_model</span></span>(<span>self) ‑> <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="../models/da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert record to personal data model</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>DataAgreementPersonalDataModel</code></dt>
+<dd>Data agreement personal data model</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_record_to_pd_model(self) -&gt; DataAgreementPersonalDataModel:
+    &#34;&#34;&#34;Convert record to personal data model
+
+    Returns:
+        DataAgreementPersonalDataModel: Data agreement personal data model
+    &#34;&#34;&#34;
+
+    pd_model = DataAgreementPersonalDataModel(
+        attribute_id=self.attribute_id,
+        attribute_name=self.attribute_name,
+        attribute_sensitive=self.attribute_sensitive,
+        attribute_category=self.attribute_category,
+        attribute_description=self.attribute_description
+    )
+
+    restriction_models = []
+
+    if self.restrictions:
+        for restriction in self.restrictions:
+
+            restriction_model = DataAgreementPersonalDataRestrictionModel(
+                schema_id=restriction.get(&#34;schemaId&#34;),
+                cred_def_id=restriction.get(&#34;credDefId&#34;)
+            )
+
+            restriction_models.append(restriction_model)
+
+    pd_model.restrictions = restriction_models
+
+    return pd_model</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema"><code class="flex name class">
+<span>class <span class="ident">PersonalDataRecordSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Personal data record schema</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PersonalDataRecordSchema(BaseRecordSchema):
+    &#34;&#34;&#34;Personal data record schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = PersonalDataRecord
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # Attribute identifier
+    attribute_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data agreement template identifier
+    data_agreement_template_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data agreement template version
+    data_agreement_template_version = fields.Str(
+        required=True,
+    )
+
+    # Attribute name
+    attribute_name = fields.Str(
+        required=True
+    )
+
+    # Attribute sensitive
+    attribute_sensitive = fields.Bool(
+        required=False
+    )
+
+    # Attribute category
+    attribute_category = fields.Str(
+        required=False
+    )
+
+    # Attribute description
+    attribute_description = fields.Str(
+        required=False
+    )
+
+    # Restrictions
+    restrictions = fields.List(
+        fields.Dict(
+            keys=fields.Str,
+            values=fields.Str
+        ),
+        required=False
+    )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base_record.BaseRecordSchema</li>
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records" href="index.html">dexa_sdk.agreements.da.v1_0.records</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord">PersonalDataRecord</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.Meta" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_ID_NAME" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_ID_NAME">RECORD_ID_NAME</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_TYPE" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.RECORD_TYPE">RECORD_TYPE</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.TAG_NAMES" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.TAG_NAMES">TAG_NAMES</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.WEBHOOK_TOPIC" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.attribute_id" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.attribute_id">attribute_id</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.batch_update_by_da_template_id" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.batch_update_by_da_template_id">batch_update_by_da_template_id</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.build_and_save_record_from_pd_model" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.build_and_save_record_from_pd_model">build_and_save_record_from_pd_model</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.convert_record_to_pd_model" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.convert_record_to_pd_model">convert_record_to_pd_model</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.list_by_template_id" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.list_by_template_id">list_by_template_id</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.record_value" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecord.record_value">record_value</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema">PersonalDataRecordSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.Meta" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.opts" href="#dexa_sdk.agreements.da.v1_0.records.personal_data_record.PersonalDataRecordSchema.opts">opts</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

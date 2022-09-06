@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.utils.utils API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.utils.utils</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import jcs
+import ast
+import typing
+import semver
+import math
+from collections import namedtuple
+from aries_cloudagent.messaging.models.base_record import BaseRecord
+
+
+def jcs_rfc8785(data: typing.Union[list, dict]) -&gt; bytes:
+    &#34;&#34;&#34;JSON canonicalisation schema as per IETF RFC 8785&#34;&#34;&#34;
+    return jcs.canonicalize(data)
+
+
+def jcs_bytes_to_pyobject(data: bytes) -&gt; typing.Any:
+    &#34;&#34;&#34;Convert JCS bytes to &lt;dict, list e.t.c&gt;&#34;&#34;&#34;
+    return ast.literal_eval(data.decode())
+
+
+def replace_jws(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;jws&#39; field with &#39;proofValue&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proofValue&#39; field
+    doc[&#34;proofValue&#34;] = doc[&#34;jws&#34;]
+    # Delete &#39;jws&#39; field
+    del doc[&#34;jws&#34;]
+
+    return doc
+
+
+def replace_proof_value(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;proofValue&#39; field with &#39;jws&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proofValue&#39; field
+    doc[&#34;jws&#34;] = doc[&#34;proofValue&#34;]
+    # Delete &#39;jws&#39; field
+    del doc[&#34;proofValue&#34;]
+
+    return doc
+
+
+def replace_proof_chain(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;proofChain&#39; field with &#39;proof&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proof&#39; field with first proof in the chain
+    doc[&#34;proof&#34;] = doc[&#34;proofChain&#34;][0]
+    # Delete &#39;proofChain&#39; field
+    del doc[&#34;proofChain&#34;]
+
+    return doc
+
+
+def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
+                                             sort_order: str = &#34;desc&#34;) -&gt; typing.List[dict]:
+    &#34;&#34;&#34;Sort exchange record dicts based on &#39;created at&#39; field
+
+    Args:
+        records (typing.List[dict]): Exchange record dicts
+        sort_order (str, optional): Sort order (&#39;desc&#39; or &#39;asc&#39;). Defaults to &#34;desc&#34;.
+
+    Returns:
+        typing.List[dict]: Sorted record dicts
+    &#34;&#34;&#34;
+    assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
+
+    return sorted(records,
+                  key=lambda k: k[&#39;created_at&#39;],
+                  reverse=True if sort_order == &#34;desc&#34; else False)
+
+
+def bump_major_for_semver_string(version: str) -&gt; str:
+    &#34;&#34;&#34;Bump major part of the semver string.
+
+    Args:
+        version (str): semver compatible version string
+
+    Returns:
+        str: Bumped version
+    &#34;&#34;&#34;
+    v = semver.parse_version_info(version)
+    return str(v.bump_major())
+
+
+# Pagination config
+PaginationConfig = namedtuple(
+    &#39;PaginationConfig&#39;,
+    [
+        &#34;total_count&#34;,
+        &#34;page&#34;,
+        &#34;page_size&#34;,
+        &#34;total_pages&#34;
+    ]
+)
+
+# Pagination result
+PaginationResult = namedtuple(
+    &#39;PaginationResult&#39;,
+    [
+        &#34;results&#34;,
+        &#34;pagination&#34;
+    ]
+)
+
+
+def get_slices(page, page_size=10):
+    &#34;&#34;&#34;
+    Get the start and end indices for the given page and page size.
+
+    Args:
+        page: page number
+        page_size: page size
+
+    Returns: start and end indices
+
+    &#34;&#34;&#34;
+    start = (page - 1) * page_size
+
+    end = start + page_size
+
+    return start, end
+
+
+def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; PaginationResult:
+    &#34;&#34;&#34;Paginate an items list
+
+    Args:
+        items_list (typing.List): items list
+        page (int, optional): page number. Defaults to None.
+
+    Returns:
+        PaginationResult: Pagination result
+    &#34;&#34;&#34;
+
+    page = page if page else 1
+
+    # total count
+    total_count = len(items_list)
+
+    # total pages
+    total_pages = math.ceil(total_count / page_size)
+
+    # Get the items list for the current page
+    # Fetch pagination indices
+    lower, upper = get_slices(page, page_size)
+
+    # Slice the items for current page
+    items_list = items_list[lower:upper]
+
+    pconfig = PaginationConfig(
+        total_count=total_count,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+
+    res = PaginationResult(results=items_list, pagination=pconfig._asdict())
+
+    return res
+
+
+def paginate_records(
+    records: typing.List[BaseRecord],
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Paginate records
+
+    Args:
+        records (typing.List[BaseRecord]): records
+        page (int, optional): page. Defaults to 1.
+        page_size (int, optional): page_size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Results
+    &#34;&#34;&#34;
+
+    presults = paginate(records, page, page_size)
+
+    serialised_item_list = []
+    for item in presults.results:
+        serialised_item_list.append(item.serialize())
+
+    res = PaginationResult(results=serialised_item_list, pagination=presults.pagination)
+
+    return res
+
+
+def clean_and_get_field_from_dict(
+        input: dict,
+        key: str
+) -&gt; typing.Union[None, typing.Any]:
+    &#34;&#34;&#34;Return the value of the field in dict if present.
+
+    Args:
+        input (dict): dict
+        key (str): dict key
+
+    Returns:
+        typing.Union[None, Any]: Value of the field
+    &#34;&#34;&#34;
+
+    # Get field value
+    field_value = input.get(key)
+
+    # Check if field value is empty string
+    if field_value and isinstance(field_value, str) and len(field_value) == 0:
+        field_value = None
+
+    return field_value
+
+
+def drop_none_dict(input: dict) -&gt; dict:
+    &#34;&#34;&#34;Return dict with None values removed
+
+    Args:
+        input (dict): input
+
+    Returns:
+        dict: output
+    &#34;&#34;&#34;
+
+    for k, v in list(input.items()):
+        if v is None:
+            input.pop(k)
+
+    return input</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dexa_sdk.utils.utils.bump_major_for_semver_string"><code class="name flex">
+<span>def <span class="ident">bump_major_for_semver_string</span></span>(<span>version: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Bump major part of the semver string.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>version</code></strong> :&ensp;<code>str</code></dt>
+<dd>semver compatible version string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Bumped version</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bump_major_for_semver_string(version: str) -&gt; str:
+    &#34;&#34;&#34;Bump major part of the semver string.
+
+    Args:
+        version (str): semver compatible version string
+
+    Returns:
+        str: Bumped version
+    &#34;&#34;&#34;
+    v = semver.parse_version_info(version)
+    return str(v.bump_major())</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.clean_and_get_field_from_dict"><code class="name flex">
+<span>def <span class="ident">clean_and_get_field_from_dict</span></span>(<span>input: dict, key: str) ‑> Optional[None]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the value of the field in dict if present.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input</code></strong> :&ensp;<code>dict</code></dt>
+<dd>dict</dd>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code></dt>
+<dd>dict key</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Union[None, Any]</code></dt>
+<dd>Value of the field</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean_and_get_field_from_dict(
+        input: dict,
+        key: str
+) -&gt; typing.Union[None, typing.Any]:
+    &#34;&#34;&#34;Return the value of the field in dict if present.
+
+    Args:
+        input (dict): dict
+        key (str): dict key
+
+    Returns:
+        typing.Union[None, Any]: Value of the field
+    &#34;&#34;&#34;
+
+    # Get field value
+    field_value = input.get(key)
+
+    # Check if field value is empty string
+    if field_value and isinstance(field_value, str) and len(field_value) == 0:
+        field_value = None
+
+    return field_value</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.drop_none_dict"><code class="name flex">
+<span>def <span class="ident">drop_none_dict</span></span>(<span>input: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return dict with None values removed</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input</code></strong> :&ensp;<code>dict</code></dt>
+<dd>input</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>output</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def drop_none_dict(input: dict) -&gt; dict:
+    &#34;&#34;&#34;Return dict with None values removed
+
+    Args:
+        input (dict): input
+
+    Returns:
+        dict: output
+    &#34;&#34;&#34;
+
+    for k, v in list(input.items()):
+        if v is None:
+            input.pop(k)
+
+    return input</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.get_slices"><code class="name flex">
+<span>def <span class="ident">get_slices</span></span>(<span>page, page_size=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the start and end indices for the given page and page size.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>page</code></strong></dt>
+<dd>page number</dd>
+<dt><strong><code>page_size</code></strong></dt>
+<dd>page size</dd>
+</dl>
+<p>Returns: start and end indices</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_slices(page, page_size=10):
+    &#34;&#34;&#34;
+    Get the start and end indices for the given page and page size.
+
+    Args:
+        page: page number
+        page_size: page size
+
+    Returns: start and end indices
+
+    &#34;&#34;&#34;
+    start = (page - 1) * page_size
+
+    end = start + page_size
+
+    return start, end</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.jcs_bytes_to_pyobject"><code class="name flex">
+<span>def <span class="ident">jcs_bytes_to_pyobject</span></span>(<span>data: bytes) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert JCS bytes to <dict, list e.t.c></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def jcs_bytes_to_pyobject(data: bytes) -&gt; typing.Any:
+    &#34;&#34;&#34;Convert JCS bytes to &lt;dict, list e.t.c&gt;&#34;&#34;&#34;
+    return ast.literal_eval(data.decode())</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.jcs_rfc8785"><code class="name flex">
+<span>def <span class="ident">jcs_rfc8785</span></span>(<span>data: Union[list, dict]) ‑> bytes</span>
+</code></dt>
+<dd>
+<div class="desc"><p>JSON canonicalisation schema as per IETF RFC 8785</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def jcs_rfc8785(data: typing.Union[list, dict]) -&gt; bytes:
+    &#34;&#34;&#34;JSON canonicalisation schema as per IETF RFC 8785&#34;&#34;&#34;
+    return jcs.canonicalize(data)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.paginate"><code class="name flex">
+<span>def <span class="ident">paginate</span></span>(<span>items_list: List[~T], page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Paginate an items list</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>items_list</code></strong> :&ensp;<code>typing.List</code></dt>
+<dd>items list</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>page number. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></code></dt>
+<dd>Pagination result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; PaginationResult:
+    &#34;&#34;&#34;Paginate an items list
+
+    Args:
+        items_list (typing.List): items list
+        page (int, optional): page number. Defaults to None.
+
+    Returns:
+        PaginationResult: Pagination result
+    &#34;&#34;&#34;
+
+    page = page if page else 1
+
+    # total count
+    total_count = len(items_list)
+
+    # total pages
+    total_pages = math.ceil(total_count / page_size)
+
+    # Get the items list for the current page
+    # Fetch pagination indices
+    lower, upper = get_slices(page, page_size)
+
+    # Slice the items for current page
+    items_list = items_list[lower:upper]
+
+    pconfig = PaginationConfig(
+        total_count=total_count,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+
+    res = PaginationResult(results=items_list, pagination=pconfig._asdict())
+
+    return res</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.paginate_records"><code class="name flex">
+<span>def <span class="ident">paginate_records</span></span>(<span>records: List[aries_cloudagent.messaging.models.base_record.BaseRecord], page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Paginate records</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>records</code></strong> :&ensp;<code>typing.List[BaseRecord]</code></dt>
+<dd>records</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>page. Defaults to 1.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>page_size. Defaults to 10.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></code></dt>
+<dd>Results</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paginate_records(
+    records: typing.List[BaseRecord],
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Paginate records
+
+    Args:
+        records (typing.List[BaseRecord]): records
+        page (int, optional): page. Defaults to 1.
+        page_size (int, optional): page_size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Results
+    &#34;&#34;&#34;
+
+    presults = paginate(records, page, page_size)
+
+    serialised_item_list = []
+    for item in presults.results:
+        serialised_item_list.append(item.serialize())
+
+    res = PaginationResult(results=serialised_item_list, pagination=presults.pagination)
+
+    return res</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.replace_jws"><code class="name flex">
+<span>def <span class="ident">replace_jws</span></span>(<span>doc: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace 'jws' field with 'proofValue' field</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>doc</code></strong> :&ensp;<code>dict</code></dt>
+<dd>input document with proof</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>replaced document</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replace_jws(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;jws&#39; field with &#39;proofValue&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proofValue&#39; field
+    doc[&#34;proofValue&#34;] = doc[&#34;jws&#34;]
+    # Delete &#39;jws&#39; field
+    del doc[&#34;jws&#34;]
+
+    return doc</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.replace_proof_chain"><code class="name flex">
+<span>def <span class="ident">replace_proof_chain</span></span>(<span>doc: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace 'proofChain' field with 'proof' field</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>doc</code></strong> :&ensp;<code>dict</code></dt>
+<dd>input document with proof</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>replaced document</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replace_proof_chain(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;proofChain&#39; field with &#39;proof&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proof&#39; field with first proof in the chain
+    doc[&#34;proof&#34;] = doc[&#34;proofChain&#34;][0]
+    # Delete &#39;proofChain&#39; field
+    del doc[&#34;proofChain&#34;]
+
+    return doc</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.replace_proof_value"><code class="name flex">
+<span>def <span class="ident">replace_proof_value</span></span>(<span>doc: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace 'proofValue' field with 'jws' field</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>doc</code></strong> :&ensp;<code>dict</code></dt>
+<dd>input document with proof</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>replaced document</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replace_proof_value(doc: dict) -&gt; dict:
+    &#34;&#34;&#34;Replace &#39;proofValue&#39; field with &#39;jws&#39; field
+
+    Args:
+        doc (dict): input document with proof
+
+    Returns:
+        dict: replaced document
+    &#34;&#34;&#34;
+    # Add &#39;proofValue&#39; field
+    doc[&#34;jws&#34;] = doc[&#34;proofValue&#34;]
+    # Delete &#39;jws&#39; field
+    del doc[&#34;proofValue&#34;]
+
+    return doc</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.sort_exchange_record_dicts_by_created_at"><code class="name flex">
+<span>def <span class="ident">sort_exchange_record_dicts_by_created_at</span></span>(<span>records: List[dict], sort_order: str = 'desc') ‑> List[dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sort exchange record dicts based on 'created at' field</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>records</code></strong> :&ensp;<code>typing.List[dict]</code></dt>
+<dd>Exchange record dicts</dd>
+<dt><strong><code>sort_order</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Sort order ('desc' or 'asc'). Defaults to "desc".</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.List[dict]</code></dt>
+<dd>Sorted record dicts</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
+                                             sort_order: str = &#34;desc&#34;) -&gt; typing.List[dict]:
+    &#34;&#34;&#34;Sort exchange record dicts based on &#39;created at&#39; field
+
+    Args:
+        records (typing.List[dict]): Exchange record dicts
+        sort_order (str, optional): Sort order (&#39;desc&#39; or &#39;asc&#39;). Defaults to &#34;desc&#34;.
+
+    Returns:
+        typing.List[dict]: Sorted record dicts
+    &#34;&#34;&#34;
+    assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
+
+    return sorted(records,
+                  key=lambda k: k[&#39;created_at&#39;],
+                  reverse=True if sort_order == &#34;desc&#34; else False)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.utils.utils.PaginationConfig"><code class="flex name class">
+<span>class <span class="ident">PaginationConfig</span></span>
+<span>(</span><span>total_count, page, page_size, total_pages)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PaginationConfig(total_count, page, page_size, total_pages)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.utils.utils.PaginationConfig.page"><code class="name">var <span class="ident">page</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 1</p></div>
+</dd>
+<dt id="dexa_sdk.utils.utils.PaginationConfig.page_size"><code class="name">var <span class="ident">page_size</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 2</p></div>
+</dd>
+<dt id="dexa_sdk.utils.utils.PaginationConfig.total_count"><code class="name">var <span class="ident">total_count</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 0</p></div>
+</dd>
+<dt id="dexa_sdk.utils.utils.PaginationConfig.total_pages"><code class="name">var <span class="ident">total_pages</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 3</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.utils.utils.PaginationResult"><code class="flex name class">
+<span>class <span class="ident">PaginationResult</span></span>
+<span>(</span><span>results, pagination)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PaginationResult(results, pagination)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.utils.utils.PaginationResult.pagination"><code class="name">var <span class="ident">pagination</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 1</p></div>
+</dd>
+<dt id="dexa_sdk.utils.utils.PaginationResult.results"><code class="name">var <span class="ident">results</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 0</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.utils" href="index.html">dexa_sdk.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="dexa_sdk.utils.utils.bump_major_for_semver_string" href="#dexa_sdk.utils.utils.bump_major_for_semver_string">bump_major_for_semver_string</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.clean_and_get_field_from_dict" href="#dexa_sdk.utils.utils.clean_and_get_field_from_dict">clean_and_get_field_from_dict</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.drop_none_dict" href="#dexa_sdk.utils.utils.drop_none_dict">drop_none_dict</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.get_slices" href="#dexa_sdk.utils.utils.get_slices">get_slices</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.jcs_bytes_to_pyobject" href="#dexa_sdk.utils.utils.jcs_bytes_to_pyobject">jcs_bytes_to_pyobject</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.jcs_rfc8785" href="#dexa_sdk.utils.utils.jcs_rfc8785">jcs_rfc8785</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.paginate" href="#dexa_sdk.utils.utils.paginate">paginate</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.paginate_records" href="#dexa_sdk.utils.utils.paginate_records">paginate_records</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.replace_jws" href="#dexa_sdk.utils.utils.replace_jws">replace_jws</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.replace_proof_chain" href="#dexa_sdk.utils.utils.replace_proof_chain">replace_proof_chain</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.replace_proof_value" href="#dexa_sdk.utils.utils.replace_proof_value">replace_proof_value</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.sort_exchange_record_dicts_by_created_at" href="#dexa_sdk.utils.utils.sort_exchange_record_dicts_by_created_at">sort_exchange_record_dicts_by_created_at</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.utils.utils.PaginationConfig" href="#dexa_sdk.utils.utils.PaginationConfig">PaginationConfig</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.utils.utils.PaginationConfig.page" href="#dexa_sdk.utils.utils.PaginationConfig.page">page</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.PaginationConfig.page_size" href="#dexa_sdk.utils.utils.PaginationConfig.page_size">page_size</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.PaginationConfig.total_count" href="#dexa_sdk.utils.utils.PaginationConfig.total_count">total_count</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.PaginationConfig.total_pages" href="#dexa_sdk.utils.utils.PaginationConfig.total_pages">total_pages</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.utils.utils.PaginationResult.pagination" href="#dexa_sdk.utils.utils.PaginationResult.pagination">pagination</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.PaginationResult.results" href="#dexa_sdk.utils.utils.PaginationResult.results">results</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
