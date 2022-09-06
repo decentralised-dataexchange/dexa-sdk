@@ -8,7 +8,7 @@ from ...models.dda_models import (
     DataSharingRestrictionsModel,
     PersonalDataModel,
     DataUsingServiceModel,
-    ProofModel
+    ProofModel,
 )
 
 
@@ -29,7 +29,7 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
                 name="XYZ company",
                 legal_id="lei:xyz",
                 url="https://company.xyz",
-                industry_sector="Retail"
+                industry_sector="Retail",
             ),
             agreement_period=365,
             data_sharing_restrictions=DataSharingRestrictionsModel(
@@ -38,15 +38,14 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
                 industry_sector="Retail",
                 data_retention_period=365,
                 geographic_restriction="EU",
-                storage_location="EU"
+                storage_location="EU",
             ),
             purpose="Health data sharing",
             purpose_description="Transfering patient data",
             lawful_basis="consent",
             personal_data=[
                 PersonalDataModel(
-                    attribute_id="urn:uuid:attribute123",
-                    attribute_name="Name"
+                    attribute_id="urn:uuid:attribute123", attribute_name="Name"
                 )
             ],
             code_of_conduct="https://company.xyz/code_of_conduct",
@@ -60,7 +59,7 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
                 jurisdiction="EU",
                 withdrawal="https://company.abc/withdrawal",
                 privacy_rights="https://company.abc/privacy_rights",
-                signature_contact="did:key:z6mk"
+                signature_contact="did:key:z6mk",
             ),
             proof=ProofModel(
                 id="urn:uuid:proof123",
@@ -68,30 +67,29 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
                 created="2022",
                 verification_method="did:key:z6mk",
                 proof_purpose="Authentication",
-                proof_value="x.y.z"
-            )
+                proof_value="x.y.z",
+            ),
         )
 
         self.dda_container = DataDisclosureAgreementInstance(
             dda=self.data_disclosure_agreement
         )
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.DataDisclosureAgreementInstance.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.dda_instance.jsonld_context_fingerprint"))
+    @async_mock.patch(
+        (
+            "dexa_sdk.agreements.dda.v1_0"
+            ".templates.BaseDataDisclosureAgreementTemplate.nquads"
+        )
+    )
+    @async_mock.patch(
+        "dexa_sdk.agreements.dda.v1_0.base.base.jsonld_context_fingerprint"
+    )
     async def test_add_single_dda_to_versions_merkle_tree(
-        self,
-        mock_jsonld_context_fingerprint,
-        mock_nquads
+        self, mock_jsonld_context_fingerprint, mock_nquads
     ) -> None:
         """Test add a single DDA to the versions merkle tree"""
 
-        mock_nquads.side_effect = [
-            [
-                'nquad-statement-1'
-            ]
-        ]
+        mock_nquads.side_effect = [["nquad-statement-1"]]
 
         mock_jsonld_context_fingerprint.side_effect = [
             "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f0"
@@ -102,25 +100,25 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
 
         assert len(versions_tree) == 1
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.DataDisclosureAgreementInstance.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.dda_instance.jsonld_context_fingerprint"))
+    @async_mock.patch(
+        (
+            "dexa_sdk.agreements.dda.v1_0"
+            ".templates.BaseDataDisclosureAgreementTemplate.nquads"
+        )
+    )
+    @async_mock.patch(
+        "dexa_sdk.agreements.dda.v1_0.base.base.jsonld_context_fingerprint"
+    )
     async def test_add_two_dda_to_versions_merkle_tree(
-        self,
-        mock_jsonld_context_fingerprint,
-        mock_nquads
+        self, mock_jsonld_context_fingerprint, mock_nquads
     ) -> None:
         """Test add two DDA to the versions merkle tree"""
 
-        mock_nquads.side_effect = [
-            'nquad-statement-1',
-            'nquad-statement-2'
-        ]
+        mock_nquads.side_effect = ["nquad-statement-1", "nquad-statement-2"]
 
         mock_jsonld_context_fingerprint.side_effect = [
             "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f0",
-            "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f1"
+            "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f1",
         ]
         versions_tree = DDAVersionsMerkleTree()
 
@@ -137,33 +135,30 @@ class TestDDAVersionsMerkleTree(AsyncTestCase):
         versions_tree.add(dda_container2)
 
         assert len(versions_tree) == 2
-        assert versions_tree.genesis.next_version_did \
-            == versions_tree.current.mydata_did
+        assert (
+            versions_tree.genesis.next_version_did == versions_tree.current.mydata_did
+        )
         assert versions_tree.current.next_version_did is None
 
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.DataDisclosureAgreementInstance.nquads"))
-    @async_mock.patch(("dexa_sdk.agreements.dda.v1"
-                       ".instances.dda_instance.jsonld_context_fingerprint"))
+    @async_mock.patch(
+        (
+            "dexa_sdk.agreements.dda.v1_0"
+            ".instances.BaseDataDisclosureAgreementTemplate.nquads"
+        )
+    )
+    @async_mock.patch(
+        "dexa_sdk.agreements.dda.v1_0.base.base.jsonld_context_fingerprint"
+    )
     async def test_query_a_dda_version_by_merkle_root(
-        self,
-        mock_jsonld_context_fingerprint,
-        mock_nquads
+        self, mock_jsonld_context_fingerprint, mock_nquads
     ) -> None:
         """Test query a dda by version"""
 
-        mock_nquads.side_effect = [
-            [
-                'nquad-statement-1'
-            ],
-            [
-                'nquad-statement-2'
-            ]
-        ]
+        mock_nquads.side_effect = [["nquad-statement-1"], ["nquad-statement-2"]]
 
         mock_jsonld_context_fingerprint.side_effect = [
             "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f0",
-            "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f1"
+            "ff2629dbdfd4157d051c7c60a3ec095864b2327f87b77b273a1772c1913445f1",
         ]
 
         versions_tree = DDAVersionsMerkleTree()

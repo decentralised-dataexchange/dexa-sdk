@@ -2,35 +2,43 @@ import typing
 import base64
 from pyld import jsonld
 from merklelib import MerkleTree
-from ..models.dda_models import DataDisclosureAgreementModel
+from abc import ABC
 from .....did_mydata.core import DidMyData
 from .....jsonld.core import jsonld_context_fingerprint
-from .....storage.utils.json import jcs_rfc8785
+from .....utils import jcs_rfc8785
+from ..models.dda_models import DataDisclosureAgreementModel
 
 
-class DataDisclosureAgreementInstance:
-    """
-    Class for managing a data disclosure agreement instance
-    """
+class BaseDataDisclosureAgreementTemplate(ABC):
+    """Base data disclosure agreement template"""
 
-    def __init__(self, dda: DataDisclosureAgreementModel, did: str = None):
+    def __init__(
+        self,
+        *,
+        dda: DataDisclosureAgreementModel,
+        did: str = None,
+    ) -> None:
+        """Initialise a new BaseDataDisclosureAgreementTemplate
 
-        # Set class attributes
+        Args:
+            dda (DataDisclosureAgreementModel): data disclosure agreement model
+            did (str, optional): did:mydata identifier. Defaults to None.
+        """
+
         self._dda = dda
-        self._merkle_tree = None
         self._mydata_did = did
+        self._merkle_tree = None
 
     def nquads(self) -> typing.List[str]:
-        """
-        JSON-LD normalise document using URDNA2015.
+        """JSON-LD normalise document using URDNA2015.
         For reference: https://json-ld.github.io/normalization/spec/
 
         Returns:
-            List of n-quad statements
+            typing.List[str]: n-quads statements
         """
 
         # Config for JSONLD normalisation
-        config = {'algorithm': 'URDNA2015', 'format': 'application/n-quads'}
+        config = {"algorithm": "URDNA2015", "format": "application/n-quads"}
 
         # Obtains the dictionary representation of the document
         doc = self._dda.serialize()
@@ -45,13 +53,10 @@ class DataDisclosureAgreementInstance:
         return normalized[:-1]
 
     def build_merkle_tree(self) -> MerkleTree:
-        """
-        Build merkle tree from nquads statements about the agreement
+        """Build merkle tree from nquads statements about the agreement
 
         Returns:
-            mt (MerkleTree):
-                Merkle tree from nquads statements
-
+            MerkleTree: merkle tree
         """
         # Normalise document to n-quads
         data = self.nquads()
@@ -65,13 +70,19 @@ class DataDisclosureAgreementInstance:
         return mt
 
     def jcs(self) -> bytes:
-        """Canonicalise the agreement using JCS IETF RFC8785"""
+        """Canonicalise the agreement using JCS IETF RFC8785
+
+        Returns:
+            bytes: jcs bytes
+        """
         return jcs_rfc8785(self._dda.serialize())
 
     def base64(self) -> str:
-        """
-        Returns output string after performing base64 encoding
+        """Returns output string after performing base64 encoding
         on JSON Canonicalisation Schema (JCS) on the document.
+
+        Returns:
+            str: base64 encoded string
         """
         return base64.urlsafe_b64encode(self.jcs()).decode()
 
@@ -103,24 +114,53 @@ class DataDisclosureAgreementInstance:
 
     @property
     def mydata_did(self) -> str:
-        """Returns did:mydata identifier"""
+        """Returns did:mydata identifier
+
+        Returns:
+            str: did:mydata identifier
+        """
+        # If did:mydata identifier not generated.
         if not self._mydata_did:
+            # Generate did:mydata identifier
             return self.generate_did()
         return self._mydata_did
 
     @mydata_did.setter
     def mydata_did(self, did: str) -> None:
-        """Set did:mydata identifier"""
+        """Set did:mydata identifier
+
+        Args:
+            did (str): did:mydata identifier
+        """
         self._mydata_did = did
 
     @property
     def merkle_tree(self) -> MerkleTree:
-        """Returns merkle tree"""
+        """Returns merkle tree
+
+        Returns:
+            MerkleTree: merkle tree
+        """
+        # If merkle tree not available
         if not self._merkle_tree:
+            # Build merkle tree and return it.
             return self.build_merkle_tree()
         return self._merkle_tree
 
     @property
     def merkle_root(self) -> str:
-        """Returns merkle root"""
+        """Returns merkle root
+
+        Returns:
+            str: merkle root
+        """
         return self.merkle_tree.merkle_root
+
+    @property
+    def dda(self) -> DataDisclosureAgreementModel:
+        """Returns data disclosure agreement
+
+        Returns:
+            DataDisclosureAgreementModel: data disclosure agreement
+        """
+        return self._dda

@@ -5,7 +5,7 @@ from ..dda_models import (
     DataSharingRestrictionsModel,
     PersonalDataModel,
     DataUsingServiceModel,
-    ProofModel
+    ProofModel,
 )
 
 
@@ -19,7 +19,7 @@ class TestACAPyDDAModels(AsyncTestCase):
             name="Happy Shopping AB",
             legal_id="lei:happy",
             url="https://happyshopping.se",
-            industry_sector="Retail"
+            industry_sector="Retail",
         )
 
         dc = data_controller.serialize()
@@ -33,7 +33,7 @@ class TestACAPyDDAModels(AsyncTestCase):
             "name": "Happy Shopping AB",
             "legalId": "lei:happy",
             "url": "https://happyshopping.se",
-            "industrySector": "Retail"
+            "industrySector": "Retail",
         }
 
         data_controller = DataControllerModel.deserialize(dc)
@@ -55,7 +55,7 @@ class TestACAPyDDAModels(AsyncTestCase):
                 name="XYZ company",
                 legal_id="lei:xyz",
                 url="https://company.xyz",
-                industry_sector="Retail"
+                industry_sector="Retail",
             ),
             agreement_period=365,
             data_sharing_restrictions=DataSharingRestrictionsModel(
@@ -64,15 +64,14 @@ class TestACAPyDDAModels(AsyncTestCase):
                 industry_sector="Retail",
                 data_retention_period=365,
                 geographic_restriction="EU",
-                storage_location="EU"
+                storage_location="EU",
             ),
             purpose="Health data sharing",
             purpose_description="Transfering patient data",
             lawful_basis="consent",
             personal_data=[
                 PersonalDataModel(
-                    attribute_id="urn:uuid:attribute123",
-                    attribute_name="Name"
+                    attribute_id="urn:uuid:attribute123", attribute_name="Name"
                 )
             ],
             code_of_conduct="https://company.xyz/code_of_conduct",
@@ -86,7 +85,7 @@ class TestACAPyDDAModels(AsyncTestCase):
                 jurisdiction="EU",
                 withdrawal="https://company.abc/withdrawal",
                 privacy_rights="https://company.abc/privacy_rights",
-                signature_contact="did:key:z6mk"
+                signature_contact="did:key:z6mk",
             ),
             proof=ProofModel(
                 id="urn:uuid:proof123",
@@ -94,27 +93,24 @@ class TestACAPyDDAModels(AsyncTestCase):
                 created="2022",
                 verification_method="did:key:z6mk",
                 proof_purpose="Authentication",
-                proof_value="x.y.z"
-            )
+                proof_value="x.y.z",
+            ),
         )
 
         dda = data_disclosure_agreement.serialize()
 
-        assert dda["dataController"]["legalId"] == \
-            data_disclosure_agreement.data_controller.legal_id
+        assert (
+            dda["dataController"]["legalId"]
+            == data_disclosure_agreement.data_controller.legal_id
+        )
 
     async def test_data_disclosure_agreement_deserialistion(self) -> None:
         """Test data disclosure agreement deserialisation"""
 
         dda = {
-            "@context": [
-                "https://schema.org",
-                "https://w3c/security/v1"
-            ],
+            "@context": ["https://schema.org", "https://w3c/security/v1"],
             "@id": "urn:uuid:abc123",
-            "@type": [
-                "DataDisclosureAgreement"
-            ],
+            "@type": ["DataDisclosureAgreement"],
             "version": "1.0.0",
             "templateId": "urn:uuid:template123",
             "templateVersion": "1.0.0",
@@ -124,7 +120,7 @@ class TestACAPyDDAModels(AsyncTestCase):
                 "name": "XYZ company",
                 "legalId": "lei:xyz",
                 "url": "https://company.xyz",
-                "industrySector": "Retail"
+                "industrySector": "Retail",
             },
             "agreementPeriod": 365,
             "dataSharingRestrictions": {
@@ -133,17 +129,17 @@ class TestACAPyDDAModels(AsyncTestCase):
                 "industrySector": "Retail",
                 "dataRetentionPeriod": "365",
                 "geographicRestriction": "EU",
-                "storageLocation": "EU"
+                "storageLocation": "EU",
             },
             "purpose": "Health data sharing",
-            "purpose_description": "Transfering patient data",
+            "purposeDescription": "Transfering patient data",
             "lawfulBasis": "consent",
             "personalData": [
                 {
                     "attributeId": "urn:uuid:attribute123",
                     "attributeName": "Name",
                     "attributeSensitive": "true",
-                    "attributeCategory": "personalData"
+                    "attributeCategory": "personalData",
                 }
             ],
             "codeOfConduct": "https://company.xyz/code_of_conduct",
@@ -157,7 +153,7 @@ class TestACAPyDDAModels(AsyncTestCase):
                 "jurisdiction": "EU",
                 "withdrawal": "https://company.abc/withdrawal",
                 "privacyRights": "https://company.abc/privacy_rights",
-                "signatureContact": "did:key:z6mk"
+                "signatureContact": "did:key:z6mk",
             },
             "proof": {
                 "id": "urn:uuid:proof123",
@@ -165,12 +161,13 @@ class TestACAPyDDAModels(AsyncTestCase):
                 "created": "2022",
                 "verificationMethod": "did:key:z6mk",
                 "proofPurpose": "Authentication",
-                "proofValue": "x.y.z"
-            }
+                "proofValue": "x.y.z",
+            },
         }
 
-        data_disclosure_agreement = DataDisclosureAgreementModel.deserialize(
-            dda)
+        data_disclosure_agreement = DataDisclosureAgreementModel.deserialize(dda)
 
-        assert data_disclosure_agreement.proof.verification_method == dda[
-            "proof"]["verificationMethod"]
+        assert (
+            data_disclosure_agreement.proof.verification_method
+            == dda["proof"]["verificationMethod"]
+        )

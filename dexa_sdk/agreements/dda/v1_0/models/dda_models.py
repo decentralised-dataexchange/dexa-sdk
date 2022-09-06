@@ -1,7 +1,18 @@
+from email.policy import default
 import typing
 from marshmallow import fields, EXCLUDE
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
 from .fields.context_field import ContextField
+
+DDA_DEFAULT_CONTEXT = [
+    (
+        "https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements"
+        "/main/interface-specs/jsonld/contexts/dexa-context.jsonld"
+    ),
+    "https://w3id.org/security/v2",
+]
+
+DDA_TYPE = ["DataDisclosureAgreement"]
 
 
 class DataControllerModel(BaseModel):
@@ -116,7 +127,7 @@ class DataSharingRestrictionsSchema(BaseModelSchema):
 
     # The amount of time that the data source holds onto
     # any personal data, in seconds.
-    data_retention_period = fields.Str(data_key="dataRetentionPeriod", required=True)
+    data_retention_period = fields.Int(data_key="dataRetentionPeriod", required=True)
 
     # The country or economic union is restricted from
     # processing personal data.[value based on W3C
@@ -308,9 +319,9 @@ class DataDisclosureAgreementModel(BaseModel):
     def __init__(
         self,
         *,
-        context: typing.Union[str, typing.List[str]],
+        context: typing.Union[str, typing.List[str]] = DDA_DEFAULT_CONTEXT,
         id: str,
-        type: typing.List[str],
+        type: typing.List[str] = DDA_TYPE,
         language: str,
         version: str,
         template_id: str = None,
@@ -363,14 +374,16 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # Defines the context of this document. E.g. the link the JSON-LD
-    context = ContextField(data_key="@context", required=True)
+    context = ContextField(
+        data_key="@context", required=True, example=DDA_DEFAULT_CONTEXT
+    )
 
     # Identifier to the data disclosure agreement instance
     # addressed to a specific DUS
     id = fields.Str(data_key="@id", required=True)
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key="@type", required=True)
+    type = fields.List(fields.Str, data_key="@type", required=True, example=DDA_TYPE)
 
     # Version number of the data disclosure agreement
     version = fields.Str(data_key="version", required=True)
@@ -407,7 +420,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     # Additional description of the purpose
     # for which the data source shares personal data
-    purpose_description = fields.Str(data_key="purpose_description", required=True)
+    purpose_description = fields.Str(data_key="purposeDescription", required=True)
 
     # Indicate the lawful basis for sharing personal data.
     # These can be consent, legal obligation, contract, vital interest,
