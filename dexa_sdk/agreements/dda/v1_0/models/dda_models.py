@@ -26,11 +26,11 @@ class DataControllerModel(BaseModel):
     def __init__(
         self,
         *,
-        did: str,
-        name: str,
-        legal_id: str,
-        url: str,
-        industry_sector: str,
+        did: str = None,
+        name: str = None,
+        legal_id: str = None,
+        url: str = None,
+        industry_sector: str = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -55,17 +55,17 @@ class DataControllerSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # This is the DID of the data source preparing the agreement
-    did = fields.Str(data_key="did", required=True)
+    did = fields.Str(data_key="did", required=False)
 
     # The name of the data source exposing the data
     name = fields.Str(data_key="name", required=True)
 
     # This is the legal ID to the data source.
     # E.g. Swedish Organisation Number
-    legal_id = fields.Str(data_key="legalId", required=True)
+    legal_id = fields.Str(data_key="legalId", required=False)
 
     # This is the data source organisation URL
-    url = fields.Str(data_key="url", required=True)
+    url = fields.Str(data_key="url", required=False)
 
     # Industry sector that the DS belongs to
     industry_sector = fields.Str(data_key="industrySector", required=True)
@@ -147,11 +147,11 @@ class PersonalDataModel(BaseModel):
     def __init__(
         self,
         *,
-        attribute_id: str,
-        attribute_name: str,
-        attribute_description: str,
+        attribute_id: str = None,
+        attribute_name: str = None,
+        attribute_description: str = None,
         attribute_sensitive: str = "true",
-        attribute_category: str = "personalData",
+        attribute_category: str = "personaldata",
         **kwargs
     ):
         # Call the parent constructor
@@ -176,22 +176,22 @@ class PersonalDataSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # Identifier of the attribute
-    attribute_id = fields.Str(data_key="attributeId")
+    attribute_id = fields.Str(data_key="attributeId", required=False)
 
     # Name of the attributes that is being shared
-    attribute_name = fields.Str(data_key="attributeName")
+    attribute_name = fields.Str(data_key="attributeName", required=True)
 
     # Defines the sensitivity of the data as per PII
-    attribute_sensitive = fields.Str(data_key="attributeSensitive")
+    attribute_sensitive = fields.Str(data_key="attributeSensitive", required=False)
 
     # An explicit list of personal data categories to be shared.
     # The categories shall be defined using language meaningful to
     # the users and consistent with the purposes of the processing.
     # [values based on W3C DPV-DP]
-    attribute_category = fields.Str(data_key="attributeCategory")
+    attribute_category = fields.Str(data_key="attributeCategory", required=False)
 
     # Attribute description.
-    attribute_description = fields.Str(data_key="attributeDescription")
+    attribute_description = fields.Str(data_key="attributeDescription", required=True)
 
 
 class DataDisclosureAgreementModel(BaseModel):
@@ -209,8 +209,6 @@ class DataDisclosureAgreementModel(BaseModel):
         type: typing.List[str] = DDA_TYPE,
         language: str,
         version: str,
-        template_id: str = None,
-        template_version: str = None,
         data_controller: DataControllerModel,
         agreement_period: int,
         data_sharing_restrictions: DataSharingRestrictionsModel,
@@ -229,8 +227,6 @@ class DataDisclosureAgreementModel(BaseModel):
         self.id = id
         self.type = type
         self.version = version
-        self.template_id = template_id
-        self.template_version = template_version
         self.language = language
         self.data_controller = data_controller
         self.agreement_period = agreement_period
