@@ -3,8 +3,10 @@ import ast
 import typing
 import semver
 import math
+import aiohttp
 from collections import namedtuple
 from aries_cloudagent.messaging.models.base_record import BaseRecord
+from aries_cloudagent.config.injection_context import InjectionContext
 
 
 def jcs_rfc8785(data: typing.Union[list, dict]) -> bytes:
@@ -198,6 +200,9 @@ def paginate_records(
     for item in presults.results:
         serialised_item_list.append(item.serialize())
 
+    # Sort the serialised records.
+    serialised_item_list = sort_exchange_record_dicts_by_created_at(serialised_item_list)
+
     res = PaginationResult(results=serialised_item_list, pagination=presults.pagination)
 
     return res
@@ -242,3 +247,85 @@ def drop_none_dict(input: dict) -> dict:
             input.pop(k)
 
     return input
+
+
+async def generate_firebase_dynamic_link(context: InjectionContext, payload: str) -> str:
+    """Generate firebase dynamic link
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+        payload (str): Payload.
+
+    Returns:
+        str: Firebase dynamic link
+    """
+
+    domain_uri_prefix = context.settings.get("intermediary.firebase_domain_uri_prefix")
+    android_package_name = context.settings.get("intermediary.firebase_android_package_name")
+    ios_bundle_id = context.settings.get("intermediary.firebase_ios_bundle_id")
+    ios_appstore_id = context.settings.get("intermediary.firebase_ios_appstore_id")
+    firebase_web_api_key = context.settings.get("intermediary.firebase_web_api_key")
+
+    payload = {
+        "dynamicLinkInfo": {
+            "domainUriPrefix": domain_uri_prefix,
+            "link": payload,
+            "androidInfo": {
+                "androidPackageName": android_package_name,
+            },
+            "iosInfo": {
+                "iosBundleId": ios_bundle_id,
+                "iosAppStoreId": ios_appstore_id,
+            }
+        },
+        "suffix": {
+            "option": "UNGUESSABLE"
+        }
+    }
+
+    firebase_dynamic_link_endpoint = "https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key="
+    firebase_dynamic_link_endpoint += firebase_web_api_key
+
+    jresp = {}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(firebase_dynamic_link_endpoint, json=payload) as resp:
+            if resp.status == 200:
+                jresp = await resp.json()
+            else:
+                tresp = await resp.text()
+                raise Exception(f"Error in Firebase dynamic link: {tresp}")
+
+    return jresp["shortLink"]
+
+
+async def fetch_org_details_from_intermediary(context: InjectionContext) -> dict:
+    """Fetch org details from intermediary
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+
+    Returns:
+        dict: Org details.
+    """
+
+    endpoint_url = context.settings.get("intermediary.igrantio_endpoint_url")
+    org_id = context.settings.get("intermediary.igrantio_org_id")
+    api_key = context.settings.get("intermediary.igrantio_org_api_key")
+
+    # Construct iGrant.io organisation detail endpoint URL
+    org_detail_url = f"{endpoint_url}/v1/organizations/{org_id}"
+
+    # Construct request headers
+    request_headers = {
+        "Authorization": f"ApiKey {api_key}"
+    }
+
+    # Make request to iGrant.io organisation detail endpoint
+    jresp = None
+    async with aiohttp.ClientSession(headers=request_headers) as session:
+        async with session.get(org_detail_url) as resp:
+            if resp.status == 200:
+                jresp = await resp.json()
+                return jresp["Organization"]
+
+    return jresp

@@ -1,5 +1,6 @@
 import typing
 from marshmallow import fields, validate, EXCLUDE
+from loguru import logger
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
 from aries_cloudagent.config.injection_context import InjectionContext
@@ -350,16 +351,26 @@ class DataAgreementTemplateRecord(BaseRecord):
 
         # Bump the version of data agreement.
         previous_data_agreement = previous_record.data_agreement
-        if "version" in previous_data_agreement:
-            self.data_agreement.update(
-                {
-                    "version": bump_major_for_semver_string(previous_data_agreement["version"])
-                }
+        previous_version = previous_data_agreement["version"]
+        template_version = bump_major_for_semver_string(previous_version)
+        logger.info(
+            (
+                f"Data agreement template version is bumped from"
+                f" {previous_version} to {template_version}"
             )
+        )
+        self.data_agreement.update(
+            {
+                "version": template_version
+            }
+        )
 
         # Save as new record to the storage
         self._id = None
-        return await self.save(context=context, **kwargs)
+        self.template_version = template_version
+        await self.save(context=context, **kwargs)
+
+        return self
 
     @classmethod
     async def published_templates(cls, context: InjectionContext) \
@@ -416,6 +427,14 @@ class DataAgreementTemplateRecord(BaseRecord):
         Returns:
             typing.List[PersonalDataRecord]: Personal data records
         """
+
+        logger.info(
+            (
+                f"Fetching personal data records for DA template with "
+                f"id:{self.template_id} and version:{self.template_version}"
+            )
+        )
+
         return await PersonalDataRecord.list_by_template_id(
             context,
             self.template_id,

@@ -17,7 +17,6 @@ from marshmallow import fields, Schema
 
 from ..config.injection_context import InjectionContext
 from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
-
 from aries_cloudagent.core.plugin_registry import PluginRegistry
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
 from aries_cloudagent.messaging.responder import BaseResponder
@@ -26,9 +25,9 @@ from aries_cloudagent.transport.outbound.message import OutboundMessage
 from aries_cloudagent.utils.stats import Collector
 from aries_cloudagent.utils.task_queue import TaskQueue
 from aries_cloudagent.version import __version__
-
 from aries_cloudagent.admin.base_server import BaseAdminServer
 from aries_cloudagent.admin.error import AdminSetupError
+from ...managers.dexa_manager import DexaManager
 
 
 LOGGER = logging.getLogger(__name__)
@@ -303,7 +302,7 @@ class AdminServer(BaseAdminServer):
                         allow_head=False),
                 web.get("/shutdown", self.shutdown_handler, allow_head=False),
                 web.get("/ws", self.websocket_handler, allow_head=False),
-                web.post("/webhooks/{path:.*}", self.webhook_handler,),
+                web.post("/webhooks/topic/connections/", self.connections_webhook_handler),
             ]
         )
 
@@ -472,7 +471,7 @@ class AdminServer(BaseAdminServer):
         return web.json_response({})
 
     @docs(tags=["server"], summary="Webhooks handler")
-    async def webhook_handler(self, request: web.BaseRequest):
+    async def connections_webhook_handler(self, request: web.BaseRequest):
         """
         Request handler for webhooks
 
@@ -484,10 +483,14 @@ class AdminServer(BaseAdminServer):
 
         """
 
+        # Request body
         body = await request.json()
-        print("\n\n\n")
-        print(body)
-        print("\n\n\n")
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 

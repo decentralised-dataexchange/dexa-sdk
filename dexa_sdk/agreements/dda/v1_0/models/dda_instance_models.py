@@ -133,12 +133,12 @@ class ProofSchema(BaseModelSchema):
     proof_value = fields.Str(data_key="proofValue", required=True)
 
 
-class DataDisclosureAgreementModel(BaseModel):
+class DataDisclosureAgreementInstanceModel(BaseModel):
     """Data disclosure agreement model"""
 
     class Meta:
         # Schema class
-        schema_class = "DataDisclosureAgreementSchema"
+        schema_class = "DataDisclosureAgreementInstanceSchema"
 
     def __init__(
         self,
@@ -187,12 +187,12 @@ class DataDisclosureAgreementModel(BaseModel):
         self.proof_chain = proof_chain
 
 
-class DataDisclosureAgreementSchema(BaseModelSchema):
+class DataDisclosureAgreementInstanceSchema(BaseModelSchema):
     """Data disclosure agreement schema"""
 
     class Meta:
         # Model class
-        model_class = "DataDisclosureAgreementModel"
+        model_class = DataDisclosureAgreementInstanceModel
 
         # Exclude unknown fields
         unknown = EXCLUDE

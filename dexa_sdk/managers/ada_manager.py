@@ -1,3 +1,4 @@
+import base64
 import asyncio
 import uuid
 import typing
@@ -5,21 +6,43 @@ import json
 from loguru import logger
 from web3._utils.encoding import to_json
 from marshmallow.exceptions import ValidationError
+from aries_cloudagent.wallet.base import BaseWallet
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.core.error import BaseError
+from aries_cloudagent.core.dispatcher import DispatcherResponder
 from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
 from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.decorators.default import DecoratorSet
 from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.messaging.agent_message import AgentMessage
+from aries_cloudagent.cache.basic import BaseCache
 from aries_cloudagent.protocols.basicmessage.v1_0.messages.basicmessage import BasicMessage
+from aries_cloudagent.protocols.connections.v1_0.messages.connection_invitation import (
+    ConnectionInvitation
+)
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManagerError
+)
 from aries_cloudagent.protocols.issue_credential.v1_0.models.credential_exchange import (
     V10CredentialExchange
 )
 from aries_cloudagent.protocols.present_proof.v1_0.models.presentation_exchange import (
     V10PresentationExchange
 )
-from mydata_did.v1_0.utils.util import bool_to_str
+from aries_cloudagent.transport.inbound.receipt import MessageReceipt
+from aries_cloudagent.protocols.problem_report.v1_0.message import ProblemReport
+from aries_cloudagent.protocols.present_proof.v1_0.messages.presentation_request import (
+    PresentationRequest
+)
+from aries_cloudagent.protocols.present_proof.v1_0.message_types import (
+    ATTACH_DECO_IDS,
+    PRESENTATION_REQUEST
+)
+from aries_cloudagent.messaging.decorators.attach_decorator import AttachDecorator
+from aries_cloudagent.indy.util import generate_pr_nonce
+from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
+from mydata_did.patched_protocols.present_proof.v1_0.manager import PresentationManager
 from mydata_did.v1_0.messages.data_agreement_offer import (
     DataAgreementNegotiationOfferMessage
 )
@@ -33,11 +56,28 @@ from mydata_did.v1_0.message_types import (
 from mydata_did.v1_0.decorators.data_agreement_context_decorator import (
     DataAgreementContextDecorator,
 )
+from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
+    DataAgreementQrCodeInitiateBody
+)
+from mydata_did.v1_0.messages.data_agreement_qr_code_initiate import (
+    DataAgreementQrCodeInitiateMessage
+)
+from mydata_did.v1_0.messages.data_controller_details import (
+    DataControllerDetailsMessage
+)
+from mydata_did.v1_0.messages.data_controller_details_response import (
+    DataControllerDetailsResponseMessage
+)
+from mydata_did.v1_0.models.data_controller_model import (
+    DataController
+)
 from ..agreements.da.v1_0.models.da_models import (
     DataAgreementModel,
     DA_DEFAULT_CONTEXT,
     DA_TYPE
 )
+from ..data_controller.records.controller_details_record import ControllerDetailsRecord
+from ..agreements.da.v1_0.records.da_qrcode_record import DataAgreementQRCodeRecord
 from ..agreements.da.v1_0.records.da_instance_record import DataAgreementInstanceRecord
 from ..agreements.da.v1_0.records.da_template_record import DataAgreementTemplateRecord
 from ..agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
@@ -47,7 +87,14 @@ from ..ledgers.indy.core import (
     create_cred_def_and_anchor_to_ledger,
     create_schema_def_and_anchor_to_ledger
 )
-from ..utils import paginate_records, PaginationResult, drop_none_dict, bump_major_for_semver_string
+from ..utils import (
+    paginate_records,
+    PaginationResult,
+    drop_none_dict,
+    bump_major_for_semver_string,
+    fetch_org_details_from_intermediary,
+    generate_firebase_dynamic_link
+)
 from ..did_mydata.core import DIDMyDataBuilder
 from ..ledgers.ethereum.core import EthereumClient
 
@@ -81,6 +128,100 @@ class V2ADAManager:
             InjectionContext: Injection context
         """
         return self._context
+
+    async def create_invitation(
+        self,
+        my_label: str = None,
+        my_endpoint: str = None,
+        their_role: str = None,
+        auto_accept: bool = None,
+        public: bool = False,
+        multi_use: bool = False,
+        alias: str = None,
+    ) -> typing.Tuple[ConnectionRecord, ConnectionInvitation]:
+        """Generate new connection invitation."""
+
+        if not my_label:
+            my_label = self.context.settings.get("default_label")
+
+        image_url = None
+
+        # Fetch organisation details from intermediary.
+        org_details = await fetch_org_details_from_intermediary(
+            self.context
+        )
+
+        my_label = org_details["Name"]
+        image_url = org_details["LogoImageURL"] + "/web"
+
+        wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+        if public:
+            if not self.context.settings.get("public_invites"):
+                raise ConnectionManagerError(
+                    "Public invitations are not enabled")
+
+            public_did = await wallet.get_public_did()
+            if not public_did:
+                raise ConnectionManagerError(
+                    "Cannot create public invitation with no public DID"
+                )
+
+            if multi_use:
+                raise ConnectionManagerError(
+                    "Cannot use public and multi_use at the same time"
+                )
+
+            # FIXME - allow ledger instance to format public DID with prefix?
+            invitation = ConnectionInvitation(
+                label=my_label, did=f"did:sov:{public_did.did}", image_url=image_url
+            )
+            return None, invitation
+
+        invitation_mode = ConnectionRecord.INVITATION_MODE_ONCE
+        if multi_use:
+            invitation_mode = ConnectionRecord.INVITATION_MODE_MULTI
+
+        if not my_endpoint:
+            my_endpoint = self.context.settings.get("default_endpoint")
+        accept = (
+            ConnectionRecord.ACCEPT_AUTO
+            if (
+                auto_accept
+                or (
+                    auto_accept is None
+                    and self.context.settings.get("debug.auto_accept_requests")
+                )
+            )
+            else ConnectionRecord.ACCEPT_MANUAL
+        )
+
+        # Create and store new invitation key
+        connection_key = await wallet.create_signing_key()
+
+        # Create connection record
+        connection = ConnectionRecord(
+            initiator=ConnectionRecord.INITIATOR_SELF,
+            invitation_key=connection_key.verkey,
+            their_role=their_role,
+            state=ConnectionRecord.STATE_INVITATION,
+            accept=accept,
+            invitation_mode=invitation_mode,
+            alias=alias,
+        )
+
+        await connection.save(self.context, reason="Created new invitation")
+
+        # Create connection invitation message
+        # Note: Need to split this into two stages to support inbound routing of invites
+        # Would want to reuse create_did_document and convert the result
+        invitation = ConnectionInvitation(
+            label=my_label, recipient_keys=[
+                connection_key.verkey], endpoint=my_endpoint, image_url=image_url
+        )
+        await connection.attach_invitation(self.context, invitation)
+
+        return connection, invitation
 
     async def create_and_store_ledger_payloads_for_da_template(
             self,
@@ -631,9 +772,6 @@ class V2ADAManager:
             pd_record.data_agreement_template_version, \
             "Matching data agreement template with same version not found."
 
-        # Delete personal data record
-        await pd_record.delete_record(self.context)
-
         da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
 
         # Iterate through the existing personal data in data agreements
@@ -641,27 +779,20 @@ class V2ADAManager:
         da_pds = []
         for da_pd in da.personal_data:
             if da_pd.attribute_id != pd_record.attribute_id:
+                da_pd.attribute_id = None
                 da_pds.append(da_pd)
 
         da.personal_data = da_pds
 
-        da_template_record.data_agreement = da.serialize()
-        await da_template_record.upgrade(self.context)
-
-        # Mark data agreement template as deleted if number of personal data is zero
         if len(da_pds) == 0:
             await da_template_record.delete_template(self.context)
         else:
-
-            pd_records = await da_template_record.fetch_personal_data_records(self.context)
-
-            if da_template_record._publish_flag:
-                # Create ledger payloads
-                await self.create_and_store_ledger_payloads_for_da_template(
-                    template_record=da_template_record,
-                    pd_records=pd_records,
-                    schema_id=None
-                )
+            # Update template record with new agreement.
+            await self.update_and_store_da_template_in_wallet(
+                pd_record.data_agreement_template_id,
+                da.serialize(),
+                publish_flag=str_to_bool(da_template_record.publish_flag)
+            )
 
     async def build_data_agreement_offer_for_credential_exchange(
         self,
@@ -1063,6 +1194,368 @@ class V2ADAManager:
         (tx_hash, tx_receipt) = await eth_client.emit_da_did(did_mydata_builder.mydata_did)
 
         return (da_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+
+    async def create_data_agreement_qr_code(
+        self,
+        template_id: str,
+        multi_use_flag: bool
+    ) -> dict:
+        """Create data agreement qr code
+
+        Args:
+            template_id (str): Template identifier
+            multi_use_flag (bool): Multi use flag
+
+        Returns:
+            dict: Qr code.
+        """
+
+        qr_record = DataAgreementQRCodeRecord(
+            template_id=template_id,
+            multi_use_flag=bool_to_str(multi_use_flag)
+        )
+        await qr_record.save(self.context)
+
+        (connection, invitation) = await self.create_invitation(
+            auto_accept=True,
+            public=False,
+            multi_use=multi_use_flag,
+            alias=f"DA_{template_id}_QR_{qr_record._id}"
+        )
+
+        qr_record.connection_id = connection.connection_id
+        await qr_record.save(self.context)
+
+        res = {
+            "qr_id": qr_record._id,
+            "invitation": invitation.serialize()
+        }
+
+        res_base64 = base64.b64encode(json.dumps(res).encode()).decode()
+        payload = self.context.settings.get("default_endpoint") + "?qt=2&qp=" + res_base64
+
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+        qr_record.dynamic_link = firebase_dynamic_link
+        await qr_record.save(self.context)
+
+        res.update({"dynamic_link": firebase_dynamic_link})
+
+        return res
+
+    async def query_data_agreement_qr_codes(
+        self,
+        template_id: str,
+    ) -> PaginationResult:
+        """Query data agreement qr codes
+
+        Returns:
+            PaginationResult: List of qr code records.
+        """
+
+        records = await DataAgreementQRCodeRecord.query(self.context, {"template_id": template_id})
+        pagination_result = paginate_records(records, page=1, page_size=1000000)
+        return pagination_result
+
+    async def send_reply_message(self, message: AgentMessage, connection_id: str) -> None:
+        """Send reply message to remote agent.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection identifier
+        """
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        if responder:
+            await responder.send_reply(message, connection_id=connection_id)
+
+    async def send_problem_report_message(self, explain: str, connection_id: str) -> None:
+        """Send problem report message as reply.
+
+        Args:
+            explain (str): Explaination.
+            connection_id (str): Connection id.
+        """
+
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        problem_report = ProblemReport(explain_ltxt=explain)
+
+        if responder:
+            await responder.send_reply(problem_report, connection_id=connection_id)
+
+    async def delete_data_agreement_qr_code(
+        self,
+        template_id: str,
+        qr_id: str
+    ) -> None:
+        """Delete data agreement qr code."""
+        record = await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
+        assert record.template_id == template_id, "Data agreement not found."
+        await record.delete_record(self.context)
+
+    async def process_data_agreement_qr_code_initiate_message(
+        self,
+        message: DataAgreementQrCodeInitiateMessage,
+        receipt: MessageReceipt
+    ):
+        """Process data QR code initiate message.
+
+        Args:
+            message (DataAgreementQrCodeInitiateMessage): Data agreement QR code initiate message.
+            receipt (MessageReceipt): Message receipt.
+        """
+        qr_id = message.body.qr_id
+        connection_id = self.context.connection_record.connection_id
+
+        connection_record = await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Fetch the qr code record.
+        record: DataAgreementQRCodeRecord = \
+            await DataAgreementQRCodeRecord.retrieve_by_id(
+                self.context,
+                qr_id
+            )
+
+        if record._multi_use_flag:
+            record._scanned_flag = True
+            await record.save(self.context)
+        else:
+            if record._scanned_flag:
+                explain = "Qr code cannot be scanned twice"
+                await self.send_problem_report_message(explain, connection_id)
+                raise Exception(explain)
+
+        # Fetch data agreement template record.
+        template_record: DataAgreementTemplateRecord = \
+            await DataAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                record.template_id
+            )
+
+        # Construct presentation request
+        preset_presentation_request = template_record.presentation_request
+        comment = preset_presentation_request.pop("comment")
+        if not preset_presentation_request.get("nonce"):
+            preset_presentation_request["nonce"] = await generate_pr_nonce()
+
+        presentation_request = PresentationRequest(
+            comment=comment,
+            request_presentations_attach=[
+                AttachDecorator.from_indy_dict(
+                    indy_dict=preset_presentation_request,
+                    ident=ATTACH_DECO_IDS[PRESENTATION_REQUEST],
+                )
+            ],
+        )
+
+        # Construct presentation exchange record
+        presentation_manager = PresentationManager(self.context)
+        (pres_ex_record) = await presentation_manager.create_exchange_for_request(
+            connection_id=self.context.connection_record.connection_id,
+            presentation_request_message=presentation_request,
+        )
+
+        # Update qr code with record id.
+        record.data_ex_id = pres_ex_record.presentation_exchange_id
+        await record.save(self.context)
+
+        offer_message = await self.build_data_agreement_offer_for_presentation_exchange(
+            template_record.template_id,
+            connection_record,
+            pres_ex_record
+        )
+
+        # Add data agreement context decorator
+        presentation_request._decorators["data-agreement-context"] = DataAgreementContextDecorator(
+            message_type="protocol",
+            message=offer_message.serialize()
+        )
+
+        pres_ex_record.presentation_request_dict = presentation_request.serialize()
+        pres_ex_record.template_id = template_record.template_id
+        await pres_ex_record.save(self.context)
+
+        await self.send_reply_message(presentation_request, connection_id)
+
+    async def send_qr_code_initiate_message(
+        self,
+        qr_id,
+        connection_id
+    ):
+        """Send data agreement qr code initiate message.
+
+        Args:
+            qr_id (_type_): QR id
+            connection_id (_type_): connection id
+        """
+
+        message = DataAgreementQrCodeInitiateMessage(
+            body=DataAgreementQrCodeInitiateBody(
+                qr_id=qr_id
+            )
+        )
+
+        await self.send_reply_message(message, connection_id)
+
+    async def send_data_controller_details_message(
+        self,
+        connection_id: str
+    ):
+        """Send data controller details message
+
+        Args:
+            connection_id (str): Connection ID
+        """
+
+        message = DataControllerDetailsMessage()
+        await self.send_reply_message(message, connection_id)
+
+    async def process_data_controller_details_message(
+        self,
+        message: DataControllerDetailsMessage,
+        receipt: MessageReceipt
+    ):
+        """Process data controller details message.
+
+        Args:
+            message (DataControllerDetailsMessage): Data controller details message.
+            receipt (MessageReceipt): Message receipt.
+        """
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+
+        connection_id = self.context.connection_record.connection_id
+
+        if not records:
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+            controller_did = await wallet.get_public_did()
+
+            cache: BaseCache = await self.context.inject(BaseCache, required=False)
+            cache_key = f"did:sov:{controller_did.did}"
+
+            assert cache, "Cache not available."
+
+            controller_details = None
+            async with cache.acquire(cache_key) as entry:
+                if entry.result:
+                    cached = entry.result
+                    controller_details = DataController.deserialize(cached)
+                else:
+                    org_details = await fetch_org_details_from_intermediary(self.context)
+
+                    # Organisation did
+                    organisation_did = f"did:sov:{controller_did.did}"
+
+                    controller_details = DataController(
+                        organisation_did=organisation_did,
+                        organisation_name=org_details["Name"],
+                        cover_image_url=org_details["CoverImageURL"] + "/web",
+                        logo_image_url=org_details["LogoImageURL"] + "/web",
+                        location=org_details["Location"],
+                        organisation_type=org_details["Type"]["Type"],
+                        description=org_details["Description"],
+                        policy_url=org_details["PolicyURL"],
+                        eula_url=org_details["EulaURL"]
+                    )
+                    cache_val = controller_details.serialize()
+                    await entry.set_result(cache_val, 3600)
+
+                response_message = DataControllerDetailsResponseMessage(
+                    body=controller_details
+                )
+
+                await self.send_reply_message(response_message, connection_id)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+
+            controller_details = DataController(
+                organisation_did=record.organisation_did,
+                organisation_name=record.organisation_name,
+                cover_image_url=record.cover_image_url,
+                logo_image_url=record.logo_image_url,
+                location=record.location,
+                organisation_type=record.organisation_type,
+                description=record.description,
+                policy_url=record.policy_url,
+                eula_url=record.eula_url
+            )
+
+            response_message = DataControllerDetailsResponseMessage(
+                body=controller_details
+            )
+
+            await self.send_reply_message(response_message, connection_id)
+
+    async def update_controller_details(
+        self,
+        organisation_name: str = None,
+        cover_image_url: str = None,
+        logo_image_url: str = None,
+        location: str = None,
+        organisation_type: str = None,
+        description: str = None,
+        policy_url: str = None,
+        eula_url: str = None
+    ) -> ControllerDetailsRecord:
+        """Update controller details
+
+        Args:
+            organisation_name (str, optional): Organisation name. Defaults to None.
+            cover_image_url (str, optional): Cover image URL. Defaults to None.
+            logo_image_url (str, optional): Logo image URL. Defaults to None.
+            location (str, optional): Location. Defaults to None.
+            organisation_type (str, optional): Organisation type. Defaults to None.
+            description (str, optional): Description. Defaults to None.
+            policy_url (str, optional): Policy URL. Defaults to None.
+            eula_url (str, optional): EULA URL. Defaults to None.
+
+        Returns:
+            ControllerDetailsRecord: Controller details record.
+        """
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+        if not records:
+
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+            controller_did = await wallet.get_public_did()
+
+            organisation_did = f"did:sov:{controller_did.did}"
+
+            # If not found, create new record.
+            record = ControllerDetailsRecord(
+                organisation_did=organisation_did,
+                organisation_name=organisation_name,
+                cover_image_url=cover_image_url,
+                logo_image_url=logo_image_url,
+                location=location,
+                organisation_type=organisation_type,
+                description=description,
+                policy_url=policy_url,
+                eula_url=eula_url
+            )
+
+            await record.save(self.context)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+            record.organisation_name = organisation_name
+            record.cover_image_url = cover_image_url
+            record.logo_image_url = logo_image_url
+            record.location = location
+            record.organisation_type = organisation_type
+            record.description = description
+            record.policy_url = policy_url
+            record.eula_url = eula_url
+
+            await record.save(self.context)
+
+        return record
 
     async def add_task(self,
                        context: InjectionContext,

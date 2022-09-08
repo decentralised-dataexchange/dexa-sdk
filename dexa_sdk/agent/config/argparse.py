@@ -102,3 +102,101 @@ class DexaGroup(ArgumentGroup):
         settings["dexa.contract_abi"] = abi
 
         return settings
+
+
+@group(CAT_START)
+class IntemediaryGroup(ArgumentGroup):
+    """Intermediary settings."""
+
+    GROUP_NAME = "Intermediary"
+
+    def add_arguments(self, parser: ArgumentParser):
+        """Add intermediary-specific command line arguments to the parser."""
+
+        parser.add_argument(
+            "--firebase-web-api-key",
+            type=str,
+            metavar="<firebase-web-api-key>",
+            env_var="FIREBASE_WEB_API_KEY",
+            help="Firebase web API key",
+        )
+
+        parser.add_argument(
+            "--firebase-domain-uri-prefix",
+            type=str,
+            metavar="<firebase-domain-uri-prefix>",
+            env_var="FIREBASE_DOMAIN_URI_PREFIX",
+            help="Firebase domain URI prefix",
+        )
+
+        parser.add_argument(
+            "--firebase-android-package-name",
+            type=str,
+            metavar="<firebase-android-package-name>",
+            env_var="FIREBASE_ANDROID_PACKAGE_NAME",
+            help="Firebase android package name",
+        )
+
+        parser.add_argument(
+            "--firebase-ios-bundle-id",
+            type=str,
+            metavar="<firebase-ios-bundle-id>",
+            env_var="FIREBASE_IOS_BUNDLE_ID",
+            help="Firebase iOS bundle ID",
+        )
+
+        parser.add_argument(
+            "--firebase-ios-appstore-id",
+            type=str,
+            metavar="<firebase-ios-appstore-id>",
+            env_var="FIREBASE_IOS_APPSTORE_ID",
+            help="Firebase iOS appstore ID",
+        )
+
+        parser.add_argument(
+            "--igrantio-org-id",
+            type=str,
+            metavar="<igrantio-org-id>",
+            env_var="IGRANTIO_ORG_ID",
+            help="iGrant.io org ID",
+        )
+
+        parser.add_argument(
+            "--igrantio-org-api-key",
+            type=str,
+            metavar="<igrantio-org-api-key>",
+            env_var="IGRANTIO_ORG_API_KEY",
+            help="iGrant.io org API key",
+        )
+
+        parser.add_argument(
+            "--igrantio-org-api-key-secret",
+            type=str,
+            metavar="<igrantio-org-api-key-secret>",
+            env_var="IGRANTIO_ORG_API_KEY_SECRET",
+            help="iGrant.io org API key secret",
+        )
+
+        parser.add_argument(
+            "--igrantio-endpoint-url",
+            type=str,
+            metavar="<igrantio-endpoint-url>",
+            env_var="IGRANTIO_ENDPOINT_URL",
+            help="iGrant.io org endpoint URL",
+        )
+
+    def get_settings(self, args: Namespace):
+        """Extract dexa settings."""
+        settings = {}
+
+        settings["intermediary.firebase_web_api_key"] = args.firebase_web_api_key
+        settings["intermediary.firebase_domain_uri_prefix"] = args.firebase_domain_uri_prefix
+        settings["intermediary.firebase_android_package_name"] = args.firebase_android_package_name
+        settings["intermediary.firebase_ios_bundle_id"] = args.firebase_ios_bundle_id
+        settings["intermediary.firebase_ios_appstore_id"] = args.firebase_ios_appstore_id
+        settings["intermediary.igrantio_org_id"] = args.igrantio_org_id
+        settings["intermediary.igrantio_org_api_key"] = args.igrantio_org_api_key
+        settings["intermediary.igrantio_org_api_key_secret"] = args.igrantio_org_api_key_secret
+        settings["intermediary.igrantio_endpoint_url"] = args.igrantio_endpoint_url
+
+        return settings
