@@ -28,6 +28,7 @@
 </summary>
 <pre><code class="python">import typing
 from marshmallow import fields, validate, EXCLUDE
+from loguru import logger
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
 from aries_cloudagent.config.injection_context import InjectionContext
@@ -378,16 +379,26 @@ class DataAgreementTemplateRecord(BaseRecord):
 
         # Bump the version of data agreement.
         previous_data_agreement = previous_record.data_agreement
-        if &#34;version&#34; in previous_data_agreement:
-            self.data_agreement.update(
-                {
-                    &#34;version&#34;: bump_major_for_semver_string(previous_data_agreement[&#34;version&#34;])
-                }
+        previous_version = previous_data_agreement[&#34;version&#34;]
+        template_version = bump_major_for_semver_string(previous_version)
+        logger.info(
+            (
+                f&#34;Data agreement template version is bumped from&#34;
+                f&#34; {previous_version} to {template_version}&#34;
             )
+        )
+        self.data_agreement.update(
+            {
+                &#34;version&#34;: template_version
+            }
+        )
 
         # Save as new record to the storage
         self._id = None
-        return await self.save(context=context, **kwargs)
+        self.template_version = template_version
+        await self.save(context=context, **kwargs)
+
+        return self
 
     @classmethod
     async def published_templates(cls, context: InjectionContext) \
@@ -444,6 +455,14 @@ class DataAgreementTemplateRecord(BaseRecord):
         Returns:
             typing.List[PersonalDataRecord]: Personal data records
         &#34;&#34;&#34;
+
+        logger.info(
+            (
+                f&#34;Fetching personal data records for DA template with &#34;
+                f&#34;id:{self.template_id} and version:{self.template_version}&#34;
+            )
+        )
+
         return await PersonalDataRecord.list_by_template_id(
             context,
             self.template_id,
@@ -971,16 +990,26 @@ Defaults to "false".</dd>
 
         # Bump the version of data agreement.
         previous_data_agreement = previous_record.data_agreement
-        if &#34;version&#34; in previous_data_agreement:
-            self.data_agreement.update(
-                {
-                    &#34;version&#34;: bump_major_for_semver_string(previous_data_agreement[&#34;version&#34;])
-                }
+        previous_version = previous_data_agreement[&#34;version&#34;]
+        template_version = bump_major_for_semver_string(previous_version)
+        logger.info(
+            (
+                f&#34;Data agreement template version is bumped from&#34;
+                f&#34; {previous_version} to {template_version}&#34;
             )
+        )
+        self.data_agreement.update(
+            {
+                &#34;version&#34;: template_version
+            }
+        )
 
         # Save as new record to the storage
         self._id = None
-        return await self.save(context=context, **kwargs)
+        self.template_version = template_version
+        await self.save(context=context, **kwargs)
+
+        return self
 
     @classmethod
     async def published_templates(cls, context: InjectionContext) \
@@ -1037,6 +1066,14 @@ Defaults to "false".</dd>
         Returns:
             typing.List[PersonalDataRecord]: Personal data records
         &#34;&#34;&#34;
+
+        logger.info(
+            (
+                f&#34;Fetching personal data records for DA template with &#34;
+                f&#34;id:{self.template_id} and version:{self.template_version}&#34;
+            )
+        )
+
         return await PersonalDataRecord.list_by_template_id(
             context,
             self.template_id,
@@ -1522,6 +1559,14 @@ def record_value(self) -&gt; dict:
     Returns:
         typing.List[PersonalDataRecord]: Personal data records
     &#34;&#34;&#34;
+
+    logger.info(
+        (
+            f&#34;Fetching personal data records for DA template with &#34;
+            f&#34;id:{self.template_id} and version:{self.template_version}&#34;
+        )
+    )
+
     return await PersonalDataRecord.list_by_template_id(
         context,
         self.template_id,
@@ -1605,16 +1650,26 @@ def record_value(self) -&gt; dict:
 
     # Bump the version of data agreement.
     previous_data_agreement = previous_record.data_agreement
-    if &#34;version&#34; in previous_data_agreement:
-        self.data_agreement.update(
-            {
-                &#34;version&#34;: bump_major_for_semver_string(previous_data_agreement[&#34;version&#34;])
-            }
+    previous_version = previous_data_agreement[&#34;version&#34;]
+    template_version = bump_major_for_semver_string(previous_version)
+    logger.info(
+        (
+            f&#34;Data agreement template version is bumped from&#34;
+            f&#34; {previous_version} to {template_version}&#34;
         )
+    )
+    self.data_agreement.update(
+        {
+            &#34;version&#34;: template_version
+        }
+    )
 
     # Save as new record to the storage
     self._id = None
-    return await self.save(context=context, **kwargs)</code></pre>
+    self.template_version = template_version
+    await self.save(context=context, **kwargs)
+
+    return self</code></pre>
 </details>
 </dd>
 </dl>

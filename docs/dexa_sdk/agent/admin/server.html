@@ -46,7 +46,6 @@ from marshmallow import fields, Schema
 
 from ..config.injection_context import InjectionContext
 from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
-
 from aries_cloudagent.core.plugin_registry import PluginRegistry
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
 from aries_cloudagent.messaging.responder import BaseResponder
@@ -55,9 +54,9 @@ from aries_cloudagent.transport.outbound.message import OutboundMessage
 from aries_cloudagent.utils.stats import Collector
 from aries_cloudagent.utils.task_queue import TaskQueue
 from aries_cloudagent.version import __version__
-
 from aries_cloudagent.admin.base_server import BaseAdminServer
 from aries_cloudagent.admin.error import AdminSetupError
+from ...managers.dexa_manager import DexaManager
 
 
 LOGGER = logging.getLogger(__name__)
@@ -332,7 +331,7 @@ class AdminServer(BaseAdminServer):
                         allow_head=False),
                 web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
                 web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-                web.post(&#34;/webhooks/{path:.*}&#34;, self.webhook_handler,),
+                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
             ]
         )
 
@@ -501,7 +500,7 @@ class AdminServer(BaseAdminServer):
         return web.json_response({})
 
     @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-    async def webhook_handler(self, request: web.BaseRequest):
+    async def connections_webhook_handler(self, request: web.BaseRequest):
         &#34;&#34;&#34;
         Request handler for webhooks
 
@@ -513,10 +512,14 @@ class AdminServer(BaseAdminServer):
 
         &#34;&#34;&#34;
 
+        # Request body
         body = await request.json()
-        print(&#34;\n\n\n&#34;)
-        print(body)
-        print(&#34;\n\n\n&#34;)
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 
@@ -1090,7 +1093,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
                         allow_head=False),
                 web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
                 web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-                web.post(&#34;/webhooks/{path:.*}&#34;, self.webhook_handler,),
+                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
             ]
         )
 
@@ -1259,7 +1262,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
         return web.json_response({})
 
     @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-    async def webhook_handler(self, request: web.BaseRequest):
+    async def connections_webhook_handler(self, request: web.BaseRequest):
         &#34;&#34;&#34;
         Request handler for webhooks
 
@@ -1271,10 +1274,14 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
 
         &#34;&#34;&#34;
 
+        # Request body
         body = await request.json()
-        print(&#34;\n\n\n&#34;)
-        print(body)
-        print(&#34;\n\n\n&#34;)
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 
@@ -1496,6 +1503,47 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     )</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler"><code class="name flex">
+<span>async def <span class="ident">connections_webhook_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for webhooks</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
+async def connections_webhook_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for webhooks
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response
+
+    &#34;&#34;&#34;
+
+    # Request body
+    body = await request.json()
+
+    # Initialise manager
+    mgr = DexaManager(self.context)
+
+    # Handle webhook.
+    await mgr.handle_connections_webhook(body)
+
+    return web.json_response({})</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler"><code class="name flex">
 <span>async def <span class="ident">liveliness_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
 </code></dt>
@@ -1616,7 +1664,7 @@ async def liveliness_handler(self, request: web.BaseRequest):
                     allow_head=False),
             web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
             web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-            web.post(&#34;/webhooks/{path:.*}&#34;, self.webhook_handler,),
+            web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
         ]
     )
 
@@ -2010,43 +2058,6 @@ async def status_reset_handler(self, request: web.BaseRequest):
         self.site = None</code></pre>
 </details>
 </dd>
-<dt id="dexa_sdk.agent.admin.server.AdminServer.webhook_handler"><code class="name flex">
-<span>async def <span class="ident">webhook_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request handler for webhooks</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>request</code></strong></dt>
-<dd>aiohttp request object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>The web response</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-async def webhook_handler(self, request: web.BaseRequest):
-    &#34;&#34;&#34;
-    Request handler for webhooks
-
-    Args:
-        request: aiohttp request object
-
-    Returns:
-        The web response
-
-    &#34;&#34;&#34;
-
-    body = await request.json()
-    print(&#34;\n\n\n&#34;)
-    print(body)
-    print(&#34;\n\n\n&#34;)
-
-    return web.json_response({})</code></pre>
-</details>
-</dd>
 <dt id="dexa_sdk.agent.admin.server.AdminServer.websocket_handler"><code class="name flex">
 <span>async def <span class="ident">websocket_handler</span></span>(<span>self, request)</span>
 </code></dt>
@@ -2331,6 +2342,7 @@ def topic_filter(self) -&gt; Set[str]:
 <h4><code><a title="dexa_sdk.agent.admin.server.AdminServer" href="#dexa_sdk.agent.admin.server.AdminServer">AdminServer</a></code></h4>
 <ul class="">
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.add_webhook_target" href="#dexa_sdk.agent.admin.server.AdminServer.add_webhook_target">add_webhook_target</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler" href="#dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler">connections_webhook_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler" href="#dexa_sdk.agent.admin.server.AdminServer.liveliness_handler">liveliness_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.make_application" href="#dexa_sdk.agent.admin.server.AdminServer.make_application">make_application</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error" href="#dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error">notify_fatal_error</a></code></li>
@@ -2345,7 +2357,6 @@ def topic_filter(self) -&gt; Set[str]:
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_handler">status_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_reset_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_reset_handler">status_reset_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.stop" href="#dexa_sdk.agent.admin.server.AdminServer.stop">stop</a></code></li>
-<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.webhook_handler" href="#dexa_sdk.agent.admin.server.AdminServer.webhook_handler">webhook_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.websocket_handler" href="#dexa_sdk.agent.admin.server.AdminServer.websocket_handler">websocket_handler</a></code></li>
 </ul>
 </li>

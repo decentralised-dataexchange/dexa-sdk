@@ -26,28 +26,51 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import asyncio
+<pre><code class="python">import base64
+import asyncio
 import uuid
 import typing
 import json
 from loguru import logger
 from web3._utils.encoding import to_json
 from marshmallow.exceptions import ValidationError
+from aries_cloudagent.wallet.base import BaseWallet
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.core.error import BaseError
+from aries_cloudagent.core.dispatcher import DispatcherResponder
 from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
 from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.decorators.default import DecoratorSet
 from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.messaging.agent_message import AgentMessage
+from aries_cloudagent.cache.basic import BaseCache
 from aries_cloudagent.protocols.basicmessage.v1_0.messages.basicmessage import BasicMessage
+from aries_cloudagent.protocols.connections.v1_0.messages.connection_invitation import (
+    ConnectionInvitation
+)
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManagerError
+)
 from aries_cloudagent.protocols.issue_credential.v1_0.models.credential_exchange import (
     V10CredentialExchange
 )
 from aries_cloudagent.protocols.present_proof.v1_0.models.presentation_exchange import (
     V10PresentationExchange
 )
-from mydata_did.v1_0.utils.util import bool_to_str
+from aries_cloudagent.transport.inbound.receipt import MessageReceipt
+from aries_cloudagent.protocols.problem_report.v1_0.message import ProblemReport
+from aries_cloudagent.protocols.present_proof.v1_0.messages.presentation_request import (
+    PresentationRequest
+)
+from aries_cloudagent.protocols.present_proof.v1_0.message_types import (
+    ATTACH_DECO_IDS,
+    PRESENTATION_REQUEST
+)
+from aries_cloudagent.messaging.decorators.attach_decorator import AttachDecorator
+from aries_cloudagent.indy.util import generate_pr_nonce
+from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
+from mydata_did.patched_protocols.present_proof.v1_0.manager import PresentationManager
 from mydata_did.v1_0.messages.data_agreement_offer import (
     DataAgreementNegotiationOfferMessage
 )
@@ -61,11 +84,28 @@ from mydata_did.v1_0.message_types import (
 from mydata_did.v1_0.decorators.data_agreement_context_decorator import (
     DataAgreementContextDecorator,
 )
+from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
+    DataAgreementQrCodeInitiateBody
+)
+from mydata_did.v1_0.messages.data_agreement_qr_code_initiate import (
+    DataAgreementQrCodeInitiateMessage
+)
+from mydata_did.v1_0.messages.data_controller_details import (
+    DataControllerDetailsMessage
+)
+from mydata_did.v1_0.messages.data_controller_details_response import (
+    DataControllerDetailsResponseMessage
+)
+from mydata_did.v1_0.models.data_controller_model import (
+    DataController
+)
 from ..agreements.da.v1_0.models.da_models import (
     DataAgreementModel,
     DA_DEFAULT_CONTEXT,
     DA_TYPE
 )
+from ..data_controller.records.controller_details_record import ControllerDetailsRecord
+from ..agreements.da.v1_0.records.da_qrcode_record import DataAgreementQRCodeRecord
 from ..agreements.da.v1_0.records.da_instance_record import DataAgreementInstanceRecord
 from ..agreements.da.v1_0.records.da_template_record import DataAgreementTemplateRecord
 from ..agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
@@ -75,7 +115,14 @@ from ..ledgers.indy.core import (
     create_cred_def_and_anchor_to_ledger,
     create_schema_def_and_anchor_to_ledger
 )
-from ..utils import paginate_records, PaginationResult, drop_none_dict, bump_major_for_semver_string
+from ..utils import (
+    paginate_records,
+    PaginationResult,
+    drop_none_dict,
+    bump_major_for_semver_string,
+    fetch_org_details_from_intermediary,
+    generate_firebase_dynamic_link
+)
 from ..did_mydata.core import DIDMyDataBuilder
 from ..ledgers.ethereum.core import EthereumClient
 
@@ -109,6 +156,100 @@ class V2ADAManager:
             InjectionContext: Injection context
         &#34;&#34;&#34;
         return self._context
+
+    async def create_invitation(
+        self,
+        my_label: str = None,
+        my_endpoint: str = None,
+        their_role: str = None,
+        auto_accept: bool = None,
+        public: bool = False,
+        multi_use: bool = False,
+        alias: str = None,
+    ) -&gt; typing.Tuple[ConnectionRecord, ConnectionInvitation]:
+        &#34;&#34;&#34;Generate new connection invitation.&#34;&#34;&#34;
+
+        if not my_label:
+            my_label = self.context.settings.get(&#34;default_label&#34;)
+
+        image_url = None
+
+        # Fetch organisation details from intermediary.
+        org_details = await fetch_org_details_from_intermediary(
+            self.context
+        )
+
+        my_label = org_details[&#34;Name&#34;]
+        image_url = org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;
+
+        wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+        if public:
+            if not self.context.settings.get(&#34;public_invites&#34;):
+                raise ConnectionManagerError(
+                    &#34;Public invitations are not enabled&#34;)
+
+            public_did = await wallet.get_public_did()
+            if not public_did:
+                raise ConnectionManagerError(
+                    &#34;Cannot create public invitation with no public DID&#34;
+                )
+
+            if multi_use:
+                raise ConnectionManagerError(
+                    &#34;Cannot use public and multi_use at the same time&#34;
+                )
+
+            # FIXME - allow ledger instance to format public DID with prefix?
+            invitation = ConnectionInvitation(
+                label=my_label, did=f&#34;did:sov:{public_did.did}&#34;, image_url=image_url
+            )
+            return None, invitation
+
+        invitation_mode = ConnectionRecord.INVITATION_MODE_ONCE
+        if multi_use:
+            invitation_mode = ConnectionRecord.INVITATION_MODE_MULTI
+
+        if not my_endpoint:
+            my_endpoint = self.context.settings.get(&#34;default_endpoint&#34;)
+        accept = (
+            ConnectionRecord.ACCEPT_AUTO
+            if (
+                auto_accept
+                or (
+                    auto_accept is None
+                    and self.context.settings.get(&#34;debug.auto_accept_requests&#34;)
+                )
+            )
+            else ConnectionRecord.ACCEPT_MANUAL
+        )
+
+        # Create and store new invitation key
+        connection_key = await wallet.create_signing_key()
+
+        # Create connection record
+        connection = ConnectionRecord(
+            initiator=ConnectionRecord.INITIATOR_SELF,
+            invitation_key=connection_key.verkey,
+            their_role=their_role,
+            state=ConnectionRecord.STATE_INVITATION,
+            accept=accept,
+            invitation_mode=invitation_mode,
+            alias=alias,
+        )
+
+        await connection.save(self.context, reason=&#34;Created new invitation&#34;)
+
+        # Create connection invitation message
+        # Note: Need to split this into two stages to support inbound routing of invites
+        # Would want to reuse create_did_document and convert the result
+        invitation = ConnectionInvitation(
+            label=my_label, recipient_keys=[
+                connection_key.verkey], endpoint=my_endpoint, image_url=image_url
+        )
+        await connection.attach_invitation(self.context, invitation)
+
+        return connection, invitation
 
     async def create_and_store_ledger_payloads_for_da_template(
             self,
@@ -659,9 +800,6 @@ class V2ADAManager:
             pd_record.data_agreement_template_version, \
             &#34;Matching data agreement template with same version not found.&#34;
 
-        # Delete personal data record
-        await pd_record.delete_record(self.context)
-
         da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
 
         # Iterate through the existing personal data in data agreements
@@ -669,27 +807,20 @@ class V2ADAManager:
         da_pds = []
         for da_pd in da.personal_data:
             if da_pd.attribute_id != pd_record.attribute_id:
+                da_pd.attribute_id = None
                 da_pds.append(da_pd)
 
         da.personal_data = da_pds
 
-        da_template_record.data_agreement = da.serialize()
-        await da_template_record.upgrade(self.context)
-
-        # Mark data agreement template as deleted if number of personal data is zero
         if len(da_pds) == 0:
             await da_template_record.delete_template(self.context)
         else:
-
-            pd_records = await da_template_record.fetch_personal_data_records(self.context)
-
-            if da_template_record._publish_flag:
-                # Create ledger payloads
-                await self.create_and_store_ledger_payloads_for_da_template(
-                    template_record=da_template_record,
-                    pd_records=pd_records,
-                    schema_id=None
-                )
+            # Update template record with new agreement.
+            await self.update_and_store_da_template_in_wallet(
+                pd_record.data_agreement_template_id,
+                da.serialize(),
+                publish_flag=str_to_bool(da_template_record.publish_flag)
+            )
 
     async def build_data_agreement_offer_for_credential_exchange(
         self,
@@ -1091,6 +1222,368 @@ class V2ADAManager:
         (tx_hash, tx_receipt) = await eth_client.emit_da_did(did_mydata_builder.mydata_did)
 
         return (da_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+
+    async def create_data_agreement_qr_code(
+        self,
+        template_id: str,
+        multi_use_flag: bool
+    ) -&gt; dict:
+        &#34;&#34;&#34;Create data agreement qr code
+
+        Args:
+            template_id (str): Template identifier
+            multi_use_flag (bool): Multi use flag
+
+        Returns:
+            dict: Qr code.
+        &#34;&#34;&#34;
+
+        qr_record = DataAgreementQRCodeRecord(
+            template_id=template_id,
+            multi_use_flag=bool_to_str(multi_use_flag)
+        )
+        await qr_record.save(self.context)
+
+        (connection, invitation) = await self.create_invitation(
+            auto_accept=True,
+            public=False,
+            multi_use=multi_use_flag,
+            alias=f&#34;DA_{template_id}_QR_{qr_record._id}&#34;
+        )
+
+        qr_record.connection_id = connection.connection_id
+        await qr_record.save(self.context)
+
+        res = {
+            &#34;qr_id&#34;: qr_record._id,
+            &#34;invitation&#34;: invitation.serialize()
+        }
+
+        res_base64 = base64.b64encode(json.dumps(res).encode()).decode()
+        payload = self.context.settings.get(&#34;default_endpoint&#34;) + &#34;?qt=2&amp;qp=&#34; + res_base64
+
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+        qr_record.dynamic_link = firebase_dynamic_link
+        await qr_record.save(self.context)
+
+        res.update({&#34;dynamic_link&#34;: firebase_dynamic_link})
+
+        return res
+
+    async def query_data_agreement_qr_codes(
+        self,
+        template_id: str,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query data agreement qr codes
+
+        Returns:
+            PaginationResult: List of qr code records.
+        &#34;&#34;&#34;
+
+        records = await DataAgreementQRCodeRecord.query(self.context, {&#34;template_id&#34;: template_id})
+        pagination_result = paginate_records(records, page=1, page_size=1000000)
+        return pagination_result
+
+    async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+        &#34;&#34;&#34;Send reply message to remote agent.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection identifier
+        &#34;&#34;&#34;
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        if responder:
+            await responder.send_reply(message, connection_id=connection_id)
+
+    async def send_problem_report_message(self, explain: str, connection_id: str) -&gt; None:
+        &#34;&#34;&#34;Send problem report message as reply.
+
+        Args:
+            explain (str): Explaination.
+            connection_id (str): Connection id.
+        &#34;&#34;&#34;
+
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        problem_report = ProblemReport(explain_ltxt=explain)
+
+        if responder:
+            await responder.send_reply(problem_report, connection_id=connection_id)
+
+    async def delete_data_agreement_qr_code(
+        self,
+        template_id: str,
+        qr_id: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Delete data agreement qr code.&#34;&#34;&#34;
+        record = await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
+        assert record.template_id == template_id, &#34;Data agreement not found.&#34;
+        await record.delete_record(self.context)
+
+    async def process_data_agreement_qr_code_initiate_message(
+        self,
+        message: DataAgreementQrCodeInitiateMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process data QR code initiate message.
+
+        Args:
+            message (DataAgreementQrCodeInitiateMessage): Data agreement QR code initiate message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+        qr_id = message.body.qr_id
+        connection_id = self.context.connection_record.connection_id
+
+        connection_record = await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Fetch the qr code record.
+        record: DataAgreementQRCodeRecord = \
+            await DataAgreementQRCodeRecord.retrieve_by_id(
+                self.context,
+                qr_id
+            )
+
+        if record._multi_use_flag:
+            record._scanned_flag = True
+            await record.save(self.context)
+        else:
+            if record._scanned_flag:
+                explain = &#34;Qr code cannot be scanned twice&#34;
+                await self.send_problem_report_message(explain, connection_id)
+                raise Exception(explain)
+
+        # Fetch data agreement template record.
+        template_record: DataAgreementTemplateRecord = \
+            await DataAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                record.template_id
+            )
+
+        # Construct presentation request
+        preset_presentation_request = template_record.presentation_request
+        comment = preset_presentation_request.pop(&#34;comment&#34;)
+        if not preset_presentation_request.get(&#34;nonce&#34;):
+            preset_presentation_request[&#34;nonce&#34;] = await generate_pr_nonce()
+
+        presentation_request = PresentationRequest(
+            comment=comment,
+            request_presentations_attach=[
+                AttachDecorator.from_indy_dict(
+                    indy_dict=preset_presentation_request,
+                    ident=ATTACH_DECO_IDS[PRESENTATION_REQUEST],
+                )
+            ],
+        )
+
+        # Construct presentation exchange record
+        presentation_manager = PresentationManager(self.context)
+        (pres_ex_record) = await presentation_manager.create_exchange_for_request(
+            connection_id=self.context.connection_record.connection_id,
+            presentation_request_message=presentation_request,
+        )
+
+        # Update qr code with record id.
+        record.data_ex_id = pres_ex_record.presentation_exchange_id
+        await record.save(self.context)
+
+        offer_message = await self.build_data_agreement_offer_for_presentation_exchange(
+            template_record.template_id,
+            connection_record,
+            pres_ex_record
+        )
+
+        # Add data agreement context decorator
+        presentation_request._decorators[&#34;data-agreement-context&#34;] = DataAgreementContextDecorator(
+            message_type=&#34;protocol&#34;,
+            message=offer_message.serialize()
+        )
+
+        pres_ex_record.presentation_request_dict = presentation_request.serialize()
+        pres_ex_record.template_id = template_record.template_id
+        await pres_ex_record.save(self.context)
+
+        await self.send_reply_message(presentation_request, connection_id)
+
+    async def send_qr_code_initiate_message(
+        self,
+        qr_id,
+        connection_id
+    ):
+        &#34;&#34;&#34;Send data agreement qr code initiate message.
+
+        Args:
+            qr_id (_type_): QR id
+            connection_id (_type_): connection id
+        &#34;&#34;&#34;
+
+        message = DataAgreementQrCodeInitiateMessage(
+            body=DataAgreementQrCodeInitiateBody(
+                qr_id=qr_id
+            )
+        )
+
+        await self.send_reply_message(message, connection_id)
+
+    async def send_data_controller_details_message(
+        self,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Send data controller details message
+
+        Args:
+            connection_id (str): Connection ID
+        &#34;&#34;&#34;
+
+        message = DataControllerDetailsMessage()
+        await self.send_reply_message(message, connection_id)
+
+    async def process_data_controller_details_message(
+        self,
+        message: DataControllerDetailsMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process data controller details message.
+
+        Args:
+            message (DataControllerDetailsMessage): Data controller details message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+
+        connection_id = self.context.connection_record.connection_id
+
+        if not records:
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+            controller_did = await wallet.get_public_did()
+
+            cache: BaseCache = await self.context.inject(BaseCache, required=False)
+            cache_key = f&#34;did:sov:{controller_did.did}&#34;
+
+            assert cache, &#34;Cache not available.&#34;
+
+            controller_details = None
+            async with cache.acquire(cache_key) as entry:
+                if entry.result:
+                    cached = entry.result
+                    controller_details = DataController.deserialize(cached)
+                else:
+                    org_details = await fetch_org_details_from_intermediary(self.context)
+
+                    # Organisation did
+                    organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+                    controller_details = DataController(
+                        organisation_did=organisation_did,
+                        organisation_name=org_details[&#34;Name&#34;],
+                        cover_image_url=org_details[&#34;CoverImageURL&#34;] + &#34;/web&#34;,
+                        logo_image_url=org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;,
+                        location=org_details[&#34;Location&#34;],
+                        organisation_type=org_details[&#34;Type&#34;][&#34;Type&#34;],
+                        description=org_details[&#34;Description&#34;],
+                        policy_url=org_details[&#34;PolicyURL&#34;],
+                        eula_url=org_details[&#34;EulaURL&#34;]
+                    )
+                    cache_val = controller_details.serialize()
+                    await entry.set_result(cache_val, 3600)
+
+                response_message = DataControllerDetailsResponseMessage(
+                    body=controller_details
+                )
+
+                await self.send_reply_message(response_message, connection_id)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+
+            controller_details = DataController(
+                organisation_did=record.organisation_did,
+                organisation_name=record.organisation_name,
+                cover_image_url=record.cover_image_url,
+                logo_image_url=record.logo_image_url,
+                location=record.location,
+                organisation_type=record.organisation_type,
+                description=record.description,
+                policy_url=record.policy_url,
+                eula_url=record.eula_url
+            )
+
+            response_message = DataControllerDetailsResponseMessage(
+                body=controller_details
+            )
+
+            await self.send_reply_message(response_message, connection_id)
+
+    async def update_controller_details(
+        self,
+        organisation_name: str = None,
+        cover_image_url: str = None,
+        logo_image_url: str = None,
+        location: str = None,
+        organisation_type: str = None,
+        description: str = None,
+        policy_url: str = None,
+        eula_url: str = None
+    ) -&gt; ControllerDetailsRecord:
+        &#34;&#34;&#34;Update controller details
+
+        Args:
+            organisation_name (str, optional): Organisation name. Defaults to None.
+            cover_image_url (str, optional): Cover image URL. Defaults to None.
+            logo_image_url (str, optional): Logo image URL. Defaults to None.
+            location (str, optional): Location. Defaults to None.
+            organisation_type (str, optional): Organisation type. Defaults to None.
+            description (str, optional): Description. Defaults to None.
+            policy_url (str, optional): Policy URL. Defaults to None.
+            eula_url (str, optional): EULA URL. Defaults to None.
+
+        Returns:
+            ControllerDetailsRecord: Controller details record.
+        &#34;&#34;&#34;
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+        if not records:
+
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+            controller_did = await wallet.get_public_did()
+
+            organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+            # If not found, create new record.
+            record = ControllerDetailsRecord(
+                organisation_did=organisation_did,
+                organisation_name=organisation_name,
+                cover_image_url=cover_image_url,
+                logo_image_url=logo_image_url,
+                location=location,
+                organisation_type=organisation_type,
+                description=description,
+                policy_url=policy_url,
+                eula_url=eula_url
+            )
+
+            await record.save(self.context)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+            record.organisation_name = organisation_name
+            record.cover_image_url = cover_image_url
+            record.logo_image_url = logo_image_url
+            record.location = location
+            record.organisation_type = organisation_type
+            record.description = description
+            record.policy_url = policy_url
+            record.eula_url = eula_url
+
+            await record.save(self.context)
+
+        return record
 
     async def add_task(self,
                        context: InjectionContext,
@@ -1201,6 +1694,100 @@ class V2ADAManager:
         &#34;&#34;&#34;
         return self._context
 
+    async def create_invitation(
+        self,
+        my_label: str = None,
+        my_endpoint: str = None,
+        their_role: str = None,
+        auto_accept: bool = None,
+        public: bool = False,
+        multi_use: bool = False,
+        alias: str = None,
+    ) -&gt; typing.Tuple[ConnectionRecord, ConnectionInvitation]:
+        &#34;&#34;&#34;Generate new connection invitation.&#34;&#34;&#34;
+
+        if not my_label:
+            my_label = self.context.settings.get(&#34;default_label&#34;)
+
+        image_url = None
+
+        # Fetch organisation details from intermediary.
+        org_details = await fetch_org_details_from_intermediary(
+            self.context
+        )
+
+        my_label = org_details[&#34;Name&#34;]
+        image_url = org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;
+
+        wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+        if public:
+            if not self.context.settings.get(&#34;public_invites&#34;):
+                raise ConnectionManagerError(
+                    &#34;Public invitations are not enabled&#34;)
+
+            public_did = await wallet.get_public_did()
+            if not public_did:
+                raise ConnectionManagerError(
+                    &#34;Cannot create public invitation with no public DID&#34;
+                )
+
+            if multi_use:
+                raise ConnectionManagerError(
+                    &#34;Cannot use public and multi_use at the same time&#34;
+                )
+
+            # FIXME - allow ledger instance to format public DID with prefix?
+            invitation = ConnectionInvitation(
+                label=my_label, did=f&#34;did:sov:{public_did.did}&#34;, image_url=image_url
+            )
+            return None, invitation
+
+        invitation_mode = ConnectionRecord.INVITATION_MODE_ONCE
+        if multi_use:
+            invitation_mode = ConnectionRecord.INVITATION_MODE_MULTI
+
+        if not my_endpoint:
+            my_endpoint = self.context.settings.get(&#34;default_endpoint&#34;)
+        accept = (
+            ConnectionRecord.ACCEPT_AUTO
+            if (
+                auto_accept
+                or (
+                    auto_accept is None
+                    and self.context.settings.get(&#34;debug.auto_accept_requests&#34;)
+                )
+            )
+            else ConnectionRecord.ACCEPT_MANUAL
+        )
+
+        # Create and store new invitation key
+        connection_key = await wallet.create_signing_key()
+
+        # Create connection record
+        connection = ConnectionRecord(
+            initiator=ConnectionRecord.INITIATOR_SELF,
+            invitation_key=connection_key.verkey,
+            their_role=their_role,
+            state=ConnectionRecord.STATE_INVITATION,
+            accept=accept,
+            invitation_mode=invitation_mode,
+            alias=alias,
+        )
+
+        await connection.save(self.context, reason=&#34;Created new invitation&#34;)
+
+        # Create connection invitation message
+        # Note: Need to split this into two stages to support inbound routing of invites
+        # Would want to reuse create_did_document and convert the result
+        invitation = ConnectionInvitation(
+            label=my_label, recipient_keys=[
+                connection_key.verkey], endpoint=my_endpoint, image_url=image_url
+        )
+        await connection.attach_invitation(self.context, invitation)
+
+        return connection, invitation
+
     async def create_and_store_ledger_payloads_for_da_template(
             self,
             *,
@@ -1750,9 +2337,6 @@ class V2ADAManager:
             pd_record.data_agreement_template_version, \
             &#34;Matching data agreement template with same version not found.&#34;
 
-        # Delete personal data record
-        await pd_record.delete_record(self.context)
-
         da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
 
         # Iterate through the existing personal data in data agreements
@@ -1760,27 +2344,20 @@ class V2ADAManager:
         da_pds = []
         for da_pd in da.personal_data:
             if da_pd.attribute_id != pd_record.attribute_id:
+                da_pd.attribute_id = None
                 da_pds.append(da_pd)
 
         da.personal_data = da_pds
 
-        da_template_record.data_agreement = da.serialize()
-        await da_template_record.upgrade(self.context)
-
-        # Mark data agreement template as deleted if number of personal data is zero
         if len(da_pds) == 0:
             await da_template_record.delete_template(self.context)
         else:
-
-            pd_records = await da_template_record.fetch_personal_data_records(self.context)
-
-            if da_template_record._publish_flag:
-                # Create ledger payloads
-                await self.create_and_store_ledger_payloads_for_da_template(
-                    template_record=da_template_record,
-                    pd_records=pd_records,
-                    schema_id=None
-                )
+            # Update template record with new agreement.
+            await self.update_and_store_da_template_in_wallet(
+                pd_record.data_agreement_template_id,
+                da.serialize(),
+                publish_flag=str_to_bool(da_template_record.publish_flag)
+            )
 
     async def build_data_agreement_offer_for_credential_exchange(
         self,
@@ -2182,6 +2759,368 @@ class V2ADAManager:
         (tx_hash, tx_receipt) = await eth_client.emit_da_did(did_mydata_builder.mydata_did)
 
         return (da_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+
+    async def create_data_agreement_qr_code(
+        self,
+        template_id: str,
+        multi_use_flag: bool
+    ) -&gt; dict:
+        &#34;&#34;&#34;Create data agreement qr code
+
+        Args:
+            template_id (str): Template identifier
+            multi_use_flag (bool): Multi use flag
+
+        Returns:
+            dict: Qr code.
+        &#34;&#34;&#34;
+
+        qr_record = DataAgreementQRCodeRecord(
+            template_id=template_id,
+            multi_use_flag=bool_to_str(multi_use_flag)
+        )
+        await qr_record.save(self.context)
+
+        (connection, invitation) = await self.create_invitation(
+            auto_accept=True,
+            public=False,
+            multi_use=multi_use_flag,
+            alias=f&#34;DA_{template_id}_QR_{qr_record._id}&#34;
+        )
+
+        qr_record.connection_id = connection.connection_id
+        await qr_record.save(self.context)
+
+        res = {
+            &#34;qr_id&#34;: qr_record._id,
+            &#34;invitation&#34;: invitation.serialize()
+        }
+
+        res_base64 = base64.b64encode(json.dumps(res).encode()).decode()
+        payload = self.context.settings.get(&#34;default_endpoint&#34;) + &#34;?qt=2&amp;qp=&#34; + res_base64
+
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+        qr_record.dynamic_link = firebase_dynamic_link
+        await qr_record.save(self.context)
+
+        res.update({&#34;dynamic_link&#34;: firebase_dynamic_link})
+
+        return res
+
+    async def query_data_agreement_qr_codes(
+        self,
+        template_id: str,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query data agreement qr codes
+
+        Returns:
+            PaginationResult: List of qr code records.
+        &#34;&#34;&#34;
+
+        records = await DataAgreementQRCodeRecord.query(self.context, {&#34;template_id&#34;: template_id})
+        pagination_result = paginate_records(records, page=1, page_size=1000000)
+        return pagination_result
+
+    async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+        &#34;&#34;&#34;Send reply message to remote agent.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection identifier
+        &#34;&#34;&#34;
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        if responder:
+            await responder.send_reply(message, connection_id=connection_id)
+
+    async def send_problem_report_message(self, explain: str, connection_id: str) -&gt; None:
+        &#34;&#34;&#34;Send problem report message as reply.
+
+        Args:
+            explain (str): Explaination.
+            connection_id (str): Connection id.
+        &#34;&#34;&#34;
+
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+        problem_report = ProblemReport(explain_ltxt=explain)
+
+        if responder:
+            await responder.send_reply(problem_report, connection_id=connection_id)
+
+    async def delete_data_agreement_qr_code(
+        self,
+        template_id: str,
+        qr_id: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Delete data agreement qr code.&#34;&#34;&#34;
+        record = await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
+        assert record.template_id == template_id, &#34;Data agreement not found.&#34;
+        await record.delete_record(self.context)
+
+    async def process_data_agreement_qr_code_initiate_message(
+        self,
+        message: DataAgreementQrCodeInitiateMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process data QR code initiate message.
+
+        Args:
+            message (DataAgreementQrCodeInitiateMessage): Data agreement QR code initiate message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+        qr_id = message.body.qr_id
+        connection_id = self.context.connection_record.connection_id
+
+        connection_record = await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Fetch the qr code record.
+        record: DataAgreementQRCodeRecord = \
+            await DataAgreementQRCodeRecord.retrieve_by_id(
+                self.context,
+                qr_id
+            )
+
+        if record._multi_use_flag:
+            record._scanned_flag = True
+            await record.save(self.context)
+        else:
+            if record._scanned_flag:
+                explain = &#34;Qr code cannot be scanned twice&#34;
+                await self.send_problem_report_message(explain, connection_id)
+                raise Exception(explain)
+
+        # Fetch data agreement template record.
+        template_record: DataAgreementTemplateRecord = \
+            await DataAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                record.template_id
+            )
+
+        # Construct presentation request
+        preset_presentation_request = template_record.presentation_request
+        comment = preset_presentation_request.pop(&#34;comment&#34;)
+        if not preset_presentation_request.get(&#34;nonce&#34;):
+            preset_presentation_request[&#34;nonce&#34;] = await generate_pr_nonce()
+
+        presentation_request = PresentationRequest(
+            comment=comment,
+            request_presentations_attach=[
+                AttachDecorator.from_indy_dict(
+                    indy_dict=preset_presentation_request,
+                    ident=ATTACH_DECO_IDS[PRESENTATION_REQUEST],
+                )
+            ],
+        )
+
+        # Construct presentation exchange record
+        presentation_manager = PresentationManager(self.context)
+        (pres_ex_record) = await presentation_manager.create_exchange_for_request(
+            connection_id=self.context.connection_record.connection_id,
+            presentation_request_message=presentation_request,
+        )
+
+        # Update qr code with record id.
+        record.data_ex_id = pres_ex_record.presentation_exchange_id
+        await record.save(self.context)
+
+        offer_message = await self.build_data_agreement_offer_for_presentation_exchange(
+            template_record.template_id,
+            connection_record,
+            pres_ex_record
+        )
+
+        # Add data agreement context decorator
+        presentation_request._decorators[&#34;data-agreement-context&#34;] = DataAgreementContextDecorator(
+            message_type=&#34;protocol&#34;,
+            message=offer_message.serialize()
+        )
+
+        pres_ex_record.presentation_request_dict = presentation_request.serialize()
+        pres_ex_record.template_id = template_record.template_id
+        await pres_ex_record.save(self.context)
+
+        await self.send_reply_message(presentation_request, connection_id)
+
+    async def send_qr_code_initiate_message(
+        self,
+        qr_id,
+        connection_id
+    ):
+        &#34;&#34;&#34;Send data agreement qr code initiate message.
+
+        Args:
+            qr_id (_type_): QR id
+            connection_id (_type_): connection id
+        &#34;&#34;&#34;
+
+        message = DataAgreementQrCodeInitiateMessage(
+            body=DataAgreementQrCodeInitiateBody(
+                qr_id=qr_id
+            )
+        )
+
+        await self.send_reply_message(message, connection_id)
+
+    async def send_data_controller_details_message(
+        self,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Send data controller details message
+
+        Args:
+            connection_id (str): Connection ID
+        &#34;&#34;&#34;
+
+        message = DataControllerDetailsMessage()
+        await self.send_reply_message(message, connection_id)
+
+    async def process_data_controller_details_message(
+        self,
+        message: DataControllerDetailsMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process data controller details message.
+
+        Args:
+            message (DataControllerDetailsMessage): Data controller details message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+
+        connection_id = self.context.connection_record.connection_id
+
+        if not records:
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+            controller_did = await wallet.get_public_did()
+
+            cache: BaseCache = await self.context.inject(BaseCache, required=False)
+            cache_key = f&#34;did:sov:{controller_did.did}&#34;
+
+            assert cache, &#34;Cache not available.&#34;
+
+            controller_details = None
+            async with cache.acquire(cache_key) as entry:
+                if entry.result:
+                    cached = entry.result
+                    controller_details = DataController.deserialize(cached)
+                else:
+                    org_details = await fetch_org_details_from_intermediary(self.context)
+
+                    # Organisation did
+                    organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+                    controller_details = DataController(
+                        organisation_did=organisation_did,
+                        organisation_name=org_details[&#34;Name&#34;],
+                        cover_image_url=org_details[&#34;CoverImageURL&#34;] + &#34;/web&#34;,
+                        logo_image_url=org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;,
+                        location=org_details[&#34;Location&#34;],
+                        organisation_type=org_details[&#34;Type&#34;][&#34;Type&#34;],
+                        description=org_details[&#34;Description&#34;],
+                        policy_url=org_details[&#34;PolicyURL&#34;],
+                        eula_url=org_details[&#34;EulaURL&#34;]
+                    )
+                    cache_val = controller_details.serialize()
+                    await entry.set_result(cache_val, 3600)
+
+                response_message = DataControllerDetailsResponseMessage(
+                    body=controller_details
+                )
+
+                await self.send_reply_message(response_message, connection_id)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+
+            controller_details = DataController(
+                organisation_did=record.organisation_did,
+                organisation_name=record.organisation_name,
+                cover_image_url=record.cover_image_url,
+                logo_image_url=record.logo_image_url,
+                location=record.location,
+                organisation_type=record.organisation_type,
+                description=record.description,
+                policy_url=record.policy_url,
+                eula_url=record.eula_url
+            )
+
+            response_message = DataControllerDetailsResponseMessage(
+                body=controller_details
+            )
+
+            await self.send_reply_message(response_message, connection_id)
+
+    async def update_controller_details(
+        self,
+        organisation_name: str = None,
+        cover_image_url: str = None,
+        logo_image_url: str = None,
+        location: str = None,
+        organisation_type: str = None,
+        description: str = None,
+        policy_url: str = None,
+        eula_url: str = None
+    ) -&gt; ControllerDetailsRecord:
+        &#34;&#34;&#34;Update controller details
+
+        Args:
+            organisation_name (str, optional): Organisation name. Defaults to None.
+            cover_image_url (str, optional): Cover image URL. Defaults to None.
+            logo_image_url (str, optional): Logo image URL. Defaults to None.
+            location (str, optional): Location. Defaults to None.
+            organisation_type (str, optional): Organisation type. Defaults to None.
+            description (str, optional): Description. Defaults to None.
+            policy_url (str, optional): Policy URL. Defaults to None.
+            eula_url (str, optional): EULA URL. Defaults to None.
+
+        Returns:
+            ControllerDetailsRecord: Controller details record.
+        &#34;&#34;&#34;
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+        if not records:
+
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+            controller_did = await wallet.get_public_did()
+
+            organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+            # If not found, create new record.
+            record = ControllerDetailsRecord(
+                organisation_did=organisation_did,
+                organisation_name=organisation_name,
+                cover_image_url=cover_image_url,
+                logo_image_url=logo_image_url,
+                location=location,
+                organisation_type=organisation_type,
+                description=description,
+                policy_url=policy_url,
+                eula_url=eula_url
+            )
+
+            await record.save(self.context)
+        else:
+            # If found update record.
+            record: ControllerDetailsRecord = records[0]
+            record.organisation_name = organisation_name
+            record.cover_image_url = cover_image_url
+            record.logo_image_url = logo_image_url
+            record.location = location
+            record.organisation_type = organisation_type
+            record.description = description
+            record.policy_url = policy_url
+            record.eula_url = eula_url
+
+            await record.save(self.context)
+
+        return record
 
     async def add_task(self,
                        context: InjectionContext,
@@ -2923,6 +3862,179 @@ Data exchange record.</p>
     return template_record</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code"><code class="name flex">
+<span>async def <span class="ident">create_data_agreement_qr_code</span></span>(<span>self, template_id: str, multi_use_flag: bool) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create data agreement qr code</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier</dd>
+<dt><strong><code>multi_use_flag</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Multi use flag</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>Qr code.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_data_agreement_qr_code(
+    self,
+    template_id: str,
+    multi_use_flag: bool
+) -&gt; dict:
+    &#34;&#34;&#34;Create data agreement qr code
+
+    Args:
+        template_id (str): Template identifier
+        multi_use_flag (bool): Multi use flag
+
+    Returns:
+        dict: Qr code.
+    &#34;&#34;&#34;
+
+    qr_record = DataAgreementQRCodeRecord(
+        template_id=template_id,
+        multi_use_flag=bool_to_str(multi_use_flag)
+    )
+    await qr_record.save(self.context)
+
+    (connection, invitation) = await self.create_invitation(
+        auto_accept=True,
+        public=False,
+        multi_use=multi_use_flag,
+        alias=f&#34;DA_{template_id}_QR_{qr_record._id}&#34;
+    )
+
+    qr_record.connection_id = connection.connection_id
+    await qr_record.save(self.context)
+
+    res = {
+        &#34;qr_id&#34;: qr_record._id,
+        &#34;invitation&#34;: invitation.serialize()
+    }
+
+    res_base64 = base64.b64encode(json.dumps(res).encode()).decode()
+    payload = self.context.settings.get(&#34;default_endpoint&#34;) + &#34;?qt=2&amp;qp=&#34; + res_base64
+
+    firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+    qr_record.dynamic_link = firebase_dynamic_link
+    await qr_record.save(self.context)
+
+    res.update({&#34;dynamic_link&#34;: firebase_dynamic_link})
+
+    return res</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.create_invitation"><code class="name flex">
+<span>async def <span class="ident">create_invitation</span></span>(<span>self, my_label: str = None, my_endpoint: str = None, their_role: str = None, auto_accept: bool = None, public: bool = False, multi_use: bool = False, alias: str = None) ‑> Tuple[aries_cloudagent.connections.models.connection_record.ConnectionRecord, aries_cloudagent.protocols.connections.v1_0.messages.connection_invitation.ConnectionInvitation]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate new connection invitation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_invitation(
+    self,
+    my_label: str = None,
+    my_endpoint: str = None,
+    their_role: str = None,
+    auto_accept: bool = None,
+    public: bool = False,
+    multi_use: bool = False,
+    alias: str = None,
+) -&gt; typing.Tuple[ConnectionRecord, ConnectionInvitation]:
+    &#34;&#34;&#34;Generate new connection invitation.&#34;&#34;&#34;
+
+    if not my_label:
+        my_label = self.context.settings.get(&#34;default_label&#34;)
+
+    image_url = None
+
+    # Fetch organisation details from intermediary.
+    org_details = await fetch_org_details_from_intermediary(
+        self.context
+    )
+
+    my_label = org_details[&#34;Name&#34;]
+    image_url = org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;
+
+    wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+    if public:
+        if not self.context.settings.get(&#34;public_invites&#34;):
+            raise ConnectionManagerError(
+                &#34;Public invitations are not enabled&#34;)
+
+        public_did = await wallet.get_public_did()
+        if not public_did:
+            raise ConnectionManagerError(
+                &#34;Cannot create public invitation with no public DID&#34;
+            )
+
+        if multi_use:
+            raise ConnectionManagerError(
+                &#34;Cannot use public and multi_use at the same time&#34;
+            )
+
+        # FIXME - allow ledger instance to format public DID with prefix?
+        invitation = ConnectionInvitation(
+            label=my_label, did=f&#34;did:sov:{public_did.did}&#34;, image_url=image_url
+        )
+        return None, invitation
+
+    invitation_mode = ConnectionRecord.INVITATION_MODE_ONCE
+    if multi_use:
+        invitation_mode = ConnectionRecord.INVITATION_MODE_MULTI
+
+    if not my_endpoint:
+        my_endpoint = self.context.settings.get(&#34;default_endpoint&#34;)
+    accept = (
+        ConnectionRecord.ACCEPT_AUTO
+        if (
+            auto_accept
+            or (
+                auto_accept is None
+                and self.context.settings.get(&#34;debug.auto_accept_requests&#34;)
+            )
+        )
+        else ConnectionRecord.ACCEPT_MANUAL
+    )
+
+    # Create and store new invitation key
+    connection_key = await wallet.create_signing_key()
+
+    # Create connection record
+    connection = ConnectionRecord(
+        initiator=ConnectionRecord.INITIATOR_SELF,
+        invitation_key=connection_key.verkey,
+        their_role=their_role,
+        state=ConnectionRecord.STATE_INVITATION,
+        accept=accept,
+        invitation_mode=invitation_mode,
+        alias=alias,
+    )
+
+    await connection.save(self.context, reason=&#34;Created new invitation&#34;)
+
+    # Create connection invitation message
+    # Note: Need to split this into two stages to support inbound routing of invites
+    # Would want to reuse create_did_document and convert the result
+    invitation = ConnectionInvitation(
+        label=my_label, recipient_keys=[
+            connection_key.verkey], endpoint=my_endpoint, image_url=image_url
+    )
+    await connection.attach_invitation(self.context, invitation)
+
+    return connection, invitation</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_instance_by_data_ex_id"><code class="name flex">
 <span>async def <span class="ident">delete_da_instance_by_data_ex_id</span></span>(<span>self, cred_ex_id: str) ‑> None</span>
 </code></dt>
@@ -3008,6 +4120,26 @@ template is no longer active.</p>
     return await data_agreement_record.delete_template(self.context)</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.delete_data_agreement_qr_code"><code class="name flex">
+<span>async def <span class="ident">delete_data_agreement_qr_code</span></span>(<span>self, template_id: str, qr_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Delete data agreement qr code.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def delete_data_agreement_qr_code(
+    self,
+    template_id: str,
+    qr_id: str
+) -&gt; None:
+    &#34;&#34;&#34;Delete data agreement qr code.&#34;&#34;&#34;
+    record = await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
+    assert record.template_id == template_id, &#34;Data agreement not found.&#34;
+    await record.delete_record(self.context)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.delete_personal_data"><code class="name flex">
 <span>async def <span class="ident">delete_personal_data</span></span>(<span>self, attribute_id: str) ‑> None</span>
 </code></dt>
@@ -3054,9 +4186,6 @@ proceed to delete the template record.</p>
         pd_record.data_agreement_template_version, \
         &#34;Matching data agreement template with same version not found.&#34;
 
-    # Delete personal data record
-    await pd_record.delete_record(self.context)
-
     da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
 
     # Iterate through the existing personal data in data agreements
@@ -3064,27 +4193,20 @@ proceed to delete the template record.</p>
     da_pds = []
     for da_pd in da.personal_data:
         if da_pd.attribute_id != pd_record.attribute_id:
+            da_pd.attribute_id = None
             da_pds.append(da_pd)
 
     da.personal_data = da_pds
 
-    da_template_record.data_agreement = da.serialize()
-    await da_template_record.upgrade(self.context)
-
-    # Mark data agreement template as deleted if number of personal data is zero
     if len(da_pds) == 0:
         await da_template_record.delete_template(self.context)
     else:
-
-        pd_records = await da_template_record.fetch_personal_data_records(self.context)
-
-        if da_template_record._publish_flag:
-            # Create ledger payloads
-            await self.create_and_store_ledger_payloads_for_da_template(
-                template_record=da_template_record,
-                pd_records=pd_records,
-                schema_id=None
-            )</code></pre>
+        # Update template record with new agreement.
+        await self.update_and_store_da_template_in_wallet(
+            pd_record.data_agreement_template_id,
+            da.serialize(),
+            publish_flag=str_to_bool(da_template_record.publish_flag)
+        )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task"><code class="name flex">
@@ -3101,6 +4223,202 @@ proceed to delete the template record.</p>
     print(&#34;Long running task commenced...&#34;)
     await asyncio.sleep(10)
     return &#34;msg: Hi from long running task!&#34;</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message"><code class="name flex">
+<span>async def <span class="ident">process_data_agreement_qr_code_initiate_message</span></span>(<span>self, message: mydata_did.v1_0.messages.data_agreement_qr_code_initiate.DataAgreementQrCodeInitiateMessage, receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process data QR code initiate message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DataAgreementQrCodeInitiateMessage</code></dt>
+<dd>Data agreement QR code initiate message.</dd>
+<dt><strong><code>receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_data_agreement_qr_code_initiate_message(
+    self,
+    message: DataAgreementQrCodeInitiateMessage,
+    receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process data QR code initiate message.
+
+    Args:
+        message (DataAgreementQrCodeInitiateMessage): Data agreement QR code initiate message.
+        receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+    qr_id = message.body.qr_id
+    connection_id = self.context.connection_record.connection_id
+
+    connection_record = await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+    # Fetch the qr code record.
+    record: DataAgreementQRCodeRecord = \
+        await DataAgreementQRCodeRecord.retrieve_by_id(
+            self.context,
+            qr_id
+        )
+
+    if record._multi_use_flag:
+        record._scanned_flag = True
+        await record.save(self.context)
+    else:
+        if record._scanned_flag:
+            explain = &#34;Qr code cannot be scanned twice&#34;
+            await self.send_problem_report_message(explain, connection_id)
+            raise Exception(explain)
+
+    # Fetch data agreement template record.
+    template_record: DataAgreementTemplateRecord = \
+        await DataAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            record.template_id
+        )
+
+    # Construct presentation request
+    preset_presentation_request = template_record.presentation_request
+    comment = preset_presentation_request.pop(&#34;comment&#34;)
+    if not preset_presentation_request.get(&#34;nonce&#34;):
+        preset_presentation_request[&#34;nonce&#34;] = await generate_pr_nonce()
+
+    presentation_request = PresentationRequest(
+        comment=comment,
+        request_presentations_attach=[
+            AttachDecorator.from_indy_dict(
+                indy_dict=preset_presentation_request,
+                ident=ATTACH_DECO_IDS[PRESENTATION_REQUEST],
+            )
+        ],
+    )
+
+    # Construct presentation exchange record
+    presentation_manager = PresentationManager(self.context)
+    (pres_ex_record) = await presentation_manager.create_exchange_for_request(
+        connection_id=self.context.connection_record.connection_id,
+        presentation_request_message=presentation_request,
+    )
+
+    # Update qr code with record id.
+    record.data_ex_id = pres_ex_record.presentation_exchange_id
+    await record.save(self.context)
+
+    offer_message = await self.build_data_agreement_offer_for_presentation_exchange(
+        template_record.template_id,
+        connection_record,
+        pres_ex_record
+    )
+
+    # Add data agreement context decorator
+    presentation_request._decorators[&#34;data-agreement-context&#34;] = DataAgreementContextDecorator(
+        message_type=&#34;protocol&#34;,
+        message=offer_message.serialize()
+    )
+
+    pres_ex_record.presentation_request_dict = presentation_request.serialize()
+    pres_ex_record.template_id = template_record.template_id
+    await pres_ex_record.save(self.context)
+
+    await self.send_reply_message(presentation_request, connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_controller_details_message"><code class="name flex">
+<span>async def <span class="ident">process_data_controller_details_message</span></span>(<span>self, message: mydata_did.v1_0.messages.data_controller_details.DataControllerDetailsMessage, receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process data controller details message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DataControllerDetailsMessage</code></dt>
+<dd>Data controller details message.</dd>
+<dt><strong><code>receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_data_controller_details_message(
+    self,
+    message: DataControllerDetailsMessage,
+    receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process data controller details message.
+
+    Args:
+        message (DataControllerDetailsMessage): Data controller details message.
+        receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    # Query controller records.
+    records = await ControllerDetailsRecord.query(self.context, {})
+
+    connection_id = self.context.connection_record.connection_id
+
+    if not records:
+        wallet: BaseWallet = await self.context.inject(BaseWallet)
+        controller_did = await wallet.get_public_did()
+
+        cache: BaseCache = await self.context.inject(BaseCache, required=False)
+        cache_key = f&#34;did:sov:{controller_did.did}&#34;
+
+        assert cache, &#34;Cache not available.&#34;
+
+        controller_details = None
+        async with cache.acquire(cache_key) as entry:
+            if entry.result:
+                cached = entry.result
+                controller_details = DataController.deserialize(cached)
+            else:
+                org_details = await fetch_org_details_from_intermediary(self.context)
+
+                # Organisation did
+                organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+                controller_details = DataController(
+                    organisation_did=organisation_did,
+                    organisation_name=org_details[&#34;Name&#34;],
+                    cover_image_url=org_details[&#34;CoverImageURL&#34;] + &#34;/web&#34;,
+                    logo_image_url=org_details[&#34;LogoImageURL&#34;] + &#34;/web&#34;,
+                    location=org_details[&#34;Location&#34;],
+                    organisation_type=org_details[&#34;Type&#34;][&#34;Type&#34;],
+                    description=org_details[&#34;Description&#34;],
+                    policy_url=org_details[&#34;PolicyURL&#34;],
+                    eula_url=org_details[&#34;EulaURL&#34;]
+                )
+                cache_val = controller_details.serialize()
+                await entry.set_result(cache_val, 3600)
+
+            response_message = DataControllerDetailsResponseMessage(
+                body=controller_details
+            )
+
+            await self.send_reply_message(response_message, connection_id)
+    else:
+        # If found update record.
+        record: ControllerDetailsRecord = records[0]
+
+        controller_details = DataController(
+            organisation_did=record.organisation_did,
+            organisation_name=record.organisation_name,
+            cover_image_url=record.cover_image_url,
+            logo_image_url=record.logo_image_url,
+            location=record.location,
+            organisation_type=record.organisation_type,
+            description=record.description,
+            policy_url=record.policy_url,
+            eula_url=record.eula_url
+        )
+
+        response_message = DataControllerDetailsResponseMessage(
+            body=controller_details
+        )
+
+        await self.send_reply_message(response_message, connection_id)</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_accept_message"><code class="name flex">
@@ -3513,6 +4831,35 @@ Defaults to false.</dd>
     return paginate_result</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_qr_codes"><code class="name flex">
+<span>async def <span class="ident">query_data_agreement_qr_codes</span></span>(<span>self, template_id: str) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query data agreement qr codes</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>List of qr code records.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_data_agreement_qr_codes(
+    self,
+    template_id: str,
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query data agreement qr codes
+
+    Returns:
+        PaginationResult: List of qr code records.
+    &#34;&#34;&#34;
+
+    records = await DataAgreementQRCodeRecord.query(self.context, {&#34;template_id&#34;: template_id})
+    pagination_result = paginate_records(records, page=1, page_size=1000000)
+    return pagination_result</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.query_pd_of_da_template_from_wallet"><code class="name flex">
 <span>async def <span class="ident">query_pd_of_da_template_from_wallet</span></span>(<span>self, template_id: str = None, method_of_use: str = None, third_party_data_sharing: str = None, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
 </code></dt>
@@ -3633,6 +4980,134 @@ Defaults to false.</dd>
     print(pending_task)</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message"><code class="name flex">
+<span>async def <span class="ident">send_data_controller_details_message</span></span>(<span>self, connection_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send data controller details message</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection ID</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_data_controller_details_message(
+    self,
+    connection_id: str
+):
+    &#34;&#34;&#34;Send data controller details message
+
+    Args:
+        connection_id (str): Connection ID
+    &#34;&#34;&#34;
+
+    message = DataControllerDetailsMessage()
+    await self.send_reply_message(message, connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message"><code class="name flex">
+<span>async def <span class="ident">send_problem_report_message</span></span>(<span>self, explain: str, connection_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send problem report message as reply.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>explain</code></strong> :&ensp;<code>str</code></dt>
+<dd>Explaination.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection id.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_problem_report_message(self, explain: str, connection_id: str) -&gt; None:
+    &#34;&#34;&#34;Send problem report message as reply.
+
+    Args:
+        explain (str): Explaination.
+        connection_id (str): Connection id.
+    &#34;&#34;&#34;
+
+    # Responder instance
+    responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+    problem_report = ProblemReport(explain_ltxt=explain)
+
+    if responder:
+        await responder.send_reply(problem_report, connection_id=connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message"><code class="name flex">
+<span>async def <span class="ident">send_qr_code_initiate_message</span></span>(<span>self, qr_id, connection_id)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send data agreement qr code initiate message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>qr_id</code></strong> :&ensp;<code>_type_</code></dt>
+<dd>QR id</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>_type_</code></dt>
+<dd>connection id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_qr_code_initiate_message(
+    self,
+    qr_id,
+    connection_id
+):
+    &#34;&#34;&#34;Send data agreement qr code initiate message.
+
+    Args:
+        qr_id (_type_): QR id
+        connection_id (_type_): connection id
+    &#34;&#34;&#34;
+
+    message = DataAgreementQrCodeInitiateMessage(
+        body=DataAgreementQrCodeInitiateBody(
+            qr_id=qr_id
+        )
+    )
+
+    await self.send_reply_message(message, connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message"><code class="name flex">
+<span>async def <span class="ident">send_reply_message</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send reply message to remote agent.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>AgentMessage</code></dt>
+<dd>Agent message.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+    &#34;&#34;&#34;Send reply message to remote agent.
+
+    Args:
+        message (AgentMessage): Agent message.
+        connection_id (str): Connection identifier
+    &#34;&#34;&#34;
+    # Responder instance
+    responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+
+    if responder:
+        await responder.send_reply(message, connection_id=connection_id)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet"><code class="name flex">
 <span>async def <span class="ident">update_and_store_da_template_in_wallet</span></span>(<span>self, template_id: str, data_agreement: dict, *, publish_flag: bool = True, schema_id: str = None) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord" href="../agreements/da/v1_0/records/da_template_record.html#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord">DataAgreementTemplateRecord</a></span>
 </code></dt>
@@ -3742,6 +5217,107 @@ Defaults to false.</dd>
             pd_records=pd_records,
             schema_id=schema_id
         )
+
+    return record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.update_controller_details"><code class="name flex">
+<span>async def <span class="ident">update_controller_details</span></span>(<span>self, organisation_name: str = None, cover_image_url: str = None, logo_image_url: str = None, location: str = None, organisation_type: str = None, description: str = None, policy_url: str = None, eula_url: str = None) ‑> <a title="dexa_sdk.data_controller.records.controller_details_record.ControllerDetailsRecord" href="../data_controller/records/controller_details_record.html#dexa_sdk.data_controller.records.controller_details_record.ControllerDetailsRecord">ControllerDetailsRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update controller details</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>organisation_name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Organisation name. Defaults to None.</dd>
+<dt><strong><code>cover_image_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Cover image URL. Defaults to None.</dd>
+<dt><strong><code>logo_image_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Logo image URL. Defaults to None.</dd>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Location. Defaults to None.</dd>
+<dt><strong><code>organisation_type</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Organisation type. Defaults to None.</dd>
+<dt><strong><code>description</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Description. Defaults to None.</dd>
+<dt><strong><code>policy_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Policy URL. Defaults to None.</dd>
+<dt><strong><code>eula_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>EULA URL. Defaults to None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ControllerDetailsRecord</code></dt>
+<dd>Controller details record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def update_controller_details(
+    self,
+    organisation_name: str = None,
+    cover_image_url: str = None,
+    logo_image_url: str = None,
+    location: str = None,
+    organisation_type: str = None,
+    description: str = None,
+    policy_url: str = None,
+    eula_url: str = None
+) -&gt; ControllerDetailsRecord:
+    &#34;&#34;&#34;Update controller details
+
+    Args:
+        organisation_name (str, optional): Organisation name. Defaults to None.
+        cover_image_url (str, optional): Cover image URL. Defaults to None.
+        logo_image_url (str, optional): Logo image URL. Defaults to None.
+        location (str, optional): Location. Defaults to None.
+        organisation_type (str, optional): Organisation type. Defaults to None.
+        description (str, optional): Description. Defaults to None.
+        policy_url (str, optional): Policy URL. Defaults to None.
+        eula_url (str, optional): EULA URL. Defaults to None.
+
+    Returns:
+        ControllerDetailsRecord: Controller details record.
+    &#34;&#34;&#34;
+
+    # Query controller records.
+    records = await ControllerDetailsRecord.query(self.context, {})
+    if not records:
+
+        wallet: BaseWallet = await self.context.inject(BaseWallet)
+
+        controller_did = await wallet.get_public_did()
+
+        organisation_did = f&#34;did:sov:{controller_did.did}&#34;
+
+        # If not found, create new record.
+        record = ControllerDetailsRecord(
+            organisation_did=organisation_did,
+            organisation_name=organisation_name,
+            cover_image_url=cover_image_url,
+            logo_image_url=logo_image_url,
+            location=location,
+            organisation_type=organisation_type,
+            description=description,
+            policy_url=policy_url,
+            eula_url=eula_url
+        )
+
+        await record.save(self.context)
+    else:
+        # If found update record.
+        record: ControllerDetailsRecord = records[0]
+        record.organisation_name = organisation_name
+        record.cover_image_url = cover_image_url
+        record.logo_image_url = logo_image_url
+        record.location = location
+        record.organisation_type = organisation_type
+        record.description = description
+        record.policy_url = policy_url
+        record.eula_url = eula_url
+
+        await record.save(self.context)
 
     return record</code></pre>
 </details>
@@ -3875,19 +5451,30 @@ Defaults to false.</dd>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.context" href="#dexa_sdk.managers.ada_manager.V2ADAManager.context">context</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_da_template_in_wallet">create_and_store_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_ledger_payloads_for_da_template" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_ledger_payloads_for_da_template">create_and_store_ledger_payloads_for_da_template</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code">create_data_agreement_qr_code</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_invitation" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_invitation">create_invitation</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_instance_by_data_ex_id" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_instance_by_data_ex_id">delete_da_instance_by_data_ex_id</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_template_in_wallet">delete_da_template_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_data_agreement_qr_code" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_data_agreement_qr_code">delete_data_agreement_qr_code</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_personal_data" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_personal_data">delete_personal_data</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task" href="#dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task">long_running_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message">process_data_agreement_qr_code_initiate_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_controller_details_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_data_controller_details_message">process_data_controller_details_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_accept_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_accept_message">process_decorator_with_da_accept_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_offer_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_offer_message">process_decorator_with_da_offer_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet">publish_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet">query_da_templates_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_instances" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_instances">query_data_agreement_instances</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_qr_codes" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_qr_codes">query_data_agreement_qr_codes</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_pd_of_da_template_from_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_pd_of_da_template_from_wallet">query_pd_of_da_template_from_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.queue_callback" href="#dexa_sdk.managers.ada_manager.V2ADAManager.queue_callback">queue_callback</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.sample_queue_snippet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.sample_queue_snippet">sample_queue_snippet</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message">send_data_controller_details_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message">send_problem_report_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message">send_qr_code_initiate_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message">send_reply_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet">update_and_store_da_template_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_controller_details" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_controller_details">update_controller_details</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_personal_data_description" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_personal_data_description">update_personal_data_description</a></code></li>
 </ul>
 </li>

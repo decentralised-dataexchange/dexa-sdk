@@ -26,8 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from email.policy import default
-import typing
+<pre><code class="python">import typing
 from marshmallow import fields, EXCLUDE
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
 from .fields.context_field import ContextField
@@ -55,11 +54,11 @@ class DataControllerModel(BaseModel):
     def __init__(
         self,
         *,
-        did: str,
-        name: str,
-        legal_id: str,
-        url: str,
-        industry_sector: str,
+        did: str = None,
+        name: str = None,
+        legal_id: str = None,
+        url: str = None,
+        industry_sector: str = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -78,23 +77,23 @@ class DataControllerSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataControllerModel&#34;
+        model_class = DataControllerModel
 
         # Unknown fields are excluded
         unknown = EXCLUDE
 
     # This is the DID of the data source preparing the agreement
-    did = fields.Str(data_key=&#34;did&#34;, required=True)
+    did = fields.Str(data_key=&#34;did&#34;, required=False)
 
     # The name of the data source exposing the data
     name = fields.Str(data_key=&#34;name&#34;, required=True)
 
     # This is the legal ID to the data source.
     # E.g. Swedish Organisation Number
-    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=True)
+    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=False)
 
     # This is the data source organisation URL
-    url = fields.Str(data_key=&#34;url&#34;, required=True)
+    url = fields.Str(data_key=&#34;url&#34;, required=False)
 
     # Industry sector that the DS belongs to
     industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
@@ -135,7 +134,7 @@ class DataSharingRestrictionsSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataSharingRestrictionsModel&#34;
+        model_class = DataSharingRestrictionsModel
 
         # Unknown fields are excluded
         unknown = EXCLUDE
@@ -176,10 +175,11 @@ class PersonalDataModel(BaseModel):
     def __init__(
         self,
         *,
-        attribute_id: str,
-        attribute_name: str,
+        attribute_id: str = None,
+        attribute_name: str = None,
+        attribute_description: str = None,
         attribute_sensitive: str = &#34;true&#34;,
-        attribute_category: str = &#34;personalData&#34;,
+        attribute_category: str = &#34;personaldata&#34;,
         **kwargs
     ):
         # Call the parent constructor
@@ -190,6 +190,7 @@ class PersonalDataModel(BaseModel):
         self.attribute_name = attribute_name
         self.attribute_sensitive = attribute_sensitive
         self.attribute_category = attribute_category
+        self.attribute_description = attribute_description
 
 
 class PersonalDataSchema(BaseModelSchema):
@@ -197,144 +198,28 @@ class PersonalDataSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;PersonalDataModel&#34;
+        model_class = PersonalDataModel
 
         # Exclude unknown fields
         unknown = EXCLUDE
 
     # Identifier of the attribute
-    attribute_id = fields.Str(data_key=&#34;attributeId&#34;)
+    attribute_id = fields.Str(data_key=&#34;attributeId&#34;, required=False)
 
     # Name of the attributes that is being shared
-    attribute_name = fields.Str(data_key=&#34;attributeName&#34;)
+    attribute_name = fields.Str(data_key=&#34;attributeName&#34;, required=True)
 
     # Defines the sensitivity of the data as per PII
-    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;)
+    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;, required=False)
 
     # An explicit list of personal data categories to be shared.
     # The categories shall be defined using language meaningful to
     # the users and consistent with the purposes of the processing.
     # [values based on W3C DPV-DP]
-    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;)
+    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;, required=False)
 
-
-class DataUsingServiceModel(BaseModel):
-    &#34;&#34;&#34;Data using service model&#34;&#34;&#34;
-
-    class Meta:
-        # Schema class
-        schema_class = &#34;DataUsingServiceSchema&#34;
-
-    def __init__(
-        self,
-        *,
-        did: str,
-        name: str,
-        legal_id: str,
-        url: str,
-        industry_sector: str,
-        usage_purposes: str,
-        jurisdiction: str,
-        withdrawal: str,
-        privacy_rights: str,
-        signature_contact: str,
-        **kwargs
-    ):
-        # Call the parent constructor
-        super().__init__(**kwargs)
-
-        # Set the model attributes
-        self.did = did
-        self.name = name
-        self.legal_id = legal_id
-        self.url = url
-        self.industry_sector = industry_sector
-        self.usage_purposes = usage_purposes
-        self.jurisdiction = jurisdiction
-        self.withdrawal = withdrawal
-        self.privacy_rights = privacy_rights
-        self.signature_contact = signature_contact
-
-
-class DataUsingServiceSchema(BaseModelSchema):
-    &#34;&#34;&#34;Data using service schema&#34;&#34;&#34;
-
-    class Meta:
-        # Model class
-        model_class = &#34;DataUsingServiceModel&#34;
-
-        # Exclude unknown fields
-        unknown = EXCLUDE
-
-    did = fields.Str(data_key=&#34;did&#34;, required=True)
-    name = fields.Str(data_key=&#34;name&#34;, required=True)
-    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=True)
-    url = fields.Str(data_key=&#34;url&#34;, required=True)
-    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
-    usage_purposes = fields.Str(data_key=&#34;usagePurposes&#34;, required=True)
-    jurisdiction = fields.Str(data_key=&#34;jurisdiction&#34;, required=True)
-    withdrawal = fields.Str(data_key=&#34;withdrawal&#34;, required=True)
-    privacy_rights = fields.Str(data_key=&#34;privacyRights&#34;, required=True)
-    signature_contact = fields.Str(data_key=&#34;signatureContact&#34;, required=True)
-
-
-class ProofModel(BaseModel):
-    &#34;&#34;&#34;Proof model&#34;&#34;&#34;
-
-    class Meta:
-        # Schema class
-        schema_class = &#34;ProofSchema&#34;
-
-    def __init__(
-        self,
-        *,
-        id: str,
-        type: str,
-        created: str,
-        verification_method: str,
-        proof_purpose: str,
-        proof_value: str,
-        **kwargs
-    ):
-        # Call the parent constructor
-        super().__init__(**kwargs)
-
-        # Set the model attributes
-        self.id = id
-        self.type = type
-        self.created = created
-        self.verification_method = verification_method
-        self.proof_purpose = proof_purpose
-        self.proof_value = proof_value
-
-
-class ProofSchema(BaseModelSchema):
-    &#34;&#34;&#34;Proof schema&#34;&#34;&#34;
-
-    class Meta:
-        # Model class
-        model_class = &#34;ProofModel&#34;
-
-        # Exclude unknown fields
-        unknown = EXCLUDE
-
-    # Proof identifier
-    id = fields.Str(data_key=&#34;id&#34;, required=True)
-
-    # Signature schema type (For e.g. ed25519, es256 e.t.c.)
-    type = fields.Str(data_key=&#34;type&#34;, required=True)
-
-    # Proof creation time (ISO 8601 UTC)
-    created = fields.Str(data_key=&#34;created&#34;, required=True)
-
-    # Should match the data_using_service did
-    verification_method = fields.Str(data_key=&#34;verificationMethod&#34;, required=True)
-
-    # Contract agreement (Type inferred from JSON-LD spec)
-    proof_purpose = fields.Str(data_key=&#34;proofPurpose&#34;, required=True)
-
-    # Proof value
-    proof_value = fields.Str(data_key=&#34;proofValue&#34;, required=True)
+    # Attribute description.
+    attribute_description = fields.Str(data_key=&#34;attributeDescription&#34;, required=True)
 
 
 class DataDisclosureAgreementModel(BaseModel):
@@ -352,8 +237,6 @@ class DataDisclosureAgreementModel(BaseModel):
         type: typing.List[str] = DDA_TYPE,
         language: str,
         version: str,
-        template_id: str = None,
-        template_version: str = None,
         data_controller: DataControllerModel,
         agreement_period: int,
         data_sharing_restrictions: DataSharingRestrictionsModel,
@@ -362,9 +245,6 @@ class DataDisclosureAgreementModel(BaseModel):
         lawful_basis: str,
         personal_data: typing.List[PersonalDataModel],
         code_of_conduct: str,
-        data_using_service: DataUsingServiceModel,
-        proof: ProofModel = None,
-        proof_chain: typing.List[ProofModel] = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -375,8 +255,6 @@ class DataDisclosureAgreementModel(BaseModel):
         self.id = id
         self.type = type
         self.version = version
-        self.template_id = template_id
-        self.template_version = template_version
         self.language = language
         self.data_controller = data_controller
         self.agreement_period = agreement_period
@@ -386,9 +264,6 @@ class DataDisclosureAgreementModel(BaseModel):
         self.lawful_basis = lawful_basis
         self.personal_data = personal_data
         self.code_of_conduct = code_of_conduct
-        self.data_using_service = data_using_service
-        self.proof = proof
-        self.proof_chain = proof_chain
 
 
 class DataDisclosureAgreementSchema(BaseModelSchema):
@@ -396,7 +271,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataDisclosureAgreementModel&#34;
+        model_class = DataDisclosureAgreementModel
 
         # Exclude unknown fields
         unknown = EXCLUDE
@@ -406,21 +281,14 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         data_key=&#34;@context&#34;, required=True, example=DDA_DEFAULT_CONTEXT
     )
 
-    # Identifier to the data disclosure agreement instance
-    # addressed to a specific DUS
+    # Data disclosure agreement template identifier
     id = fields.Str(data_key=&#34;@id&#34;, required=True)
 
     # Type of the agreement
     type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True, example=DDA_TYPE)
 
-    # Version number of the data disclosure agreement
+    # Data disclosure agreement version
     version = fields.Str(data_key=&#34;version&#34;, required=True)
-
-    # Identifier to the template of the data disclosure agreement
-    template_id = fields.Str(data_key=&#34;templateId&#34;, required=False)
-
-    # Version number of the data disclosure agreement template
-    template_version = fields.Str(data_key=&#34;templateVersion&#34;, required=False)
 
     # language used. If not present default language is English
     language = fields.Str(data_key=&#34;language&#34;, required=True)
@@ -465,25 +333,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     # taking into account specific features within a sector.
     # The code of conduct shall reference the name of the code of conduct
     # and with a publicly accessible reference.
-    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)
-
-    # The data using services that have signed up for consuming data.
-    # This get populated after the data disclosure agreement
-    # is proposed by the data using service
-    data_using_service = fields.Nested(
-        DataUsingServiceSchema, data_key=&#34;dataUsingService&#34;, required=True
-    )
-
-    # Encapsulates the event signatures that allows anyone (e.g. an auditor)
-    # to verify the authencity and source of the data disclosure agreement.
-    # Its uses linked data proofs as per W3C and contains a set of attributes
-    # that represent a Linked Data digital proof
-    # and the parameters required to verify it.
-    proof = fields.Nested(ProofSchema, data_key=&#34;proof&#34;, required=False)
-
-    proof_chain = fields.List(
-        fields.Nested(ProofSchema), data_key=&#34;proofChain&#34;, required=False
-    )</code></pre>
+    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)</code></pre>
 </details>
 </section>
 <section>
@@ -497,7 +347,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 <dl>
 <dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel"><code class="flex name class">
 <span>class <span class="ident">DataControllerModel</span></span>
-<span>(</span><span>*, did: str, name: str, legal_id: str, url: str, industry_sector: str, **kwargs)</span>
+<span>(</span><span>*, did: str = None, name: str = None, legal_id: str = None, url: str = None, industry_sector: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Data controller model class</p>
@@ -523,11 +373,11 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     def __init__(
         self,
         *,
-        did: str,
-        name: str,
-        legal_id: str,
-        url: str,
-        industry_sector: str,
+        did: str = None,
+        name: str = None,
+        legal_id: str = None,
+        url: str = None,
+        industry_sector: str = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -574,23 +424,23 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataControllerModel&#34;
+        model_class = DataControllerModel
 
         # Unknown fields are excluded
         unknown = EXCLUDE
 
     # This is the DID of the data source preparing the agreement
-    did = fields.Str(data_key=&#34;did&#34;, required=True)
+    did = fields.Str(data_key=&#34;did&#34;, required=False)
 
     # The name of the data source exposing the data
     name = fields.Str(data_key=&#34;name&#34;, required=True)
 
     # This is the legal ID to the data source.
     # E.g. Swedish Organisation Number
-    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=True)
+    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=False)
 
     # This is the data source organisation URL
-    url = fields.Str(data_key=&#34;url&#34;, required=True)
+    url = fields.Str(data_key=&#34;url&#34;, required=False)
 
     # Industry sector that the DS belongs to
     industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)</code></pre>
@@ -615,7 +465,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 </dd>
 <dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel"><code class="flex name class">
 <span>class <span class="ident">DataDisclosureAgreementModel</span></span>
-<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str, type: List[str] = ['DataDisclosureAgreement'], language: str, version: str, template_id: str = None, template_version: str = None, data_controller: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel">DataControllerModel</a>, agreement_period: int, data_sharing_restrictions: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel">DataSharingRestrictionsModel</a>, purpose: str, purpose_description: str, lawful_basis: str, personal_data: List[<a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel">PersonalDataModel</a>], code_of_conduct: str, data_using_service: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel">DataUsingServiceModel</a>, proof: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel">ProofModel</a> = None, proof_chain: List[<a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel">ProofModel</a>] = None, **kwargs)</span>
+<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str, type: List[str] = ['DataDisclosureAgreement'], language: str, version: str, data_controller: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel">DataControllerModel</a>, agreement_period: int, data_sharing_restrictions: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel">DataSharingRestrictionsModel</a>, purpose: str, purpose_description: str, lawful_basis: str, personal_data: List[<a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel">PersonalDataModel</a>], code_of_conduct: str, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Data disclosure agreement model</p>
@@ -644,8 +494,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         type: typing.List[str] = DDA_TYPE,
         language: str,
         version: str,
-        template_id: str = None,
-        template_version: str = None,
         data_controller: DataControllerModel,
         agreement_period: int,
         data_sharing_restrictions: DataSharingRestrictionsModel,
@@ -654,9 +502,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         lawful_basis: str,
         personal_data: typing.List[PersonalDataModel],
         code_of_conduct: str,
-        data_using_service: DataUsingServiceModel,
-        proof: ProofModel = None,
-        proof_chain: typing.List[ProofModel] = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -667,8 +512,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         self.id = id
         self.type = type
         self.version = version
-        self.template_id = template_id
-        self.template_version = template_version
         self.language = language
         self.data_controller = data_controller
         self.agreement_period = agreement_period
@@ -677,10 +520,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         self.purpose_description = purpose_description
         self.lawful_basis = lawful_basis
         self.personal_data = personal_data
-        self.code_of_conduct = code_of_conduct
-        self.data_using_service = data_using_service
-        self.proof = proof
-        self.proof_chain = proof_chain</code></pre>
+        self.code_of_conduct = code_of_conduct</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -716,7 +556,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataDisclosureAgreementModel&#34;
+        model_class = DataDisclosureAgreementModel
 
         # Exclude unknown fields
         unknown = EXCLUDE
@@ -726,21 +566,14 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         data_key=&#34;@context&#34;, required=True, example=DDA_DEFAULT_CONTEXT
     )
 
-    # Identifier to the data disclosure agreement instance
-    # addressed to a specific DUS
+    # Data disclosure agreement template identifier
     id = fields.Str(data_key=&#34;@id&#34;, required=True)
 
     # Type of the agreement
     type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True, example=DDA_TYPE)
 
-    # Version number of the data disclosure agreement
+    # Data disclosure agreement version
     version = fields.Str(data_key=&#34;version&#34;, required=True)
-
-    # Identifier to the template of the data disclosure agreement
-    template_id = fields.Str(data_key=&#34;templateId&#34;, required=False)
-
-    # Version number of the data disclosure agreement template
-    template_version = fields.Str(data_key=&#34;templateVersion&#34;, required=False)
 
     # language used. If not present default language is English
     language = fields.Str(data_key=&#34;language&#34;, required=True)
@@ -785,25 +618,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     # taking into account specific features within a sector.
     # The code of conduct shall reference the name of the code of conduct
     # and with a publicly accessible reference.
-    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)
-
-    # The data using services that have signed up for consuming data.
-    # This get populated after the data disclosure agreement
-    # is proposed by the data using service
-    data_using_service = fields.Nested(
-        DataUsingServiceSchema, data_key=&#34;dataUsingService&#34;, required=True
-    )
-
-    # Encapsulates the event signatures that allows anyone (e.g. an auditor)
-    # to verify the authencity and source of the data disclosure agreement.
-    # Its uses linked data proofs as per W3C and contains a set of attributes
-    # that represent a Linked Data digital proof
-    # and the parameters required to verify it.
-    proof = fields.Nested(ProofSchema, data_key=&#34;proof&#34;, required=False)
-
-    proof_chain = fields.List(
-        fields.Nested(ProofSchema), data_key=&#34;proofChain&#34;, required=False
-    )</code></pre>
+    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -902,7 +717,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;DataSharingRestrictionsModel&#34;
+        model_class = DataSharingRestrictionsModel
 
         # Unknown fields are excluded
         unknown = EXCLUDE
@@ -951,130 +766,9 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 </dd>
 </dl>
 </dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel"><code class="flex name class">
-<span>class <span class="ident">DataUsingServiceModel</span></span>
-<span>(</span><span>*, did: str, name: str, legal_id: str, url: str, industry_sector: str, usage_purposes: str, jurisdiction: str, withdrawal: str, privacy_rights: str, signature_contact: str, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Data using service model</p>
-<p>Initialize BaseModel.</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>TypeError</code></dt>
-<dd>If schema_class is not set on Meta</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DataUsingServiceModel(BaseModel):
-    &#34;&#34;&#34;Data using service model&#34;&#34;&#34;
-
-    class Meta:
-        # Schema class
-        schema_class = &#34;DataUsingServiceSchema&#34;
-
-    def __init__(
-        self,
-        *,
-        did: str,
-        name: str,
-        legal_id: str,
-        url: str,
-        industry_sector: str,
-        usage_purposes: str,
-        jurisdiction: str,
-        withdrawal: str,
-        privacy_rights: str,
-        signature_contact: str,
-        **kwargs
-    ):
-        # Call the parent constructor
-        super().__init__(**kwargs)
-
-        # Set the model attributes
-        self.did = did
-        self.name = name
-        self.legal_id = legal_id
-        self.url = url
-        self.industry_sector = industry_sector
-        self.usage_purposes = usage_purposes
-        self.jurisdiction = jurisdiction
-        self.withdrawal = withdrawal
-        self.privacy_rights = privacy_rights
-        self.signature_contact = signature_contact</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>aries_cloudagent.messaging.models.base.BaseModel</li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema"><code class="flex name class">
-<span>class <span class="ident">DataUsingServiceSchema</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Data using service schema</p>
-<p>Initialize BaseModelSchema.</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>TypeError</code></dt>
-<dd>If model_class is not set on Meta</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DataUsingServiceSchema(BaseModelSchema):
-    &#34;&#34;&#34;Data using service schema&#34;&#34;&#34;
-
-    class Meta:
-        # Model class
-        model_class = &#34;DataUsingServiceModel&#34;
-
-        # Exclude unknown fields
-        unknown = EXCLUDE
-
-    did = fields.Str(data_key=&#34;did&#34;, required=True)
-    name = fields.Str(data_key=&#34;name&#34;, required=True)
-    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=True)
-    url = fields.Str(data_key=&#34;url&#34;, required=True)
-    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
-    usage_purposes = fields.Str(data_key=&#34;usagePurposes&#34;, required=True)
-    jurisdiction = fields.Str(data_key=&#34;jurisdiction&#34;, required=True)
-    withdrawal = fields.Str(data_key=&#34;withdrawal&#34;, required=True)
-    privacy_rights = fields.Str(data_key=&#34;privacyRights&#34;, required=True)
-    signature_contact = fields.Str(data_key=&#34;signatureContact&#34;, required=True)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
-<li>marshmallow.schema.Schema</li>
-<li>marshmallow.base.SchemaABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
 <dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel"><code class="flex name class">
 <span>class <span class="ident">PersonalDataModel</span></span>
-<span>(</span><span>*, attribute_id: str, attribute_name: str, attribute_sensitive: str = 'true', attribute_category: str = 'personalData', **kwargs)</span>
+<span>(</span><span>*, attribute_id: str = None, attribute_name: str = None, attribute_description: str = None, attribute_sensitive: str = 'true', attribute_category: str = 'personaldata', **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Personal data model class</p>
@@ -1097,10 +791,11 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
     def __init__(
         self,
         *,
-        attribute_id: str,
-        attribute_name: str,
+        attribute_id: str = None,
+        attribute_name: str = None,
+        attribute_description: str = None,
         attribute_sensitive: str = &#34;true&#34;,
-        attribute_category: str = &#34;personalData&#34;,
+        attribute_category: str = &#34;personaldata&#34;,
         **kwargs
     ):
         # Call the parent constructor
@@ -1110,7 +805,8 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         self.attribute_id = attribute_id
         self.attribute_name = attribute_name
         self.attribute_sensitive = attribute_sensitive
-        self.attribute_category = attribute_category</code></pre>
+        self.attribute_category = attribute_category
+        self.attribute_description = attribute_description</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1146,25 +842,28 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 
     class Meta:
         # Model class
-        model_class = &#34;PersonalDataModel&#34;
+        model_class = PersonalDataModel
 
         # Exclude unknown fields
         unknown = EXCLUDE
 
     # Identifier of the attribute
-    attribute_id = fields.Str(data_key=&#34;attributeId&#34;)
+    attribute_id = fields.Str(data_key=&#34;attributeId&#34;, required=False)
 
     # Name of the attributes that is being shared
-    attribute_name = fields.Str(data_key=&#34;attributeName&#34;)
+    attribute_name = fields.Str(data_key=&#34;attributeName&#34;, required=True)
 
     # Defines the sensitivity of the data as per PII
-    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;)
+    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;, required=False)
 
     # An explicit list of personal data categories to be shared.
     # The categories shall be defined using language meaningful to
     # the users and consistent with the purposes of the processing.
     # [values based on W3C DPV-DP]
-    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;)</code></pre>
+    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;, required=False)
+
+    # Attribute description.
+    attribute_description = fields.Str(data_key=&#34;attributeDescription&#34;, required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1179,126 +878,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 <div class="desc"></div>
 </dd>
 <dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel"><code class="flex name class">
-<span>class <span class="ident">ProofModel</span></span>
-<span>(</span><span>*, id: str, type: str, created: str, verification_method: str, proof_purpose: str, proof_value: str, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Proof model</p>
-<p>Initialize BaseModel.</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>TypeError</code></dt>
-<dd>If schema_class is not set on Meta</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ProofModel(BaseModel):
-    &#34;&#34;&#34;Proof model&#34;&#34;&#34;
-
-    class Meta:
-        # Schema class
-        schema_class = &#34;ProofSchema&#34;
-
-    def __init__(
-        self,
-        *,
-        id: str,
-        type: str,
-        created: str,
-        verification_method: str,
-        proof_purpose: str,
-        proof_value: str,
-        **kwargs
-    ):
-        # Call the parent constructor
-        super().__init__(**kwargs)
-
-        # Set the model attributes
-        self.id = id
-        self.type = type
-        self.created = created
-        self.verification_method = verification_method
-        self.proof_purpose = proof_purpose
-        self.proof_value = proof_value</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>aries_cloudagent.messaging.models.base.BaseModel</li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema"><code class="flex name class">
-<span>class <span class="ident">ProofSchema</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Proof schema</p>
-<p>Initialize BaseModelSchema.</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>TypeError</code></dt>
-<dd>If model_class is not set on Meta</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ProofSchema(BaseModelSchema):
-    &#34;&#34;&#34;Proof schema&#34;&#34;&#34;
-
-    class Meta:
-        # Model class
-        model_class = &#34;ProofModel&#34;
-
-        # Exclude unknown fields
-        unknown = EXCLUDE
-
-    # Proof identifier
-    id = fields.Str(data_key=&#34;id&#34;, required=True)
-
-    # Signature schema type (For e.g. ed25519, es256 e.t.c.)
-    type = fields.Str(data_key=&#34;type&#34;, required=True)
-
-    # Proof creation time (ISO 8601 UTC)
-    created = fields.Str(data_key=&#34;created&#34;, required=True)
-
-    # Should match the data_using_service did
-    verification_method = fields.Str(data_key=&#34;verificationMethod&#34;, required=True)
-
-    # Contract agreement (Type inferred from JSON-LD spec)
-    proof_purpose = fields.Str(data_key=&#34;proofPurpose&#34;, required=True)
-
-    # Proof value
-    proof_value = fields.Str(data_key=&#34;proofValue&#34;, required=True)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
-<li>marshmallow.schema.Schema</li>
-<li>marshmallow.base.SchemaABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1360,19 +939,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 </ul>
 </li>
 <li>
-<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel">DataUsingServiceModel</a></code></h4>
-<ul class="">
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceModel.Meta">Meta</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema">DataUsingServiceSchema</a></code></h4>
-<ul class="">
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.Meta">Meta</a></code></li>
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataUsingServiceSchema.opts">opts</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel">PersonalDataModel</a></code></h4>
 <ul class="">
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel.Meta">Meta</a></code></li>
@@ -1383,19 +949,6 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 <ul class="">
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.Meta">Meta</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts">opts</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel">ProofModel</a></code></h4>
-<ul class="">
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofModel.Meta">Meta</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema">ProofSchema</a></code></h4>
-<ul class="">
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.Meta">Meta</a></code></li>
-<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.ProofSchema.opts">opts</a></code></li>
 </ul>
 </li>
 </ul>
