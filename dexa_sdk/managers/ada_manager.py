@@ -3,18 +3,26 @@ import asyncio
 import uuid
 import typing
 import json
+import aiohttp
 from loguru import logger
 from web3._utils.encoding import to_json
 from marshmallow.exceptions import ValidationError
-from aries_cloudagent.wallet.base import BaseWallet
+from aries_cloudagent.wallet.base import BaseWallet, DIDInfo
+from aries_cloudagent.wallet.indy import IndyWallet
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.core.error import BaseError
 from aries_cloudagent.core.dispatcher import DispatcherResponder
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManager,
+)
 from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
+from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
 from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
+from aries_cloudagent.connections.models.connection_target import ConnectionTarget
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.decorators.default import DecoratorSet
 from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.messaging.models.base_record import match_post_filter
 from aries_cloudagent.messaging.agent_message import AgentMessage
 from aries_cloudagent.cache.basic import BaseCache
 from aries_cloudagent.protocols.basicmessage.v1_0.messages.basicmessage import BasicMessage
@@ -71,6 +79,15 @@ from mydata_did.v1_0.messages.data_controller_details_response import (
 from mydata_did.v1_0.models.data_controller_model import (
     DataController
 )
+from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMessage
+from mydata_did.v1_0.models.existing_connections_model import (
+    ExistingConnectionsBody
+)
+
+from dexa_sdk.marketplace.records.marketplace_connection_record import MarketplaceConnectionRecord
+from ..connections.records.existing_connections_record import (
+    ExistingConnectionRecord
+)
 from ..agreements.da.v1_0.models.da_models import (
     DataAgreementModel,
     DA_DEFAULT_CONTEXT,
@@ -88,6 +105,7 @@ from ..ledgers.indy.core import (
     create_schema_def_and_anchor_to_ledger
 )
 from ..utils import (
+    paginate,
     paginate_records,
     PaginationResult,
     drop_none_dict,
@@ -97,6 +115,9 @@ from ..utils import (
 )
 from ..did_mydata.core import DIDMyDataBuilder
 from ..ledgers.ethereum.core import EthereumClient
+from ..data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord
+)
 
 
 class V2ADAManagerError(BaseError):
@@ -1242,6 +1263,38 @@ class V2ADAManager:
 
         return res
 
+    async def create_connection_qr_code(
+        self,
+        connection_id: str
+    ) -> dict:
+        """Create connection QR code.
+
+        Args:
+            connection_id (str): Connection identifier.
+
+        Returns:
+            dict: Dict with dynamic link.
+        """
+
+        # Connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        # Connection invitation
+        connection_invitation: ConnectionInvitation = await connection_record.retrieve_invitation(
+            self.context
+        )
+
+        # Generate firebase dynamic link.
+        payload = connection_invitation.to_url()
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+
+        res = {"dynamic_link": firebase_dynamic_link}
+
+        return res
+
     async def query_data_agreement_qr_codes(
         self,
         template_id: str,
@@ -1256,7 +1309,7 @@ class V2ADAManager:
         pagination_result = paginate_records(records, page=1, page_size=1000000)
         return pagination_result
 
-    async def send_reply_message(self, message: AgentMessage, connection_id: str) -> None:
+    async def send_reply_message(self, message: AgentMessage, connection_id: str = None) -> None:
         """Send reply message to remote agent.
 
         Args:
@@ -1556,6 +1609,241 @@ class V2ADAManager:
             await record.save(self.context)
 
         return record
+
+    async def process_existing_connections_message(
+        self,
+        message: ExistingConnectionsMessage,
+        message_receipt: MessageReceipt
+    ):
+        """Process existing connections message.
+
+        Args:
+            message (ExistingConnectionsMessage): Existing connections message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+
+        # Invitation key.
+        invitation_key = message_receipt.recipient_verkey
+
+        # Fetch current connection record using invitation key
+        connection_record = await ConnectionRecord.retrieve_by_invitation_key(
+            self.context,
+            invitation_key
+        )
+
+        # Fetch existing connections record for the current connection.
+        tag_filter = {
+            "connection_id": connection_record.connection_id
+        }
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        if existing_connection_records:
+            # Existing connection record.
+            existing_connection_record: ExistingConnectionRecord = existing_connection_records[0]
+
+            # Delete the record.
+            await existing_connection_record.delete_record(self.context)
+
+        # Fetch associated connection record.
+        old_connection_record = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=None,
+            my_did=message.body.theirdid
+        )
+
+        # Create a new existing connection record.
+        existing_connection_record = ExistingConnectionRecord(
+            existing_connection_id=old_connection_record.connection_id,
+            my_did=old_connection_record.my_did,
+            connection_status="available",
+            connection_id=connection_record.connection_id
+        )
+
+        await existing_connection_record.save(self.context)
+
+        # updating the current connection invitation status to inactive
+        connection_record.state = ConnectionRecord.STATE_INACTIVE
+        await connection_record.save(context=self.context)
+
+    async def get_existing_connection_record_for_new_connection_id(
+        self,
+        connection_id: str
+    ) -> ExistingConnectionRecord:
+        """Get existing connection record for new connection id.
+
+        Args:
+            connection_id (str): Connection id.
+
+        Returns:
+            ExistingConnectionRecord: Existing connection record.
+        """
+
+        # Tag filter.
+        tag_filter = {
+            "connection_id": connection_id
+        }
+
+        # Fetch existing connection records.
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        res = None
+        if existing_connection_records:
+            res = existing_connection_records[0]
+
+        return res
+
+    async def send_message_with_connection_invitation(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -> None:
+        """Send message with connection invitation.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+        """
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            "Content-Type": "application/ssi-agent-wire"
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    self._logger.info("Posted existing connection message...")
+
+    async def send_existing_connections_message(
+        self,
+        theirdid: str,
+        connection_id: str
+    ):
+        """Send existing connections notification message.
+
+        Args:
+            theirdid (str): Their DID of remote agent in old connection.
+            connection_id (str): Connection identifier.
+        """
+
+        # Construct existing connection message.
+        message = ExistingConnectionsMessage(
+            body=ExistingConnectionsBody(
+                theirdid=theirdid
+            )
+        )
+
+        # Send the message to remote agent.
+        await self.send_message_with_connection_invitation(
+            message,
+            connection_id
+        )
+
+    async def query_connections_and_categorise_results(
+        self,
+        tag_filter: dict = None,
+        post_filter_positive: dict = None,
+        page: int = 1,
+        page_size: int = 10,
+        org_flag: bool = False,
+        marketplace_flag: bool = False,
+    ) -> PaginationResult:
+
+        # Query the connection records.
+        records = await ConnectionRecord.query(
+            self.context,
+            tag_filter,
+            post_filter_positive
+        )
+
+        # Sort the connection records.
+        records = sorted(
+            records,
+            key=lambda k: k.created_at,
+            reverse=True
+        )
+
+        res = []
+        for record in records:
+            tag_filter = {"connection_id": record.connection_id}
+
+            # Fetch controller details attached to the connection.
+            controller_details: typing.List[ConnectionControllerDetailsRecord] = \
+                await ConnectionControllerDetailsRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            # Fetch marketplace connection record.
+            marketplace_connections: typing.List[MarketplaceConnectionRecord] = \
+                await MarketplaceConnectionRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            connection = record.serialize()
+
+            # Update controller details to the connection dict.
+            if controller_details:
+                connection.update({
+                    "org_flag": True,
+                    "controller_details": controller_details[0].controller_details
+                })
+            else:
+                connection.update({
+                    "controller_details": {},
+                    "org_flag": False
+                })
+
+            if marketplace_connections:
+                connection.update({
+                    "marketplace_flag": True
+                })
+            else:
+                connection.update({"marketplace_flag": False})
+
+            # Apply category filter on connections.
+            categorise_filter = {
+                "org_flag": org_flag,
+                "marketplace_flag": marketplace_flag
+            }
+
+            categorise_filter = drop_none_dict(categorise_filter)
+            self._logger.info(f"Categorise filter: {categorise_filter}")
+
+            if match_post_filter(connection, categorise_filter, True):
+                res.append(connection)
+
+        pagination_result = paginate(res, page if page else 1, page_size if page_size else 10)
+
+        return pagination_result
 
     async def add_task(self,
                        context: InjectionContext,
