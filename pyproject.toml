@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dexa-sdk"
-version = "0.1.0"
+version = "0.1.1"
 description = "Store and manage Data Exchange Agreements (DEXA)"
 authors = ["George J Padayatti <george.padayatti@igrant.io>"]
 license = "MIT"
