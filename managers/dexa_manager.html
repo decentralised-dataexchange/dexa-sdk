@@ -1,0 +1,4395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.managers.dexa_manager API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.managers.dexa_manager</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import uuid
+import json
+import aiohttp
+import typing
+import asyncio
+from loguru import logger
+from web3._utils.encoding import to_json
+from aries_cloudagent.core.dispatcher import Dispatcher
+from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.wallet.base import BaseWallet
+from aries_cloudagent.wallet.indy import IndyWallet
+from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
+from aries_cloudagent.connections.models.connection_target import ConnectionTarget
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.messaging.agent_message import AgentMessage
+from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
+from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManager
+)
+from aries_cloudagent.transport.inbound.receipt import MessageReceipt
+from mydata_did.v1_0.utils.util import bool_to_str
+from mydata_did.v1_0.messages.data_controller_details import DataControllerDetailsMessage
+from mydata_did.v1_0.messages.data_controller_details_response import (
+    DataControllerDetailsResponseMessage
+)
+from dexa_protocol.v1_0.messages.negotiation.request_dda import RequestDDAMessage
+from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
+from dexa_protocol.v1_0.messages.negotiation.accept_dda import AcceptDDAMessage
+from dexa_protocol.v1_0.models.offer_dda_model import (
+    OfferDDAMessageBodyModel,
+    CustomerIdentificationModel
+)
+from dexa_protocol.v1_0.models.accept_dda_model import (
+    AcceptDDAMessageBodyModel
+)
+from dexa_protocol.v1_0.models.request_dda_model import RequestDDAModel
+from dexa_protocol.v1_0.messages.marketplace.publish_dda import PublishDDAMessage
+from dexa_protocol.v1_0.models.publish_dda_model import PublishDDAModel
+from dexa_protocol.v1_0.messages.marketplace.delete_dda import DeleteDDAMessage
+from dexa_protocol.v1_0.models.delete_dda_model import DeleteDDAModel
+from dexa_protocol.v1_0.messages.marketplace.list_marketplace_dda import ListMarketplaceDDAMessage
+from dexa_protocol.v1_0.messages.marketplace.list_marketplace_dda_response import (
+    ListMarketplaceDDAResponseMessage
+)
+from dexa_protocol.v1_0.models.list_marketplace_dda_response_model import (
+    ListMarketplaceDDAResponseBody,
+    ListMarketplaceDDAResponseModel
+)
+from dexa_protocol.v1_0.messages.negotiation.dda_negotiation_receipt import (
+    DDANegotiationReceiptMessage
+)
+from dexa_protocol.v1_0.models.dda_negotiation_receipt_model import (
+    DDANegotiationReceiptBodyModel
+)
+from .ada_manager import V2ADAManager
+from ..utils import (
+    PaginationResult,
+    paginate_records,
+    drop_none_dict
+)
+from ..agreements.dda.v1_0.models.dda_instance_models import (
+    DataDisclosureAgreementInstanceModel
+)
+from ..agreements.da.v1_0.records.da_template_record import (
+    DataAgreementTemplateRecord
+)
+from ..agreements.dda.v1_0.records.dda_template_record import (
+    DataDisclosureAgreementTemplateRecord
+)
+from ..agreements.dda.v1_0.records.dda_instance_record import (
+    DataDisclosureAgreementInstanceRecord
+)
+from ..agreements.dda.v1_0.models.dda_models import (
+    DDA_DEFAULT_CONTEXT,
+    DDA_TYPE,
+    DataDisclosureAgreementModel,
+)
+from ..marketplace.records.marketplace_connection_record import (
+    MarketplaceConnectionRecord
+)
+from ..marketplace.records.publish_dda_record import (
+    PublishDDARecord
+)
+from ..marketplace.records.published_dda_template_record import (
+    PublishedDDATemplateRecord
+)
+from ..data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord
+)
+from ..agreements.da.v1_0.records.customer_identification_record import (
+    CustomerIdentificationRecord
+)
+from ..ledgers.ethereum.core import EthereumClient
+from ..did_mydata.core import DIDMyDataBuilder
+
+
+class DexaManager:
+    &#34;&#34;&#34;Manages Dexa related functions&#34;&#34;&#34;
+
+    def __init__(self, context: InjectionContext) -&gt; None:
+        &#34;&#34;&#34;Initialise Dexa manager
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+        &#34;&#34;&#34;
+
+        # Injection context
+        self._context = context
+
+        # Logger
+        self._logger = logger
+
+    @property
+    def context(self) -&gt; InjectionContext:
+        &#34;&#34;&#34;Accessor for injection context
+
+        Returns:
+            InjectionContext: Injection context
+        &#34;&#34;&#34;
+        return self._context
+
+    @property
+    def logger(self):
+        &#34;&#34;&#34;Accessor for logger.&#34;&#34;&#34;
+        return self._logger
+
+    async def create_and_store_dda_template_in_wallet(
+            self,
+            dda: dict,
+            *,
+            publish_flag: bool = True
+    ) -&gt; DataDisclosureAgreementTemplateRecord:
+        &#34;&#34;&#34;Create and store dda template in wallet
+
+        Args:
+            dda (dict): DDA template.
+            publish_flag (bool): Publish flag
+            schema_id (str): Schema identifier
+        &#34;&#34;&#34;
+
+        # Temp hack
+        template_version = &#34;1.0.0&#34;
+        template_id = str(uuid.uuid4())
+        dda.update({&#34;@context&#34;: DDA_DEFAULT_CONTEXT})
+        dda.update({&#34;@id&#34;: template_id})
+        dda.update({&#34;@type&#34;: DDA_TYPE})
+        dda.update({&#34;version&#34;: template_version})
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+        controller_did = await wallet.get_public_did()
+
+        dda[&#34;dataController&#34;].update({&#34;did&#34;: f&#34;did:sov:{controller_did.did}&#34;})
+
+        # Validate the data agreement.
+        dda: DataDisclosureAgreementModel = \
+            DataDisclosureAgreementModel.deserialize(
+                dda)
+
+        # Hack: Iterate through personal data records and add a unique identifier
+        # Todo: Correlating personal data across agreements needs to be done.
+        pds = dda.personal_data
+        for pd in pds:
+            pd.attribute_id = str(uuid.uuid4())
+
+        # Update the personal data with attribute identifiers to the agreement
+        dda.personal_data = pds
+
+        # Create template record
+        record = DataDisclosureAgreementTemplateRecord(
+            template_id=template_id,
+            template_version=template_version,
+            state=DataDisclosureAgreementTemplateRecord.STATE_DEFINITION,
+            data_disclosure_agreement=dda.serialize(),
+            industry_sector=dda.data_sharing_restrictions.industry_sector.lower(),
+            publish_flag=bool_to_str(publish_flag),
+            latest_version_flag=bool_to_str(True)
+        )
+
+        await record.save(self.context)
+
+        return record
+
+    async def query_dda_templates_in_wallet(
+        self,
+        template_id: str = None,
+        template_version: str = None,
+        industry_sector: str = None,
+        publish_flag: str = &#34;false&#34;,
+        delete_flag: str = &#34;false&#34;,
+        latest_version_flag: str = &#34;false&#34;,
+        page: int = 1,
+        page_size: int = 10,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query DA templates in wallet.
+
+        Args:
+            template_id (str, optional): Template id. Defaults to None.
+            template_version (str, optional): Template version. Defaults to None.
+            industry_sector (str, optional): Industry sector. Defaults to None.
+            publish_flag (str, optional): Publish flag. Defaults to &#34;false&#34;.
+            delete_flag (str, optional): Delete flag. Defaults to &#34;false&#34;.
+            latest_version_flag (str, optional): Latest version flag. Defaults to &#34;false&#34;.
+            page (int): Page number. Defaults to 1.
+            page_size (int): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+
+        # Query by version is only possible if the template id is provided
+        if template_version:
+            assert template_id, &#34;Template identifier is required to query by version&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;template_id&#34;: template_id,
+            &#34;template_version&#34;: template_version,
+            &#34;industry_sector&#34;: industry_sector.lower() if industry_sector else industry_sector,
+            &#34;publish_flag&#34;: publish_flag,
+            &#34;delete_flag&#34;: delete_flag,
+            &#34;latest_version_flag&#34;: latest_version_flag
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await DataDisclosureAgreementTemplateRecord.query(
+            context=self.context,
+            tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def update_dda_template_in_wallet(
+        self,
+        template_id: str,
+        *,
+        dda: dict,
+        publish_flag: bool = True,
+    ) -&gt; DataDisclosureAgreementTemplateRecord:
+        &#34;&#34;&#34;Update DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier
+            publish_flag (bool, optional): Publish flag. Defaults to True.
+
+        Returns:
+            DataDisclosureAgreementTemplateRecord: Upgraded template record.
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        # Upgrade the existing template to next version.
+        upgraded = await existing_template.upgrade(
+            self.context,
+            dda,
+            bool_to_str(publish_flag)
+        )
+
+        # Post update actions
+        if publish_flag:
+            await self.post_update_dda_template(
+                upgraded
+            )
+
+        return upgraded
+
+    async def delete_dda_template_in_wallet(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Delete DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier.
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        assert existing_template, &#34;DDA template not found.&#34;
+
+        # Delete template.
+        await existing_template.delete_template(self.context)
+
+        # Post delete actions.
+        await self.post_delete_dda_template(
+            template_id
+        )
+
+    async def publish_dda_template_wallet(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Publish DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        await existing_template.publish_template(self.context)
+
+        # Post publish actions.
+        await self.post_update_dda_template(existing_template)
+
+    async def send_message_with_return_route_all(
+        self,
+        message: AgentMessage,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[str, str, dict]:
+        &#34;&#34;&#34;Send message with return route all in transport decorator.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        &#34;&#34;&#34;
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Get pack format from context
+        pack_format: PackWireFormat = await self.context.inject(BaseWireFormat)
+
+        # Add transport decorator
+        message._decorators[&#34;transport&#34;] = TransportDecorator(
+            return_route=&#34;all&#34;
+        )
+
+        # Initialise connection manager
+        connection_manager = ConnectionManager(self.context)
+
+        # Fetch connection targets
+        connection_targets = await connection_manager.fetch_connection_targets(connection_record)
+
+        assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+        connection_target: ConnectionTarget = connection_targets[0]
+
+        # Pack message
+        packed_message = await pack_format.pack(
+            context=self.context,
+            message_json=message.serialize(as_string=True),
+            recipient_keys=connection_target.recipient_keys,
+            routing_keys=None,
+            sender_key=connection_target.sender_key,
+        )
+
+        # Headers
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        # Send request and receive response.
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(connection_target.endpoint, data=packed_message) as response:
+                # Assert status code is 200
+                assert response.status == 200, \
+                    f&#34;HTTP request failed with status code {response.status}&#34;
+
+                message_body = await response.read()
+
+                # Unpack message
+                unpacked = await wallet.unpack_message(message_body)
+                (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                # Convert message to dict.
+                message_dict = json.loads(message_json)
+
+                return (sender_verkey, recipient_verkey, message_dict)
+
+    async def add_marketplace_connection(
+        self,
+        connection_id: str
+    ) -&gt; MarketplaceConnectionRecord:
+        &#34;&#34;&#34;Set connection as marketplace.
+
+        Args:
+            connection_id (str): Connection identifier.
+
+        Returns:
+            MarketplaceConnectionRecord: Marketplace connection record.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        record = await MarketplaceConnectionRecord.set_connection_as_marketplace(
+            self.context,
+            connection_record.connection_id
+        )
+
+        return record
+
+    async def query_marketplace_connections(
+        self,
+        connection_id: str,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query marketplace connections
+
+        Args:
+            connection_id (str): Connection identifier
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+
+        tag_filter = {&#34;connection_id&#34;: connection_id}
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await MarketplaceConnectionRecord.query(self.context, tag_filter)
+
+        pagination_result = paginate_records(records, page, page_size)
+
+        return pagination_result
+
+    async def post_update_dda_template(
+        self,
+        template_record: DataDisclosureAgreementTemplateRecord
+    ):
+        &#34;&#34;&#34;Post update DDA template actions.
+
+        Args:
+            template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+        &#34;&#34;&#34;
+
+        # Find all the marketplace connections.
+        # Query to find all marketplaces the template is published to.
+        tag_filter = {
+            &#34;template_id&#34;: template_record.template_id
+        }
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        # Notify all the marketplaces about the update.
+        for record in records:
+            await self.send_publish_dda_message(
+                record,
+                template_record
+            )
+
+    async def send_publish_dda_message(
+        self,
+        publish_dda_record: PublishDDARecord,
+        template_record: DataDisclosureAgreementTemplateRecord
+    ):
+        &#34;&#34;&#34;Send publish DDA message.
+
+        Args:
+            publish_dda_record (PublishDDARecord): Publish dda record.
+            template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+        # Create connection invitation
+        mgr = V2ADAManager(self.context)
+        (connection_record_for_marketplace, connection_invitation_for_marketplace) = \
+            await mgr.create_invitation(
+            auto_accept=True,
+            public=False,
+            multi_use=True,
+            alias=f&#34;DDA_{template_record.template_id}_QR_{publish_dda_record._id}&#34;
+        )
+
+        # Publish dda message
+        publish_dda_message = PublishDDAMessage(
+            body=PublishDDAModel(
+                dda=template_record.dda_model,
+                connection_url=connection_invitation_for_marketplace.to_url()
+            )
+        )
+
+        # Send publish dda message to marketplace connection
+        await mgr.send_reply_message(
+            publish_dda_message,
+            publish_dda_record.connection_id
+        )
+
+    async def publish_dda_template_to_marketplace(
+        self,
+        connection_id: str,
+        template_id: str
+    ) -&gt; PublishDDARecord:
+        &#34;&#34;&#34;Publish DDA template to marketplace
+
+        Args:
+            connection_id (str): Connection ID
+            template_id (str): Template ID
+
+        Returns:
+            PublishDDARecord: Publish DDA record.
+        &#34;&#34;&#34;
+
+        # Fetch template
+        template_record = await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            template_id
+        )
+
+        assert template_record._publish_flag, \
+            &#34;DDA must be published locally before published to marketplace.&#34;
+
+        # Connection record
+        connection_record: ConnectionRecord = \
+            await MarketplaceConnectionRecord.retrieve_connection_record(
+                self.context,
+                connection_id
+            )
+
+        # Create Publish DDA record.
+        # Publish DDA record is mapping of which template is published in which marketplace.
+        publish_dda_record = await PublishDDARecord.store_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            template_record.template_id,
+            template_record.data_disclosure_agreement
+        )
+
+        # Send publish dda message to marketplace.
+        await self.send_publish_dda_message(
+            publish_dda_record,
+            template_record
+        )
+
+        return publish_dda_record
+
+    async def fetch_and_save_controller_details_for_connection(
+        self,
+        connection_record: ConnectionRecord
+    ):
+        &#34;&#34;&#34;Fetch and save controller details for connection
+
+        Args:
+            connection_record (ConnectionRecord): Connection record
+        &#34;&#34;&#34;
+        controller_details_message = DataControllerDetailsMessage()
+        (sender_verkey, recipient_verkey, message_dict) = \
+            await self.send_message_with_return_route_all(
+            controller_details_message,
+            connection_record
+        )
+        # Data controller detail response.
+        data_controller_details_response: DataControllerDetailsResponseMessage = \
+            DataControllerDetailsResponseMessage.deserialize(
+                message_dict
+            )
+
+        # Save controller details for a connection.
+        await ConnectionControllerDetailsRecord.set_controller_details_for_connection(
+            self.context,
+            connection_record,
+            data_controller_details_response.body
+        )
+
+    async def post_connection_delete_actions(
+        self,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Post connection record delete actions.
+
+        Args:
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+
+        self._logger.info(&#34;Performing post delete actions for connection records...&#34;)
+
+        # Delete marketplace connection records.
+        tag_filter = {&#34;connection_id&#34;: connection_id}
+        marketplace_records = await MarketplaceConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+        if marketplace_records:
+            marketplace_record = marketplace_records[0]
+            await marketplace_record.delete_record(self.context)
+
+        # Delete controller connection records.
+        controller_records = await ConnectionControllerDetailsRecord.query(
+            self.context,
+            tag_filter
+        )
+        if controller_records:
+            controller_record = controller_records[0]
+            await controller_record.delete_record(self.context)
+
+    async def handle_connections_webhook(
+        self,
+        body: dict
+    ):
+        &#34;&#34;&#34;Handle connections webhook.
+
+        Args:
+            body (dict): Connection record.
+        &#34;&#34;&#34;
+
+        # Fetch connection record.
+        connection_record: ConnectionRecord = ConnectionRecord.deserialize(body)
+
+        if connection_record.state == ConnectionRecord.STATE_ACTIVE:
+            # Save controller details for connection.
+            await self.fetch_and_save_controller_details_for_connection(
+                connection_record
+            )
+        if connection_record.state == &#34;delete&#34;:
+            # Perform cleanup.
+            await self.post_connection_delete_actions(connection_record.connection_id)
+
+    async def process_publish_dda_request_message(
+        self,
+        message: PublishDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process publish dda request message.
+
+        Args:
+            message (PublishDDAMessage): Publish dda request message
+            message_receipt (MessageReceipt): Message receipt
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Save a publish DDA record if not existing.
+        await PublishedDDATemplateRecord.store_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            message.body.dda,
+            message.body.connection_url
+        )
+
+    async def query_publish_dda_template_records(
+        self,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query publish DDA template record.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Fetch all the published DDA records.
+        records = await PublishedDDATemplateRecord.query(self.context, {})
+
+        # Paginate the records.
+        pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+        # Return the result.
+        return pagination_result
+
+    async def process_delete_dda_message(
+        self,
+        message: DeleteDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process delete DDA message.
+
+        Args:
+            message (DeleteDDAMessage): Delete DDA message
+            message_receipt (MessageReceipt): Message receipt
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Template id.
+        template_id = message.body.template_id
+
+        # Delete published DDA template record.
+        await PublishedDDATemplateRecord.delete_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            template_id
+        )
+
+    async def post_delete_dda_template(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Post delete dda template record actions.
+
+        Inform the data marketplaces the template is deleted.
+
+        Args:
+            template_id (str): Template identifier.
+        &#34;&#34;&#34;
+
+        # Construct delete DDA message.
+        message = DeleteDDAMessage(
+            body=DeleteDDAModel(
+                template_id=template_id
+            )
+        )
+
+        # Query to find all marketplaces the template is published to.
+        tag_filter = {
+            &#34;template_id&#34;: template_id
+        }
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        mgr = V2ADAManager(self.context)
+
+        # Notify all the marketplaces the template is deleted.
+        for record in records:
+            await mgr.send_reply_message(
+                message,
+                record.connection_id
+            )
+
+            # Delete publish DDA records.
+            await record.delete_record(self.context)
+
+    async def list_dda_published_in_marketplace(
+        self,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;List DDAs published in a marketplace.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Fetch all publish dda records.
+        tag_filter = {}
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+        return pagination_result
+
+    async def send_list_marketplace_dda_message(
+        self,
+        connection_id: str
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Send list marketplace DDA message.
+
+        Args:
+            connection_id (str): Marketplace connection identifier.
+        &#34;&#34;&#34;
+
+        # Retrieve connection record for marketplace connection.
+        connection_record = \
+            await MarketplaceConnectionRecord.retrieve_connection_record(
+                self.context,
+                connection_id
+            )
+
+        # Construct the list dda message.
+        message = ListMarketplaceDDAMessage()
+
+        (sender_verkey, recipient_verkey, message_dict) = \
+            await self.send_message_with_return_route_all(
+            message,
+            connection_record
+        )
+
+        # Deserialise the message dict into response message.
+        response: ListMarketplaceDDAResponseMessage = \
+            ListMarketplaceDDAResponseMessage.deserialize(
+                message_dict
+            )
+
+        results = response.body.results
+
+        # Pagination result.
+        pagination_result = paginate_records(
+            results,
+            1,
+            100000
+        )
+
+        return pagination_result
+
+    async def process_list_marketplace_dda_message(
+        self,
+        message: ListMarketplaceDDAMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process list marketplace DDA message.
+
+        Args:
+            message (ListMarketplaceDDAMessage): List marketplace DDA message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Query published DDAs
+        tag_filter = {}
+        records: typing.List[PublishedDDATemplateRecord] = \
+            await PublishedDDATemplateRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        # Iterate through the records and create DDA results.
+        results = []
+        for record in records:
+            results.append(
+                ListMarketplaceDDAResponseModel(
+                    dda=record.dda,
+                    template_id=record.template_id,
+                    industry_sector=record.industry_sector,
+                    connection_url=record.connection_url,
+                    created_at=record.created_at,
+                    updated_at=record.updated_at
+                )
+            )
+
+        # Construct response message.
+        response_message = ListMarketplaceDDAResponseMessage(
+            body=ListMarketplaceDDAResponseBody(
+                results=results
+            )
+        )
+
+        # Initialise ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send response message.
+        await mgr.send_reply_message(
+            response_message
+        )
+
+    async def get_message_class_from_dict(
+            self,
+            message_dict: dict
+    ) -&gt; AgentMessage:
+        &#34;&#34;&#34;Get message class from message dict.
+
+        Args:
+            message_dict (dict): Message dict.
+
+        Returns:
+            AgentMessage: Agent message.
+        &#34;&#34;&#34;
+
+        # Initialise dispatcher
+        dispatcher = Dispatcher(self.context)
+
+        # Get message class.
+        msg_class = await dispatcher.make_message(message_dict)
+
+        return msg_class
+
+    async def process_request_dda_message(
+        self,
+        message: RequestDDAMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process request DDA message.
+
+        Args:
+            message (RequestDDAMessage): Request DDA message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch the template record.
+        template_id = message.body.template_id
+
+        # Build instance record.
+        (dda_instance_record, dda_instance_model) = \
+            await DataDisclosureAgreementInstanceRecord.build_instance_from_template(
+                self.context,
+                template_id,
+                connection_record)
+
+        # Fetch customer identification data agreement if available.
+        customer_identification_records = await CustomerIdentificationRecord.query(self.context, {})
+
+        if customer_identification_records:
+            customer_identification_record: CustomerIdentificationRecord = \
+                customer_identification_records[0]
+
+            # Fetch DA template.
+            da_template_record: DataAgreementTemplateRecord = \
+                await customer_identification_record.data_agreement_template_record(
+                    self.context
+                )
+
+            # Build dda offer message
+            offer_dda_message = OfferDDAMessage(
+                body=OfferDDAMessageBodyModel(
+                    dda=dda_instance_model,
+                    customer_identification=CustomerIdentificationModel(
+                        schema_id=da_template_record.schema_id,
+                        cred_def_id=da_template_record.cred_def_id
+                    )
+                )
+            )
+        else:
+            # Build dda offer message
+            offer_dda_message = OfferDDAMessage(
+                body=OfferDDAMessageBodyModel(
+                    dda=dda_instance_model
+                )
+            )
+
+        mgr = V2ADAManager(self.context)
+
+        await mgr.send_reply_message(
+            offer_dda_message,
+            connection_record.connection_id
+        )
+
+    async def request_dda_offer_from_ds(
+        self,
+        connection_id: str,
+        template_id: str
+    ):
+        &#34;&#34;&#34;DUS requests DDA offer from DS.
+
+        Args:
+            connection_id (str): Connection ID.
+            template_id (str): Template ID.
+        &#34;&#34;&#34;
+
+        # Retreive connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        # Send DDA request message to DS.
+        message = RequestDDAMessage(
+            body=RequestDDAModel(
+                template_id=template_id
+            )
+        )
+
+        # Initialise ADA manager.
+        mgr = V2ADAManager(self.context)
+
+        await mgr.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
+    async def fetch_customer_identification_data_agreement(
+        self
+    ) -&gt; typing.Union[None, CustomerIdentificationRecord]:
+        &#34;&#34;&#34;Fetch customer identification data agreement.
+
+        Returns:
+            typing.Union[None, CustomerIdentificationRecord]: Customer identification record.
+        &#34;&#34;&#34;
+        records = await CustomerIdentificationRecord.query(self.context, {})
+
+        return {} if not records else records[0]
+
+    async def configure_customer_identification_data_agreement(
+        self,
+        da_template_id: str
+    ) -&gt; CustomerIdentificationRecord:
+        &#34;&#34;&#34;Configure customer identification data agreement.
+
+        Args:
+            da_template_id (str): DA template ID.
+
+        Returns:
+            CustomerIdentificationRecord: _description_
+        &#34;&#34;&#34;
+
+        return await CustomerIdentificationRecord.create_or_update_record(
+            self.context,
+            da_template_id
+        )
+
+    async def process_offer_dda_message(
+        self,
+        message: OfferDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process offer dda message.
+
+        Args:
+            message (OfferDDAMessage): Offer DDA message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        (record, instance_model) = \
+            await DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer(
+            self.context,
+            message,
+            self.context.connection_record
+        )
+
+        # Construct accept DDA message.
+        accept_dda_message = AcceptDDAMessage(
+            body=AcceptDDAMessageBodyModel(
+                dda=instance_model
+            )
+        )
+
+        # Initialise the ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send the message.
+        await mgr.send_reply_message(accept_dda_message)
+
+    async def process_accept_dda_message(
+        self,
+        message: AcceptDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process accept dda message.
+
+        Args:
+            message (AcceptDDAMessage): Accept DDA message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        instance_record = \
+            await DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept(
+                self.context,
+                message
+            )
+
+        # Anchor DDA instance to blochain.
+        await self.anchor_dda_instance_to_blockchain_async_task(instance_record.instance_id)
+
+    async def add_task(self,
+                       context: InjectionContext,
+                       coro: typing.Coroutine,
+                       task_complete: typing.Callable = None,
+                       ident: str = None) -&gt; PendingTask:
+        &#34;&#34;&#34;
+        Add a new task to the queue, delaying execution if busy.
+
+        Args:
+            context: Injection context to be used.
+            coro: The coroutine to run
+            task_complete: A callback to run on completion
+            ident: A string identifier for the task
+
+        Returns: a future resolving to the asyncio task instance once queued
+        &#34;&#34;&#34;
+        loop = asyncio.get_event_loop()
+        pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
+        return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
+
+    async def anchor_dda_instance_to_blockchain_async_task(
+        self,
+        instance_id: str
+    ):
+        &#34;&#34;&#34;Async task to anchor DDA instance to blockchain.
+
+        Args:
+            instance_id (str): Instance id
+        &#34;&#34;&#34;
+        pending_task = await self.add_task(
+            self.context,
+            self.anchor_dda_instance_to_blockchain(instance_id),
+            self.anchor_dda_instance_to_blockchain_async_task_callback
+        )
+        self._logger.info(pending_task)
+
+    async def anchor_dda_instance_to_blockchain(
+        self,
+        instance_id: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Anchor DDA instance to blockchain.
+
+        Args:
+            instance_id (str): Instance id
+        &#34;&#34;&#34;
+
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+
+        # Fetch DDA instance record.
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context,
+            tag_filter,
+        )
+
+        assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+        dda_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                dda_instance_record.data_disclosure_agreement)
+
+        did_mydata_builder = DIDMyDataBuilder(
+            artefact=dda_model
+        )
+
+        (tx_hash, tx_receipt) = await eth_client.emit_dda_did(
+            did_mydata_builder.generate_did(
+                &#34;DataDisclosureAgreement&#34;
+            )
+        )
+
+        return (dda_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+
+    async def anchor_dda_instance_to_blockchain_async_task_callback(
+        self, *args, **kwargs
+    ):
+        &#34;&#34;&#34;Anchor DDA instance to blockchain async task callback function
+        &#34;&#34;&#34;
+
+        # Obtain the completed task.
+        completed_task: CompletedTask = args[0]
+
+        # Obtain the results from the task.
+        (instance_id, mydata_did, tx_hash, tx_receipt) = completed_task.task.result()
+
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+
+        # Fetch data agreement instance record.
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context,
+            tag_filter,
+        )
+
+        assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+
+        transaction_receipt = json.loads(to_json(tx_receipt))
+        transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+        # Update the data agreement with blockchain metadata.
+        dda_instance_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+        dda_instance_record.mydata_did = mydata_did
+        dda_instance_record.blockchain_receipt = transaction_receipt
+
+        await dda_instance_record.save(self.context)
+
+        # Send negotiation receipt to DUS.
+        # Construct negotiation receipt message.
+        message = DDANegotiationReceiptMessage(
+            body=DDANegotiationReceiptBodyModel(
+                instance_id=dda_instance_record.instance_id,
+                blockchain_receipt=transaction_receipt,
+                blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+                mydata_did=mydata_did
+            )
+        )
+
+        # Fetch connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            dda_instance_record.connection_id
+        )
+
+        # Initialise ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send message
+        await mgr.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
+    async def query_dda_instances(
+        self,
+        instance_id: str,
+        template_id: str,
+        template_version: str,
+        connection_id: str,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query DDA instances
+
+        Args:
+            instance_id (str): Instance identifier
+            template_id (str): Template identifier
+            template_version (str): Template version
+            connection_id (str): Connection id
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+        # Query by version is only possible if the template id is provided
+        if template_version:
+            assert template_id, &#34;Template identifier is required to query by version&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id,
+            &#34;template_id&#34;: template_id,
+            &#34;template_version&#34;: template_version,
+            &#34;connection_id&#34;: connection_id
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await DataDisclosureAgreementInstanceRecord.query(
+            context=self.context,
+            tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def process_dda_negotiation_receipt_message(
+        self,
+        message: DDANegotiationReceiptMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process DDA negotiation receipt message.
+
+        Args:
+            message (DDANegotiationReceiptMessage): DDA negotiation receipt message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        instance_id = message.body.instance_id
+        blockchain_receipt = message.body.blockchain_receipt
+        blink = message.body.blink
+        mydata_did = message.body.mydata_did
+
+        # Fetch the DDA instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+        instance_record: DataDisclosureAgreementInstanceRecord = \
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context,
+                tag_filter
+            )
+
+        # Update instance record.
+        instance_record.blockchain_receipt = blockchain_receipt
+        instance_record.blink = blink
+        instance_record.mydata_did = mydata_did
+
+        await instance_record.save(self.context)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager"><code class="flex name class">
+<span>class <span class="ident">DexaManager</span></span>
+<span>(</span><span>context: aries_cloudagent.config.injection_context.InjectionContext)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manages Dexa related functions</p>
+<p>Initialise Dexa manager</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DexaManager:
+    &#34;&#34;&#34;Manages Dexa related functions&#34;&#34;&#34;
+
+    def __init__(self, context: InjectionContext) -&gt; None:
+        &#34;&#34;&#34;Initialise Dexa manager
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+        &#34;&#34;&#34;
+
+        # Injection context
+        self._context = context
+
+        # Logger
+        self._logger = logger
+
+    @property
+    def context(self) -&gt; InjectionContext:
+        &#34;&#34;&#34;Accessor for injection context
+
+        Returns:
+            InjectionContext: Injection context
+        &#34;&#34;&#34;
+        return self._context
+
+    @property
+    def logger(self):
+        &#34;&#34;&#34;Accessor for logger.&#34;&#34;&#34;
+        return self._logger
+
+    async def create_and_store_dda_template_in_wallet(
+            self,
+            dda: dict,
+            *,
+            publish_flag: bool = True
+    ) -&gt; DataDisclosureAgreementTemplateRecord:
+        &#34;&#34;&#34;Create and store dda template in wallet
+
+        Args:
+            dda (dict): DDA template.
+            publish_flag (bool): Publish flag
+            schema_id (str): Schema identifier
+        &#34;&#34;&#34;
+
+        # Temp hack
+        template_version = &#34;1.0.0&#34;
+        template_id = str(uuid.uuid4())
+        dda.update({&#34;@context&#34;: DDA_DEFAULT_CONTEXT})
+        dda.update({&#34;@id&#34;: template_id})
+        dda.update({&#34;@type&#34;: DDA_TYPE})
+        dda.update({&#34;version&#34;: template_version})
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+        controller_did = await wallet.get_public_did()
+
+        dda[&#34;dataController&#34;].update({&#34;did&#34;: f&#34;did:sov:{controller_did.did}&#34;})
+
+        # Validate the data agreement.
+        dda: DataDisclosureAgreementModel = \
+            DataDisclosureAgreementModel.deserialize(
+                dda)
+
+        # Hack: Iterate through personal data records and add a unique identifier
+        # Todo: Correlating personal data across agreements needs to be done.
+        pds = dda.personal_data
+        for pd in pds:
+            pd.attribute_id = str(uuid.uuid4())
+
+        # Update the personal data with attribute identifiers to the agreement
+        dda.personal_data = pds
+
+        # Create template record
+        record = DataDisclosureAgreementTemplateRecord(
+            template_id=template_id,
+            template_version=template_version,
+            state=DataDisclosureAgreementTemplateRecord.STATE_DEFINITION,
+            data_disclosure_agreement=dda.serialize(),
+            industry_sector=dda.data_sharing_restrictions.industry_sector.lower(),
+            publish_flag=bool_to_str(publish_flag),
+            latest_version_flag=bool_to_str(True)
+        )
+
+        await record.save(self.context)
+
+        return record
+
+    async def query_dda_templates_in_wallet(
+        self,
+        template_id: str = None,
+        template_version: str = None,
+        industry_sector: str = None,
+        publish_flag: str = &#34;false&#34;,
+        delete_flag: str = &#34;false&#34;,
+        latest_version_flag: str = &#34;false&#34;,
+        page: int = 1,
+        page_size: int = 10,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query DA templates in wallet.
+
+        Args:
+            template_id (str, optional): Template id. Defaults to None.
+            template_version (str, optional): Template version. Defaults to None.
+            industry_sector (str, optional): Industry sector. Defaults to None.
+            publish_flag (str, optional): Publish flag. Defaults to &#34;false&#34;.
+            delete_flag (str, optional): Delete flag. Defaults to &#34;false&#34;.
+            latest_version_flag (str, optional): Latest version flag. Defaults to &#34;false&#34;.
+            page (int): Page number. Defaults to 1.
+            page_size (int): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+
+        # Query by version is only possible if the template id is provided
+        if template_version:
+            assert template_id, &#34;Template identifier is required to query by version&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;template_id&#34;: template_id,
+            &#34;template_version&#34;: template_version,
+            &#34;industry_sector&#34;: industry_sector.lower() if industry_sector else industry_sector,
+            &#34;publish_flag&#34;: publish_flag,
+            &#34;delete_flag&#34;: delete_flag,
+            &#34;latest_version_flag&#34;: latest_version_flag
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await DataDisclosureAgreementTemplateRecord.query(
+            context=self.context,
+            tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def update_dda_template_in_wallet(
+        self,
+        template_id: str,
+        *,
+        dda: dict,
+        publish_flag: bool = True,
+    ) -&gt; DataDisclosureAgreementTemplateRecord:
+        &#34;&#34;&#34;Update DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier
+            publish_flag (bool, optional): Publish flag. Defaults to True.
+
+        Returns:
+            DataDisclosureAgreementTemplateRecord: Upgraded template record.
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        # Upgrade the existing template to next version.
+        upgraded = await existing_template.upgrade(
+            self.context,
+            dda,
+            bool_to_str(publish_flag)
+        )
+
+        # Post update actions
+        if publish_flag:
+            await self.post_update_dda_template(
+                upgraded
+            )
+
+        return upgraded
+
+    async def delete_dda_template_in_wallet(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Delete DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier.
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        assert existing_template, &#34;DDA template not found.&#34;
+
+        # Delete template.
+        await existing_template.delete_template(self.context)
+
+        # Post delete actions.
+        await self.post_delete_dda_template(
+            template_id
+        )
+
+    async def publish_dda_template_wallet(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Publish DDA template in wallet.
+
+        Args:
+            template_id (str): Template identifier
+        &#34;&#34;&#34;
+
+        # Fetch the latest template.
+        existing_template = \
+            await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+                self.context,
+                template_id
+            )
+
+        await existing_template.publish_template(self.context)
+
+        # Post publish actions.
+        await self.post_update_dda_template(existing_template)
+
+    async def send_message_with_return_route_all(
+        self,
+        message: AgentMessage,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[str, str, dict]:
+        &#34;&#34;&#34;Send message with return route all in transport decorator.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        &#34;&#34;&#34;
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Get pack format from context
+        pack_format: PackWireFormat = await self.context.inject(BaseWireFormat)
+
+        # Add transport decorator
+        message._decorators[&#34;transport&#34;] = TransportDecorator(
+            return_route=&#34;all&#34;
+        )
+
+        # Initialise connection manager
+        connection_manager = ConnectionManager(self.context)
+
+        # Fetch connection targets
+        connection_targets = await connection_manager.fetch_connection_targets(connection_record)
+
+        assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+        connection_target: ConnectionTarget = connection_targets[0]
+
+        # Pack message
+        packed_message = await pack_format.pack(
+            context=self.context,
+            message_json=message.serialize(as_string=True),
+            recipient_keys=connection_target.recipient_keys,
+            routing_keys=None,
+            sender_key=connection_target.sender_key,
+        )
+
+        # Headers
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        # Send request and receive response.
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(connection_target.endpoint, data=packed_message) as response:
+                # Assert status code is 200
+                assert response.status == 200, \
+                    f&#34;HTTP request failed with status code {response.status}&#34;
+
+                message_body = await response.read()
+
+                # Unpack message
+                unpacked = await wallet.unpack_message(message_body)
+                (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                # Convert message to dict.
+                message_dict = json.loads(message_json)
+
+                return (sender_verkey, recipient_verkey, message_dict)
+
+    async def add_marketplace_connection(
+        self,
+        connection_id: str
+    ) -&gt; MarketplaceConnectionRecord:
+        &#34;&#34;&#34;Set connection as marketplace.
+
+        Args:
+            connection_id (str): Connection identifier.
+
+        Returns:
+            MarketplaceConnectionRecord: Marketplace connection record.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        record = await MarketplaceConnectionRecord.set_connection_as_marketplace(
+            self.context,
+            connection_record.connection_id
+        )
+
+        return record
+
+    async def query_marketplace_connections(
+        self,
+        connection_id: str,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query marketplace connections
+
+        Args:
+            connection_id (str): Connection identifier
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+
+        tag_filter = {&#34;connection_id&#34;: connection_id}
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await MarketplaceConnectionRecord.query(self.context, tag_filter)
+
+        pagination_result = paginate_records(records, page, page_size)
+
+        return pagination_result
+
+    async def post_update_dda_template(
+        self,
+        template_record: DataDisclosureAgreementTemplateRecord
+    ):
+        &#34;&#34;&#34;Post update DDA template actions.
+
+        Args:
+            template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+        &#34;&#34;&#34;
+
+        # Find all the marketplace connections.
+        # Query to find all marketplaces the template is published to.
+        tag_filter = {
+            &#34;template_id&#34;: template_record.template_id
+        }
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        # Notify all the marketplaces about the update.
+        for record in records:
+            await self.send_publish_dda_message(
+                record,
+                template_record
+            )
+
+    async def send_publish_dda_message(
+        self,
+        publish_dda_record: PublishDDARecord,
+        template_record: DataDisclosureAgreementTemplateRecord
+    ):
+        &#34;&#34;&#34;Send publish DDA message.
+
+        Args:
+            publish_dda_record (PublishDDARecord): Publish dda record.
+            template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+        # Create connection invitation
+        mgr = V2ADAManager(self.context)
+        (connection_record_for_marketplace, connection_invitation_for_marketplace) = \
+            await mgr.create_invitation(
+            auto_accept=True,
+            public=False,
+            multi_use=True,
+            alias=f&#34;DDA_{template_record.template_id}_QR_{publish_dda_record._id}&#34;
+        )
+
+        # Publish dda message
+        publish_dda_message = PublishDDAMessage(
+            body=PublishDDAModel(
+                dda=template_record.dda_model,
+                connection_url=connection_invitation_for_marketplace.to_url()
+            )
+        )
+
+        # Send publish dda message to marketplace connection
+        await mgr.send_reply_message(
+            publish_dda_message,
+            publish_dda_record.connection_id
+        )
+
+    async def publish_dda_template_to_marketplace(
+        self,
+        connection_id: str,
+        template_id: str
+    ) -&gt; PublishDDARecord:
+        &#34;&#34;&#34;Publish DDA template to marketplace
+
+        Args:
+            connection_id (str): Connection ID
+            template_id (str): Template ID
+
+        Returns:
+            PublishDDARecord: Publish DDA record.
+        &#34;&#34;&#34;
+
+        # Fetch template
+        template_record = await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            template_id
+        )
+
+        assert template_record._publish_flag, \
+            &#34;DDA must be published locally before published to marketplace.&#34;
+
+        # Connection record
+        connection_record: ConnectionRecord = \
+            await MarketplaceConnectionRecord.retrieve_connection_record(
+                self.context,
+                connection_id
+            )
+
+        # Create Publish DDA record.
+        # Publish DDA record is mapping of which template is published in which marketplace.
+        publish_dda_record = await PublishDDARecord.store_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            template_record.template_id,
+            template_record.data_disclosure_agreement
+        )
+
+        # Send publish dda message to marketplace.
+        await self.send_publish_dda_message(
+            publish_dda_record,
+            template_record
+        )
+
+        return publish_dda_record
+
+    async def fetch_and_save_controller_details_for_connection(
+        self,
+        connection_record: ConnectionRecord
+    ):
+        &#34;&#34;&#34;Fetch and save controller details for connection
+
+        Args:
+            connection_record (ConnectionRecord): Connection record
+        &#34;&#34;&#34;
+        controller_details_message = DataControllerDetailsMessage()
+        (sender_verkey, recipient_verkey, message_dict) = \
+            await self.send_message_with_return_route_all(
+            controller_details_message,
+            connection_record
+        )
+        # Data controller detail response.
+        data_controller_details_response: DataControllerDetailsResponseMessage = \
+            DataControllerDetailsResponseMessage.deserialize(
+                message_dict
+            )
+
+        # Save controller details for a connection.
+        await ConnectionControllerDetailsRecord.set_controller_details_for_connection(
+            self.context,
+            connection_record,
+            data_controller_details_response.body
+        )
+
+    async def post_connection_delete_actions(
+        self,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Post connection record delete actions.
+
+        Args:
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+
+        self._logger.info(&#34;Performing post delete actions for connection records...&#34;)
+
+        # Delete marketplace connection records.
+        tag_filter = {&#34;connection_id&#34;: connection_id}
+        marketplace_records = await MarketplaceConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+        if marketplace_records:
+            marketplace_record = marketplace_records[0]
+            await marketplace_record.delete_record(self.context)
+
+        # Delete controller connection records.
+        controller_records = await ConnectionControllerDetailsRecord.query(
+            self.context,
+            tag_filter
+        )
+        if controller_records:
+            controller_record = controller_records[0]
+            await controller_record.delete_record(self.context)
+
+    async def handle_connections_webhook(
+        self,
+        body: dict
+    ):
+        &#34;&#34;&#34;Handle connections webhook.
+
+        Args:
+            body (dict): Connection record.
+        &#34;&#34;&#34;
+
+        # Fetch connection record.
+        connection_record: ConnectionRecord = ConnectionRecord.deserialize(body)
+
+        if connection_record.state == ConnectionRecord.STATE_ACTIVE:
+            # Save controller details for connection.
+            await self.fetch_and_save_controller_details_for_connection(
+                connection_record
+            )
+        if connection_record.state == &#34;delete&#34;:
+            # Perform cleanup.
+            await self.post_connection_delete_actions(connection_record.connection_id)
+
+    async def process_publish_dda_request_message(
+        self,
+        message: PublishDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process publish dda request message.
+
+        Args:
+            message (PublishDDAMessage): Publish dda request message
+            message_receipt (MessageReceipt): Message receipt
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Save a publish DDA record if not existing.
+        await PublishedDDATemplateRecord.store_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            message.body.dda,
+            message.body.connection_url
+        )
+
+    async def query_publish_dda_template_records(
+        self,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query publish DDA template record.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Fetch all the published DDA records.
+        records = await PublishedDDATemplateRecord.query(self.context, {})
+
+        # Paginate the records.
+        pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+        # Return the result.
+        return pagination_result
+
+    async def process_delete_dda_message(
+        self,
+        message: DeleteDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process delete DDA message.
+
+        Args:
+            message (DeleteDDAMessage): Delete DDA message
+            message_receipt (MessageReceipt): Message receipt
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Template id.
+        template_id = message.body.template_id
+
+        # Delete published DDA template record.
+        await PublishedDDATemplateRecord.delete_publish_dda_record(
+            self.context,
+            connection_record.connection_id,
+            template_id
+        )
+
+    async def post_delete_dda_template(
+        self,
+        template_id: str
+    ):
+        &#34;&#34;&#34;Post delete dda template record actions.
+
+        Inform the data marketplaces the template is deleted.
+
+        Args:
+            template_id (str): Template identifier.
+        &#34;&#34;&#34;
+
+        # Construct delete DDA message.
+        message = DeleteDDAMessage(
+            body=DeleteDDAModel(
+                template_id=template_id
+            )
+        )
+
+        # Query to find all marketplaces the template is published to.
+        tag_filter = {
+            &#34;template_id&#34;: template_id
+        }
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        mgr = V2ADAManager(self.context)
+
+        # Notify all the marketplaces the template is deleted.
+        for record in records:
+            await mgr.send_reply_message(
+                message,
+                record.connection_id
+            )
+
+            # Delete publish DDA records.
+            await record.delete_record(self.context)
+
+    async def list_dda_published_in_marketplace(
+        self,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;List DDAs published in a marketplace.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Fetch all publish dda records.
+        tag_filter = {}
+        records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+            self.context,
+            tag_filter
+        )
+
+        pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+        return pagination_result
+
+    async def send_list_marketplace_dda_message(
+        self,
+        connection_id: str
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Send list marketplace DDA message.
+
+        Args:
+            connection_id (str): Marketplace connection identifier.
+        &#34;&#34;&#34;
+
+        # Retrieve connection record for marketplace connection.
+        connection_record = \
+            await MarketplaceConnectionRecord.retrieve_connection_record(
+                self.context,
+                connection_id
+            )
+
+        # Construct the list dda message.
+        message = ListMarketplaceDDAMessage()
+
+        (sender_verkey, recipient_verkey, message_dict) = \
+            await self.send_message_with_return_route_all(
+            message,
+            connection_record
+        )
+
+        # Deserialise the message dict into response message.
+        response: ListMarketplaceDDAResponseMessage = \
+            ListMarketplaceDDAResponseMessage.deserialize(
+                message_dict
+            )
+
+        results = response.body.results
+
+        # Pagination result.
+        pagination_result = paginate_records(
+            results,
+            1,
+            100000
+        )
+
+        return pagination_result
+
+    async def process_list_marketplace_dda_message(
+        self,
+        message: ListMarketplaceDDAMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process list marketplace DDA message.
+
+        Args:
+            message (ListMarketplaceDDAMessage): List marketplace DDA message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Query published DDAs
+        tag_filter = {}
+        records: typing.List[PublishedDDATemplateRecord] = \
+            await PublishedDDATemplateRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        # Iterate through the records and create DDA results.
+        results = []
+        for record in records:
+            results.append(
+                ListMarketplaceDDAResponseModel(
+                    dda=record.dda,
+                    template_id=record.template_id,
+                    industry_sector=record.industry_sector,
+                    connection_url=record.connection_url,
+                    created_at=record.created_at,
+                    updated_at=record.updated_at
+                )
+            )
+
+        # Construct response message.
+        response_message = ListMarketplaceDDAResponseMessage(
+            body=ListMarketplaceDDAResponseBody(
+                results=results
+            )
+        )
+
+        # Initialise ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send response message.
+        await mgr.send_reply_message(
+            response_message
+        )
+
+    async def get_message_class_from_dict(
+            self,
+            message_dict: dict
+    ) -&gt; AgentMessage:
+        &#34;&#34;&#34;Get message class from message dict.
+
+        Args:
+            message_dict (dict): Message dict.
+
+        Returns:
+            AgentMessage: Agent message.
+        &#34;&#34;&#34;
+
+        # Initialise dispatcher
+        dispatcher = Dispatcher(self.context)
+
+        # Get message class.
+        msg_class = await dispatcher.make_message(message_dict)
+
+        return msg_class
+
+    async def process_request_dda_message(
+        self,
+        message: RequestDDAMessage,
+        receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process request DDA message.
+
+        Args:
+            message (RequestDDAMessage): Request DDA message.
+            receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch the template record.
+        template_id = message.body.template_id
+
+        # Build instance record.
+        (dda_instance_record, dda_instance_model) = \
+            await DataDisclosureAgreementInstanceRecord.build_instance_from_template(
+                self.context,
+                template_id,
+                connection_record)
+
+        # Fetch customer identification data agreement if available.
+        customer_identification_records = await CustomerIdentificationRecord.query(self.context, {})
+
+        if customer_identification_records:
+            customer_identification_record: CustomerIdentificationRecord = \
+                customer_identification_records[0]
+
+            # Fetch DA template.
+            da_template_record: DataAgreementTemplateRecord = \
+                await customer_identification_record.data_agreement_template_record(
+                    self.context
+                )
+
+            # Build dda offer message
+            offer_dda_message = OfferDDAMessage(
+                body=OfferDDAMessageBodyModel(
+                    dda=dda_instance_model,
+                    customer_identification=CustomerIdentificationModel(
+                        schema_id=da_template_record.schema_id,
+                        cred_def_id=da_template_record.cred_def_id
+                    )
+                )
+            )
+        else:
+            # Build dda offer message
+            offer_dda_message = OfferDDAMessage(
+                body=OfferDDAMessageBodyModel(
+                    dda=dda_instance_model
+                )
+            )
+
+        mgr = V2ADAManager(self.context)
+
+        await mgr.send_reply_message(
+            offer_dda_message,
+            connection_record.connection_id
+        )
+
+    async def request_dda_offer_from_ds(
+        self,
+        connection_id: str,
+        template_id: str
+    ):
+        &#34;&#34;&#34;DUS requests DDA offer from DS.
+
+        Args:
+            connection_id (str): Connection ID.
+            template_id (str): Template ID.
+        &#34;&#34;&#34;
+
+        # Retreive connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        # Send DDA request message to DS.
+        message = RequestDDAMessage(
+            body=RequestDDAModel(
+                template_id=template_id
+            )
+        )
+
+        # Initialise ADA manager.
+        mgr = V2ADAManager(self.context)
+
+        await mgr.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
+    async def fetch_customer_identification_data_agreement(
+        self
+    ) -&gt; typing.Union[None, CustomerIdentificationRecord]:
+        &#34;&#34;&#34;Fetch customer identification data agreement.
+
+        Returns:
+            typing.Union[None, CustomerIdentificationRecord]: Customer identification record.
+        &#34;&#34;&#34;
+        records = await CustomerIdentificationRecord.query(self.context, {})
+
+        return {} if not records else records[0]
+
+    async def configure_customer_identification_data_agreement(
+        self,
+        da_template_id: str
+    ) -&gt; CustomerIdentificationRecord:
+        &#34;&#34;&#34;Configure customer identification data agreement.
+
+        Args:
+            da_template_id (str): DA template ID.
+
+        Returns:
+            CustomerIdentificationRecord: _description_
+        &#34;&#34;&#34;
+
+        return await CustomerIdentificationRecord.create_or_update_record(
+            self.context,
+            da_template_id
+        )
+
+    async def process_offer_dda_message(
+        self,
+        message: OfferDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process offer dda message.
+
+        Args:
+            message (OfferDDAMessage): Offer DDA message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        (record, instance_model) = \
+            await DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer(
+            self.context,
+            message,
+            self.context.connection_record
+        )
+
+        # Construct accept DDA message.
+        accept_dda_message = AcceptDDAMessage(
+            body=AcceptDDAMessageBodyModel(
+                dda=instance_model
+            )
+        )
+
+        # Initialise the ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send the message.
+        await mgr.send_reply_message(accept_dda_message)
+
+    async def process_accept_dda_message(
+        self,
+        message: AcceptDDAMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process accept dda message.
+
+        Args:
+            message (AcceptDDAMessage): Accept DDA message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        instance_record = \
+            await DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept(
+                self.context,
+                message
+            )
+
+        # Anchor DDA instance to blochain.
+        await self.anchor_dda_instance_to_blockchain_async_task(instance_record.instance_id)
+
+    async def add_task(self,
+                       context: InjectionContext,
+                       coro: typing.Coroutine,
+                       task_complete: typing.Callable = None,
+                       ident: str = None) -&gt; PendingTask:
+        &#34;&#34;&#34;
+        Add a new task to the queue, delaying execution if busy.
+
+        Args:
+            context: Injection context to be used.
+            coro: The coroutine to run
+            task_complete: A callback to run on completion
+            ident: A string identifier for the task
+
+        Returns: a future resolving to the asyncio task instance once queued
+        &#34;&#34;&#34;
+        loop = asyncio.get_event_loop()
+        pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
+        return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
+
+    async def anchor_dda_instance_to_blockchain_async_task(
+        self,
+        instance_id: str
+    ):
+        &#34;&#34;&#34;Async task to anchor DDA instance to blockchain.
+
+        Args:
+            instance_id (str): Instance id
+        &#34;&#34;&#34;
+        pending_task = await self.add_task(
+            self.context,
+            self.anchor_dda_instance_to_blockchain(instance_id),
+            self.anchor_dda_instance_to_blockchain_async_task_callback
+        )
+        self._logger.info(pending_task)
+
+    async def anchor_dda_instance_to_blockchain(
+        self,
+        instance_id: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Anchor DDA instance to blockchain.
+
+        Args:
+            instance_id (str): Instance id
+        &#34;&#34;&#34;
+
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+
+        # Fetch DDA instance record.
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context,
+            tag_filter,
+        )
+
+        assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+        dda_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                dda_instance_record.data_disclosure_agreement)
+
+        did_mydata_builder = DIDMyDataBuilder(
+            artefact=dda_model
+        )
+
+        (tx_hash, tx_receipt) = await eth_client.emit_dda_did(
+            did_mydata_builder.generate_did(
+                &#34;DataDisclosureAgreement&#34;
+            )
+        )
+
+        return (dda_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+
+    async def anchor_dda_instance_to_blockchain_async_task_callback(
+        self, *args, **kwargs
+    ):
+        &#34;&#34;&#34;Anchor DDA instance to blockchain async task callback function
+        &#34;&#34;&#34;
+
+        # Obtain the completed task.
+        completed_task: CompletedTask = args[0]
+
+        # Obtain the results from the task.
+        (instance_id, mydata_did, tx_hash, tx_receipt) = completed_task.task.result()
+
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+
+        # Fetch data agreement instance record.
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context,
+            tag_filter,
+        )
+
+        assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+
+        transaction_receipt = json.loads(to_json(tx_receipt))
+        transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+        # Update the data agreement with blockchain metadata.
+        dda_instance_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+        dda_instance_record.mydata_did = mydata_did
+        dda_instance_record.blockchain_receipt = transaction_receipt
+
+        await dda_instance_record.save(self.context)
+
+        # Send negotiation receipt to DUS.
+        # Construct negotiation receipt message.
+        message = DDANegotiationReceiptMessage(
+            body=DDANegotiationReceiptBodyModel(
+                instance_id=dda_instance_record.instance_id,
+                blockchain_receipt=transaction_receipt,
+                blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+                mydata_did=mydata_did
+            )
+        )
+
+        # Fetch connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            dda_instance_record.connection_id
+        )
+
+        # Initialise ADA manager
+        mgr = V2ADAManager(self.context)
+
+        # Send message
+        await mgr.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
+    async def query_dda_instances(
+        self,
+        instance_id: str,
+        template_id: str,
+        template_version: str,
+        connection_id: str,
+        page: int = 1,
+        page_size: int = 10
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query DDA instances
+
+        Args:
+            instance_id (str): Instance identifier
+            template_id (str): Template identifier
+            template_version (str): Template version
+            connection_id (str): Connection id
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result
+        &#34;&#34;&#34;
+        # Query by version is only possible if the template id is provided
+        if template_version:
+            assert template_id, &#34;Template identifier is required to query by version&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id,
+            &#34;template_id&#34;: template_id,
+            &#34;template_version&#34;: template_version,
+            &#34;connection_id&#34;: connection_id
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await DataDisclosureAgreementInstanceRecord.query(
+            context=self.context,
+            tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def process_dda_negotiation_receipt_message(
+        self,
+        message: DDANegotiationReceiptMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process DDA negotiation receipt message.
+
+        Args:
+            message (DDANegotiationReceiptMessage): DDA negotiation receipt message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        instance_id = message.body.instance_id
+        blockchain_receipt = message.body.blockchain_receipt
+        blink = message.body.blink
+        mydata_did = message.body.mydata_did
+
+        # Fetch the DDA instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+        instance_record: DataDisclosureAgreementInstanceRecord = \
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context,
+                tag_filter
+            )
+
+        # Update instance record.
+        instance_record.blockchain_receipt = blockchain_receipt
+        instance_record.blink = blink
+        instance_record.mydata_did = mydata_did
+
+        await instance_record.save(self.context)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.context"><code class="name">var <span class="ident">context</span> : aries_cloudagent.config.injection_context.InjectionContext</code></dt>
+<dd>
+<div class="desc"><p>Accessor for injection context</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>InjectionContext</code></dt>
+<dd>Injection context</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def context(self) -&gt; InjectionContext:
+    &#34;&#34;&#34;Accessor for injection context
+
+    Returns:
+        InjectionContext: Injection context
+    &#34;&#34;&#34;
+    return self._context</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.logger"><code class="name">var <span class="ident">logger</span></code></dt>
+<dd>
+<div class="desc"><p>Accessor for logger.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def logger(self):
+    &#34;&#34;&#34;Accessor for logger.&#34;&#34;&#34;
+    return self._logger</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.add_marketplace_connection"><code class="name flex">
+<span>async def <span class="ident">add_marketplace_connection</span></span>(<span>self, connection_id: str) ‑> <a title="dexa_sdk.marketplace.records.marketplace_connection_record.MarketplaceConnectionRecord" href="../marketplace/records/marketplace_connection_record.html#dexa_sdk.marketplace.records.marketplace_connection_record.MarketplaceConnectionRecord">MarketplaceConnectionRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set connection as marketplace.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>MarketplaceConnectionRecord</code></dt>
+<dd>Marketplace connection record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def add_marketplace_connection(
+    self,
+    connection_id: str
+) -&gt; MarketplaceConnectionRecord:
+    &#34;&#34;&#34;Set connection as marketplace.
+
+    Args:
+        connection_id (str): Connection identifier.
+
+    Returns:
+        MarketplaceConnectionRecord: Marketplace connection record.
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+        self.context,
+        connection_id
+    )
+
+    record = await MarketplaceConnectionRecord.set_connection_as_marketplace(
+        self.context,
+        connection_record.connection_id
+    )
+
+    return record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.add_task"><code class="name flex">
+<span>async def <span class="ident">add_task</span></span>(<span>self, context: aries_cloudagent.config.injection_context.InjectionContext, coro: Coroutine[+T_co, -T_contra, +V_co], task_complete: Callable = None, ident: str = None) ‑> aries_cloudagent.utils.task_queue.PendingTask</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a new task to the queue, delaying execution if busy.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong></dt>
+<dd>Injection context to be used.</dd>
+<dt><strong><code>coro</code></strong></dt>
+<dd>The coroutine to run</dd>
+<dt><strong><code>task_complete</code></strong></dt>
+<dd>A callback to run on completion</dd>
+<dt><strong><code>ident</code></strong></dt>
+<dd>A string identifier for the task</dd>
+</dl>
+<p>Returns: a future resolving to the asyncio task instance once queued</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def add_task(self,
+                   context: InjectionContext,
+                   coro: typing.Coroutine,
+                   task_complete: typing.Callable = None,
+                   ident: str = None) -&gt; PendingTask:
+    &#34;&#34;&#34;
+    Add a new task to the queue, delaying execution if busy.
+
+    Args:
+        context: Injection context to be used.
+        coro: The coroutine to run
+        task_complete: A callback to run on completion
+        ident: A string identifier for the task
+
+    Returns: a future resolving to the asyncio task instance once queued
+    &#34;&#34;&#34;
+    loop = asyncio.get_event_loop()
+    pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
+    return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain"><code class="name flex">
+<span>async def <span class="ident">anchor_dda_instance_to_blockchain</span></span>(<span>self, instance_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Anchor DDA instance to blockchain.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Instance id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def anchor_dda_instance_to_blockchain(
+    self,
+    instance_id: str
+) -&gt; None:
+    &#34;&#34;&#34;Anchor DDA instance to blockchain.
+
+    Args:
+        instance_id (str): Instance id
+    &#34;&#34;&#34;
+
+    eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+    tag_filter = {
+        &#34;instance_id&#34;: instance_id
+    }
+
+    # Fetch DDA instance record.
+    dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+        self.context,
+        tag_filter,
+    )
+
+    assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+    dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+    dda_model: DataDisclosureAgreementInstanceModel = \
+        DataDisclosureAgreementInstanceModel.deserialize(
+            dda_instance_record.data_disclosure_agreement)
+
+    did_mydata_builder = DIDMyDataBuilder(
+        artefact=dda_model
+    )
+
+    (tx_hash, tx_receipt) = await eth_client.emit_dda_did(
+        did_mydata_builder.generate_did(
+            &#34;DataDisclosureAgreement&#34;
+        )
+    )
+
+    return (dda_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task"><code class="name flex">
+<span>async def <span class="ident">anchor_dda_instance_to_blockchain_async_task</span></span>(<span>self, instance_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Async task to anchor DDA instance to blockchain.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Instance id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def anchor_dda_instance_to_blockchain_async_task(
+    self,
+    instance_id: str
+):
+    &#34;&#34;&#34;Async task to anchor DDA instance to blockchain.
+
+    Args:
+        instance_id (str): Instance id
+    &#34;&#34;&#34;
+    pending_task = await self.add_task(
+        self.context,
+        self.anchor_dda_instance_to_blockchain(instance_id),
+        self.anchor_dda_instance_to_blockchain_async_task_callback
+    )
+    self._logger.info(pending_task)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task_callback"><code class="name flex">
+<span>async def <span class="ident">anchor_dda_instance_to_blockchain_async_task_callback</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Anchor DDA instance to blockchain async task callback function</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def anchor_dda_instance_to_blockchain_async_task_callback(
+    self, *args, **kwargs
+):
+    &#34;&#34;&#34;Anchor DDA instance to blockchain async task callback function
+    &#34;&#34;&#34;
+
+    # Obtain the completed task.
+    completed_task: CompletedTask = args[0]
+
+    # Obtain the results from the task.
+    (instance_id, mydata_did, tx_hash, tx_receipt) = completed_task.task.result()
+
+    tag_filter = {
+        &#34;instance_id&#34;: instance_id
+    }
+
+    # Fetch data agreement instance record.
+    dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+        self.context,
+        tag_filter,
+    )
+
+    assert dda_instance_records, &#34;Data agreement instance not found.&#34;
+
+    dda_instance_record: DataDisclosureAgreementInstanceRecord = dda_instance_records[0]
+
+    transaction_receipt = json.loads(to_json(tx_receipt))
+    transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+    # Update the data agreement with blockchain metadata.
+    dda_instance_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+    dda_instance_record.mydata_did = mydata_did
+    dda_instance_record.blockchain_receipt = transaction_receipt
+
+    await dda_instance_record.save(self.context)
+
+    # Send negotiation receipt to DUS.
+    # Construct negotiation receipt message.
+    message = DDANegotiationReceiptMessage(
+        body=DDANegotiationReceiptBodyModel(
+            instance_id=dda_instance_record.instance_id,
+            blockchain_receipt=transaction_receipt,
+            blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+            mydata_did=mydata_did
+        )
+    )
+
+    # Fetch connection record.
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+        self.context,
+        dda_instance_record.connection_id
+    )
+
+    # Initialise ADA manager
+    mgr = V2ADAManager(self.context)
+
+    # Send message
+    await mgr.send_reply_message(
+        message,
+        connection_record.connection_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.configure_customer_identification_data_agreement"><code class="name flex">
+<span>async def <span class="ident">configure_customer_identification_data_agreement</span></span>(<span>self, da_template_id: str) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.customer_identification_record.CustomerIdentificationRecord" href="../agreements/da/v1_0/records/customer_identification_record.html#dexa_sdk.agreements.da.v1_0.records.customer_identification_record.CustomerIdentificationRecord">CustomerIdentificationRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure customer identification data agreement.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>da_template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DA template ID.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>CustomerIdentificationRecord</code></dt>
+<dd><em>description</em></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def configure_customer_identification_data_agreement(
+    self,
+    da_template_id: str
+) -&gt; CustomerIdentificationRecord:
+    &#34;&#34;&#34;Configure customer identification data agreement.
+
+    Args:
+        da_template_id (str): DA template ID.
+
+    Returns:
+        CustomerIdentificationRecord: _description_
+    &#34;&#34;&#34;
+
+    return await CustomerIdentificationRecord.create_or_update_record(
+        self.context,
+        da_template_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.create_and_store_dda_template_in_wallet"><code class="name flex">
+<span>async def <span class="ident">create_and_store_dda_template_in_wallet</span></span>(<span>self, dda: dict, *, publish_flag: bool = True) ‑> <a title="dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord" href="../agreements/dda/v1_0/records/dda_template_record.html#dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord">DataDisclosureAgreementTemplateRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create and store dda template in wallet</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dda</code></strong> :&ensp;<code>dict</code></dt>
+<dd>DDA template.</dd>
+<dt><strong><code>publish_flag</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Publish flag</dd>
+<dt><strong><code>schema_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Schema identifier</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_and_store_dda_template_in_wallet(
+        self,
+        dda: dict,
+        *,
+        publish_flag: bool = True
+) -&gt; DataDisclosureAgreementTemplateRecord:
+    &#34;&#34;&#34;Create and store dda template in wallet
+
+    Args:
+        dda (dict): DDA template.
+        publish_flag (bool): Publish flag
+        schema_id (str): Schema identifier
+    &#34;&#34;&#34;
+
+    # Temp hack
+    template_version = &#34;1.0.0&#34;
+    template_id = str(uuid.uuid4())
+    dda.update({&#34;@context&#34;: DDA_DEFAULT_CONTEXT})
+    dda.update({&#34;@id&#34;: template_id})
+    dda.update({&#34;@type&#34;: DDA_TYPE})
+    dda.update({&#34;version&#34;: template_version})
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+    controller_did = await wallet.get_public_did()
+
+    dda[&#34;dataController&#34;].update({&#34;did&#34;: f&#34;did:sov:{controller_did.did}&#34;})
+
+    # Validate the data agreement.
+    dda: DataDisclosureAgreementModel = \
+        DataDisclosureAgreementModel.deserialize(
+            dda)
+
+    # Hack: Iterate through personal data records and add a unique identifier
+    # Todo: Correlating personal data across agreements needs to be done.
+    pds = dda.personal_data
+    for pd in pds:
+        pd.attribute_id = str(uuid.uuid4())
+
+    # Update the personal data with attribute identifiers to the agreement
+    dda.personal_data = pds
+
+    # Create template record
+    record = DataDisclosureAgreementTemplateRecord(
+        template_id=template_id,
+        template_version=template_version,
+        state=DataDisclosureAgreementTemplateRecord.STATE_DEFINITION,
+        data_disclosure_agreement=dda.serialize(),
+        industry_sector=dda.data_sharing_restrictions.industry_sector.lower(),
+        publish_flag=bool_to_str(publish_flag),
+        latest_version_flag=bool_to_str(True)
+    )
+
+    await record.save(self.context)
+
+    return record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.delete_dda_template_in_wallet"><code class="name flex">
+<span>async def <span class="ident">delete_dda_template_in_wallet</span></span>(<span>self, template_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Delete DDA template in wallet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def delete_dda_template_in_wallet(
+    self,
+    template_id: str
+):
+    &#34;&#34;&#34;Delete DDA template in wallet.
+
+    Args:
+        template_id (str): Template identifier.
+    &#34;&#34;&#34;
+
+    # Fetch the latest template.
+    existing_template = \
+        await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            template_id
+        )
+
+    assert existing_template, &#34;DDA template not found.&#34;
+
+    # Delete template.
+    await existing_template.delete_template(self.context)
+
+    # Post delete actions.
+    await self.post_delete_dda_template(
+        template_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.fetch_and_save_controller_details_for_connection"><code class="name flex">
+<span>async def <span class="ident">fetch_and_save_controller_details_for_connection</span></span>(<span>self, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch and save controller details for connection</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_record</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
+<dd>Connection record</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def fetch_and_save_controller_details_for_connection(
+    self,
+    connection_record: ConnectionRecord
+):
+    &#34;&#34;&#34;Fetch and save controller details for connection
+
+    Args:
+        connection_record (ConnectionRecord): Connection record
+    &#34;&#34;&#34;
+    controller_details_message = DataControllerDetailsMessage()
+    (sender_verkey, recipient_verkey, message_dict) = \
+        await self.send_message_with_return_route_all(
+        controller_details_message,
+        connection_record
+    )
+    # Data controller detail response.
+    data_controller_details_response: DataControllerDetailsResponseMessage = \
+        DataControllerDetailsResponseMessage.deserialize(
+            message_dict
+        )
+
+    # Save controller details for a connection.
+    await ConnectionControllerDetailsRecord.set_controller_details_for_connection(
+        self.context,
+        connection_record,
+        data_controller_details_response.body
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.fetch_customer_identification_data_agreement"><code class="name flex">
+<span>async def <span class="ident">fetch_customer_identification_data_agreement</span></span>(<span>self) ‑> Optional[None]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch customer identification data agreement.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Union[None, CustomerIdentificationRecord]</code></dt>
+<dd>Customer identification record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def fetch_customer_identification_data_agreement(
+    self
+) -&gt; typing.Union[None, CustomerIdentificationRecord]:
+    &#34;&#34;&#34;Fetch customer identification data agreement.
+
+    Returns:
+        typing.Union[None, CustomerIdentificationRecord]: Customer identification record.
+    &#34;&#34;&#34;
+    records = await CustomerIdentificationRecord.query(self.context, {})
+
+    return {} if not records else records[0]</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.get_message_class_from_dict"><code class="name flex">
+<span>async def <span class="ident">get_message_class_from_dict</span></span>(<span>self, message_dict: dict) ‑> aries_cloudagent.messaging.agent_message.AgentMessage</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get message class from message dict.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Message dict.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>AgentMessage</code></dt>
+<dd>Agent message.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_message_class_from_dict(
+        self,
+        message_dict: dict
+) -&gt; AgentMessage:
+    &#34;&#34;&#34;Get message class from message dict.
+
+    Args:
+        message_dict (dict): Message dict.
+
+    Returns:
+        AgentMessage: Agent message.
+    &#34;&#34;&#34;
+
+    # Initialise dispatcher
+    dispatcher = Dispatcher(self.context)
+
+    # Get message class.
+    msg_class = await dispatcher.make_message(message_dict)
+
+    return msg_class</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.handle_connections_webhook"><code class="name flex">
+<span>async def <span class="ident">handle_connections_webhook</span></span>(<span>self, body: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle connections webhook.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>body</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Connection record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def handle_connections_webhook(
+    self,
+    body: dict
+):
+    &#34;&#34;&#34;Handle connections webhook.
+
+    Args:
+        body (dict): Connection record.
+    &#34;&#34;&#34;
+
+    # Fetch connection record.
+    connection_record: ConnectionRecord = ConnectionRecord.deserialize(body)
+
+    if connection_record.state == ConnectionRecord.STATE_ACTIVE:
+        # Save controller details for connection.
+        await self.fetch_and_save_controller_details_for_connection(
+            connection_record
+        )
+    if connection_record.state == &#34;delete&#34;:
+        # Perform cleanup.
+        await self.post_connection_delete_actions(connection_record.connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.list_dda_published_in_marketplace"><code class="name flex">
+<span>async def <span class="ident">list_dda_published_in_marketplace</span></span>(<span>self, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>List DDAs published in a marketplace.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def list_dda_published_in_marketplace(
+    self,
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;List DDAs published in a marketplace.
+
+    Returns:
+        PaginationResult: Pagination result.
+    &#34;&#34;&#34;
+
+    # Fetch all publish dda records.
+    tag_filter = {}
+    records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+        self.context,
+        tag_filter
+    )
+
+    pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+    return pagination_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions"><code class="name flex">
+<span>async def <span class="ident">post_connection_delete_actions</span></span>(<span>self, connection_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Post connection record delete actions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def post_connection_delete_actions(
+    self,
+    connection_id: str
+):
+    &#34;&#34;&#34;Post connection record delete actions.
+
+    Args:
+        connection_id (str): Connection identifier.
+    &#34;&#34;&#34;
+
+    self._logger.info(&#34;Performing post delete actions for connection records...&#34;)
+
+    # Delete marketplace connection records.
+    tag_filter = {&#34;connection_id&#34;: connection_id}
+    marketplace_records = await MarketplaceConnectionRecord.query(
+        self.context,
+        tag_filter
+    )
+    if marketplace_records:
+        marketplace_record = marketplace_records[0]
+        await marketplace_record.delete_record(self.context)
+
+    # Delete controller connection records.
+    controller_records = await ConnectionControllerDetailsRecord.query(
+        self.context,
+        tag_filter
+    )
+    if controller_records:
+        controller_record = controller_records[0]
+        await controller_record.delete_record(self.context)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.post_delete_dda_template"><code class="name flex">
+<span>async def <span class="ident">post_delete_dda_template</span></span>(<span>self, template_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Post delete dda template record actions.</p>
+<p>Inform the data marketplaces the template is deleted.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def post_delete_dda_template(
+    self,
+    template_id: str
+):
+    &#34;&#34;&#34;Post delete dda template record actions.
+
+    Inform the data marketplaces the template is deleted.
+
+    Args:
+        template_id (str): Template identifier.
+    &#34;&#34;&#34;
+
+    # Construct delete DDA message.
+    message = DeleteDDAMessage(
+        body=DeleteDDAModel(
+            template_id=template_id
+        )
+    )
+
+    # Query to find all marketplaces the template is published to.
+    tag_filter = {
+        &#34;template_id&#34;: template_id
+    }
+    records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+        self.context,
+        tag_filter
+    )
+
+    mgr = V2ADAManager(self.context)
+
+    # Notify all the marketplaces the template is deleted.
+    for record in records:
+        await mgr.send_reply_message(
+            message,
+            record.connection_id
+        )
+
+        # Delete publish DDA records.
+        await record.delete_record(self.context)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.post_update_dda_template"><code class="name flex">
+<span>async def <span class="ident">post_update_dda_template</span></span>(<span>self, template_record: <a title="dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord" href="../agreements/dda/v1_0/records/dda_template_record.html#dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord">DataDisclosureAgreementTemplateRecord</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Post update DDA template actions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_record</code></strong> :&ensp;<code>DataDisclosureAgreementTemplateRecord</code></dt>
+<dd>DDA template record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def post_update_dda_template(
+    self,
+    template_record: DataDisclosureAgreementTemplateRecord
+):
+    &#34;&#34;&#34;Post update DDA template actions.
+
+    Args:
+        template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+    &#34;&#34;&#34;
+
+    # Find all the marketplace connections.
+    # Query to find all marketplaces the template is published to.
+    tag_filter = {
+        &#34;template_id&#34;: template_record.template_id
+    }
+    records: typing.List[PublishDDARecord] = await PublishDDARecord.query(
+        self.context,
+        tag_filter
+    )
+
+    # Notify all the marketplaces about the update.
+    for record in records:
+        await self.send_publish_dda_message(
+            record,
+            template_record
+        )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_accept_dda_message"><code class="name flex">
+<span>async def <span class="ident">process_accept_dda_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.negotiation.accept_dda.AcceptDDAMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process accept dda message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>AcceptDDAMessage</code></dt>
+<dd>Accept DDA message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_accept_dda_message(
+    self,
+    message: AcceptDDAMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process accept dda message.
+
+    Args:
+        message (AcceptDDAMessage): Accept DDA message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    instance_record = \
+        await DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept(
+            self.context,
+            message
+        )
+
+    # Anchor DDA instance to blochain.
+    await self.anchor_dda_instance_to_blockchain_async_task(instance_record.instance_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_dda_negotiation_receipt_message"><code class="name flex">
+<span>async def <span class="ident">process_dda_negotiation_receipt_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.negotiation.dda_negotiation_receipt.DDANegotiationReceiptMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process DDA negotiation receipt message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DDANegotiationReceiptMessage</code></dt>
+<dd>DDA negotiation receipt message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_dda_negotiation_receipt_message(
+    self,
+    message: DDANegotiationReceiptMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process DDA negotiation receipt message.
+
+    Args:
+        message (DDANegotiationReceiptMessage): DDA negotiation receipt message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    instance_id = message.body.instance_id
+    blockchain_receipt = message.body.blockchain_receipt
+    blink = message.body.blink
+    mydata_did = message.body.mydata_did
+
+    # Fetch the DDA instance record.
+    tag_filter = {
+        &#34;instance_id&#34;: instance_id
+    }
+    instance_record: DataDisclosureAgreementInstanceRecord = \
+        await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+            self.context,
+            tag_filter
+        )
+
+    # Update instance record.
+    instance_record.blockchain_receipt = blockchain_receipt
+    instance_record.blink = blink
+    instance_record.mydata_did = mydata_did
+
+    await instance_record.save(self.context)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_delete_dda_message"><code class="name flex">
+<span>async def <span class="ident">process_delete_dda_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.marketplace.delete_dda.DeleteDDAMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process delete DDA message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DeleteDDAMessage</code></dt>
+<dd>Delete DDA message</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_delete_dda_message(
+    self,
+    message: DeleteDDAMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process delete DDA message.
+
+    Args:
+        message (DeleteDDAMessage): Delete DDA message
+        message_receipt (MessageReceipt): Message receipt
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = self.context.connection_record
+
+    # Template id.
+    template_id = message.body.template_id
+
+    # Delete published DDA template record.
+    await PublishedDDATemplateRecord.delete_publish_dda_record(
+        self.context,
+        connection_record.connection_id,
+        template_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_list_marketplace_dda_message"><code class="name flex">
+<span>async def <span class="ident">process_list_marketplace_dda_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.marketplace.list_marketplace_dda.ListMarketplaceDDAMessage, receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process list marketplace DDA message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>ListMarketplaceDDAMessage</code></dt>
+<dd>List marketplace DDA message.</dd>
+<dt><strong><code>receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_list_marketplace_dda_message(
+    self,
+    message: ListMarketplaceDDAMessage,
+    receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process list marketplace DDA message.
+
+    Args:
+        message (ListMarketplaceDDAMessage): List marketplace DDA message.
+        receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    # Query published DDAs
+    tag_filter = {}
+    records: typing.List[PublishedDDATemplateRecord] = \
+        await PublishedDDATemplateRecord.query(
+        self.context,
+        tag_filter
+    )
+
+    # Iterate through the records and create DDA results.
+    results = []
+    for record in records:
+        results.append(
+            ListMarketplaceDDAResponseModel(
+                dda=record.dda,
+                template_id=record.template_id,
+                industry_sector=record.industry_sector,
+                connection_url=record.connection_url,
+                created_at=record.created_at,
+                updated_at=record.updated_at
+            )
+        )
+
+    # Construct response message.
+    response_message = ListMarketplaceDDAResponseMessage(
+        body=ListMarketplaceDDAResponseBody(
+            results=results
+        )
+    )
+
+    # Initialise ADA manager
+    mgr = V2ADAManager(self.context)
+
+    # Send response message.
+    await mgr.send_reply_message(
+        response_message
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_offer_dda_message"><code class="name flex">
+<span>async def <span class="ident">process_offer_dda_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.negotiation.offer_dda.OfferDDAMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process offer dda message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>OfferDDAMessage</code></dt>
+<dd>Offer DDA message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_offer_dda_message(
+    self,
+    message: OfferDDAMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process offer dda message.
+
+    Args:
+        message (OfferDDAMessage): Offer DDA message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    (record, instance_model) = \
+        await DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer(
+        self.context,
+        message,
+        self.context.connection_record
+    )
+
+    # Construct accept DDA message.
+    accept_dda_message = AcceptDDAMessage(
+        body=AcceptDDAMessageBodyModel(
+            dda=instance_model
+        )
+    )
+
+    # Initialise the ADA manager
+    mgr = V2ADAManager(self.context)
+
+    # Send the message.
+    await mgr.send_reply_message(accept_dda_message)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_publish_dda_request_message"><code class="name flex">
+<span>async def <span class="ident">process_publish_dda_request_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.marketplace.publish_dda.PublishDDAMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process publish dda request message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>PublishDDAMessage</code></dt>
+<dd>Publish dda request message</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_publish_dda_request_message(
+    self,
+    message: PublishDDAMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process publish dda request message.
+
+    Args:
+        message (PublishDDAMessage): Publish dda request message
+        message_receipt (MessageReceipt): Message receipt
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = self.context.connection_record
+
+    # Save a publish DDA record if not existing.
+    await PublishedDDATemplateRecord.store_publish_dda_record(
+        self.context,
+        connection_record.connection_id,
+        message.body.dda,
+        message.body.connection_url
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message"><code class="name flex">
+<span>async def <span class="ident">process_request_dda_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.negotiation.request_dda.RequestDDAMessage, receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process request DDA message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>RequestDDAMessage</code></dt>
+<dd>Request DDA message.</dd>
+<dt><strong><code>receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_request_dda_message(
+    self,
+    message: RequestDDAMessage,
+    receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process request DDA message.
+
+    Args:
+        message (RequestDDAMessage): Request DDA message.
+        receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = self.context.connection_record
+
+    # Fetch the template record.
+    template_id = message.body.template_id
+
+    # Build instance record.
+    (dda_instance_record, dda_instance_model) = \
+        await DataDisclosureAgreementInstanceRecord.build_instance_from_template(
+            self.context,
+            template_id,
+            connection_record)
+
+    # Fetch customer identification data agreement if available.
+    customer_identification_records = await CustomerIdentificationRecord.query(self.context, {})
+
+    if customer_identification_records:
+        customer_identification_record: CustomerIdentificationRecord = \
+            customer_identification_records[0]
+
+        # Fetch DA template.
+        da_template_record: DataAgreementTemplateRecord = \
+            await customer_identification_record.data_agreement_template_record(
+                self.context
+            )
+
+        # Build dda offer message
+        offer_dda_message = OfferDDAMessage(
+            body=OfferDDAMessageBodyModel(
+                dda=dda_instance_model,
+                customer_identification=CustomerIdentificationModel(
+                    schema_id=da_template_record.schema_id,
+                    cred_def_id=da_template_record.cred_def_id
+                )
+            )
+        )
+    else:
+        # Build dda offer message
+        offer_dda_message = OfferDDAMessage(
+            body=OfferDDAMessageBodyModel(
+                dda=dda_instance_model
+            )
+        )
+
+    mgr = V2ADAManager(self.context)
+
+    await mgr.send_reply_message(
+        offer_dda_message,
+        connection_record.connection_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_to_marketplace"><code class="name flex">
+<span>async def <span class="ident">publish_dda_template_to_marketplace</span></span>(<span>self, connection_id: str, template_id: str) ‑> <a title="dexa_sdk.marketplace.records.publish_dda_record.PublishDDARecord" href="../marketplace/records/publish_dda_record.html#dexa_sdk.marketplace.records.publish_dda_record.PublishDDARecord">PublishDDARecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish DDA template to marketplace</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection ID</dd>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template ID</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PublishDDARecord</code></dt>
+<dd>Publish DDA record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def publish_dda_template_to_marketplace(
+    self,
+    connection_id: str,
+    template_id: str
+) -&gt; PublishDDARecord:
+    &#34;&#34;&#34;Publish DDA template to marketplace
+
+    Args:
+        connection_id (str): Connection ID
+        template_id (str): Template ID
+
+    Returns:
+        PublishDDARecord: Publish DDA record.
+    &#34;&#34;&#34;
+
+    # Fetch template
+    template_record = await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+        self.context,
+        template_id
+    )
+
+    assert template_record._publish_flag, \
+        &#34;DDA must be published locally before published to marketplace.&#34;
+
+    # Connection record
+    connection_record: ConnectionRecord = \
+        await MarketplaceConnectionRecord.retrieve_connection_record(
+            self.context,
+            connection_id
+        )
+
+    # Create Publish DDA record.
+    # Publish DDA record is mapping of which template is published in which marketplace.
+    publish_dda_record = await PublishDDARecord.store_publish_dda_record(
+        self.context,
+        connection_record.connection_id,
+        template_record.template_id,
+        template_record.data_disclosure_agreement
+    )
+
+    # Send publish dda message to marketplace.
+    await self.send_publish_dda_message(
+        publish_dda_record,
+        template_record
+    )
+
+    return publish_dda_record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_wallet"><code class="name flex">
+<span>async def <span class="ident">publish_dda_template_wallet</span></span>(<span>self, template_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish DDA template in wallet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def publish_dda_template_wallet(
+    self,
+    template_id: str
+):
+    &#34;&#34;&#34;Publish DDA template in wallet.
+
+    Args:
+        template_id (str): Template identifier
+    &#34;&#34;&#34;
+
+    # Fetch the latest template.
+    existing_template = \
+        await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            template_id
+        )
+
+    await existing_template.publish_template(self.context)
+
+    # Post publish actions.
+    await self.post_update_dda_template(existing_template)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.query_dda_instances"><code class="name flex">
+<span>async def <span class="ident">query_dda_instances</span></span>(<span>self, instance_id: str, template_id: str, template_version: str, connection_id: str, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query DDA instances</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Instance identifier</dd>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier</dd>
+<dt><strong><code>template_version</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template version</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection id</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page. Defaults to 1.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page size. Defaults to 10.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_dda_instances(
+    self,
+    instance_id: str,
+    template_id: str,
+    template_version: str,
+    connection_id: str,
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query DDA instances
+
+    Args:
+        instance_id (str): Instance identifier
+        template_id (str): Template identifier
+        template_version (str): Template version
+        connection_id (str): Connection id
+        page (int, optional): Page. Defaults to 1.
+        page_size (int, optional): Page size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Pagination result
+    &#34;&#34;&#34;
+    # Query by version is only possible if the template id is provided
+    if template_version:
+        assert template_id, &#34;Template identifier is required to query by version&#34;
+
+    # Tag filter
+    tag_filter = {
+        &#34;instance_id&#34;: instance_id,
+        &#34;template_id&#34;: template_id,
+        &#34;template_version&#34;: template_version,
+        &#34;connection_id&#34;: connection_id
+    }
+
+    tag_filter = drop_none_dict(tag_filter)
+
+    records = await DataDisclosureAgreementInstanceRecord.query(
+        context=self.context,
+        tag_filter=tag_filter
+    )
+
+    records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+    paginate_result = paginate_records(records, page, page_size)
+
+    return paginate_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.query_dda_templates_in_wallet"><code class="name flex">
+<span>async def <span class="ident">query_dda_templates_in_wallet</span></span>(<span>self, template_id: str = None, template_version: str = None, industry_sector: str = None, publish_flag: str = 'false', delete_flag: str = 'false', latest_version_flag: str = 'false', page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query DA templates in wallet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Template id. Defaults to None.</dd>
+<dt><strong><code>template_version</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Template version. Defaults to None.</dd>
+<dt><strong><code>industry_sector</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Industry sector. Defaults to None.</dd>
+<dt><strong><code>publish_flag</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Publish flag. Defaults to "false".</dd>
+<dt><strong><code>delete_flag</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Delete flag. Defaults to "false".</dd>
+<dt><strong><code>latest_version_flag</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Latest version flag. Defaults to "false".</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
+<dd>Page number. Defaults to 1.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Page size. Defaults to 10.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_dda_templates_in_wallet(
+    self,
+    template_id: str = None,
+    template_version: str = None,
+    industry_sector: str = None,
+    publish_flag: str = &#34;false&#34;,
+    delete_flag: str = &#34;false&#34;,
+    latest_version_flag: str = &#34;false&#34;,
+    page: int = 1,
+    page_size: int = 10,
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query DA templates in wallet.
+
+    Args:
+        template_id (str, optional): Template id. Defaults to None.
+        template_version (str, optional): Template version. Defaults to None.
+        industry_sector (str, optional): Industry sector. Defaults to None.
+        publish_flag (str, optional): Publish flag. Defaults to &#34;false&#34;.
+        delete_flag (str, optional): Delete flag. Defaults to &#34;false&#34;.
+        latest_version_flag (str, optional): Latest version flag. Defaults to &#34;false&#34;.
+        page (int): Page number. Defaults to 1.
+        page_size (int): Page size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Pagination result
+    &#34;&#34;&#34;
+
+    # Query by version is only possible if the template id is provided
+    if template_version:
+        assert template_id, &#34;Template identifier is required to query by version&#34;
+
+    # Tag filter
+    tag_filter = {
+        &#34;template_id&#34;: template_id,
+        &#34;template_version&#34;: template_version,
+        &#34;industry_sector&#34;: industry_sector.lower() if industry_sector else industry_sector,
+        &#34;publish_flag&#34;: publish_flag,
+        &#34;delete_flag&#34;: delete_flag,
+        &#34;latest_version_flag&#34;: latest_version_flag
+    }
+
+    tag_filter = drop_none_dict(tag_filter)
+
+    records = await DataDisclosureAgreementTemplateRecord.query(
+        context=self.context,
+        tag_filter=tag_filter
+    )
+
+    records = sorted(records, key=lambda k: k.created_at, reverse=True)
+
+    paginate_result = paginate_records(records, page, page_size)
+
+    return paginate_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.query_marketplace_connections"><code class="name flex">
+<span>async def <span class="ident">query_marketplace_connections</span></span>(<span>self, connection_id: str, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query marketplace connections</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page. Defaults to 1.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page size. Defaults to 10.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_marketplace_connections(
+    self,
+    connection_id: str,
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query marketplace connections
+
+    Args:
+        connection_id (str): Connection identifier
+        page (int, optional): Page. Defaults to 1.
+        page_size (int, optional): Page size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Pagination result
+    &#34;&#34;&#34;
+
+    tag_filter = {&#34;connection_id&#34;: connection_id}
+    tag_filter = drop_none_dict(tag_filter)
+
+    records = await MarketplaceConnectionRecord.query(self.context, tag_filter)
+
+    pagination_result = paginate_records(records, page, page_size)
+
+    return pagination_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.query_publish_dda_template_records"><code class="name flex">
+<span>async def <span class="ident">query_publish_dda_template_records</span></span>(<span>self, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query publish DDA template record.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_publish_dda_template_records(
+    self,
+    page: int = 1,
+    page_size: int = 10
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query publish DDA template record.
+
+    Returns:
+        PaginationResult: Pagination result.
+    &#34;&#34;&#34;
+
+    # Fetch all the published DDA records.
+    records = await PublishedDDATemplateRecord.query(self.context, {})
+
+    # Paginate the records.
+    pagination_result = paginate_records(records, page=page, page_size=page_size)
+
+    # Return the result.
+    return pagination_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds"><code class="name flex">
+<span>async def <span class="ident">request_dda_offer_from_ds</span></span>(<span>self, connection_id: str, template_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>DUS requests DDA offer from DS.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection ID.</dd>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template ID.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def request_dda_offer_from_ds(
+    self,
+    connection_id: str,
+    template_id: str
+):
+    &#34;&#34;&#34;DUS requests DDA offer from DS.
+
+    Args:
+        connection_id (str): Connection ID.
+        template_id (str): Template ID.
+    &#34;&#34;&#34;
+
+    # Retreive connection record.
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+        self.context,
+        connection_id
+    )
+
+    # Send DDA request message to DS.
+    message = RequestDDAMessage(
+        body=RequestDDAModel(
+            template_id=template_id
+        )
+    )
+
+    # Initialise ADA manager.
+    mgr = V2ADAManager(self.context)
+
+    await mgr.send_reply_message(
+        message,
+        connection_record.connection_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.send_list_marketplace_dda_message"><code class="name flex">
+<span>async def <span class="ident">send_list_marketplace_dda_message</span></span>(<span>self, connection_id: str) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send list marketplace DDA message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Marketplace connection identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_list_marketplace_dda_message(
+    self,
+    connection_id: str
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Send list marketplace DDA message.
+
+    Args:
+        connection_id (str): Marketplace connection identifier.
+    &#34;&#34;&#34;
+
+    # Retrieve connection record for marketplace connection.
+    connection_record = \
+        await MarketplaceConnectionRecord.retrieve_connection_record(
+            self.context,
+            connection_id
+        )
+
+    # Construct the list dda message.
+    message = ListMarketplaceDDAMessage()
+
+    (sender_verkey, recipient_verkey, message_dict) = \
+        await self.send_message_with_return_route_all(
+        message,
+        connection_record
+    )
+
+    # Deserialise the message dict into response message.
+    response: ListMarketplaceDDAResponseMessage = \
+        ListMarketplaceDDAResponseMessage.deserialize(
+            message_dict
+        )
+
+    results = response.body.results
+
+    # Pagination result.
+    pagination_result = paginate_records(
+        results,
+        1,
+        100000
+    )
+
+    return pagination_result</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.send_message_with_return_route_all"><code class="name flex">
+<span>async def <span class="ident">send_message_with_return_route_all</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord) ‑> Tuple[str, str, dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send message with return route all in transport decorator.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>AgentMessage</code></dt>
+<dd>Agent message.</dd>
+<dt><strong><code>connection_record</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Tuple[str, str, dict]</code></dt>
+<dd>sender_verkey, recipient_verkey, message_dict</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_message_with_return_route_all(
+    self,
+    message: AgentMessage,
+    connection_record: ConnectionRecord
+) -&gt; typing.Tuple[str, str, dict]:
+    &#34;&#34;&#34;Send message with return route all in transport decorator.
+
+    Args:
+        message (AgentMessage): Agent message.
+        connection_record (ConnectionRecord): Connection record.
+
+    Returns:
+        typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+    &#34;&#34;&#34;
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+    # Get pack format from context
+    pack_format: PackWireFormat = await self.context.inject(BaseWireFormat)
+
+    # Add transport decorator
+    message._decorators[&#34;transport&#34;] = TransportDecorator(
+        return_route=&#34;all&#34;
+    )
+
+    # Initialise connection manager
+    connection_manager = ConnectionManager(self.context)
+
+    # Fetch connection targets
+    connection_targets = await connection_manager.fetch_connection_targets(connection_record)
+
+    assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+    connection_target: ConnectionTarget = connection_targets[0]
+
+    # Pack message
+    packed_message = await pack_format.pack(
+        context=self.context,
+        message_json=message.serialize(as_string=True),
+        recipient_keys=connection_target.recipient_keys,
+        routing_keys=None,
+        sender_key=connection_target.sender_key,
+    )
+
+    # Headers
+    headers = {
+        &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+    }
+
+    # Send request and receive response.
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.post(connection_target.endpoint, data=packed_message) as response:
+            # Assert status code is 200
+            assert response.status == 200, \
+                f&#34;HTTP request failed with status code {response.status}&#34;
+
+            message_body = await response.read()
+
+            # Unpack message
+            unpacked = await wallet.unpack_message(message_body)
+            (message_json, sender_verkey, recipient_verkey) = unpacked
+
+            # Convert message to dict.
+            message_dict = json.loads(message_json)
+
+            return (sender_verkey, recipient_verkey, message_dict)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.send_publish_dda_message"><code class="name flex">
+<span>async def <span class="ident">send_publish_dda_message</span></span>(<span>self, publish_dda_record: <a title="dexa_sdk.marketplace.records.publish_dda_record.PublishDDARecord" href="../marketplace/records/publish_dda_record.html#dexa_sdk.marketplace.records.publish_dda_record.PublishDDARecord">PublishDDARecord</a>, template_record: <a title="dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord" href="../agreements/dda/v1_0/records/dda_template_record.html#dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord">DataDisclosureAgreementTemplateRecord</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send publish DDA message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>publish_dda_record</code></strong> :&ensp;<code>PublishDDARecord</code></dt>
+<dd>Publish dda record.</dd>
+<dt><strong><code>template_record</code></strong> :&ensp;<code>DataDisclosureAgreementTemplateRecord</code></dt>
+<dd>DDA template record.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_publish_dda_message(
+    self,
+    publish_dda_record: PublishDDARecord,
+    template_record: DataDisclosureAgreementTemplateRecord
+):
+    &#34;&#34;&#34;Send publish DDA message.
+
+    Args:
+        publish_dda_record (PublishDDARecord): Publish dda record.
+        template_record (DataDisclosureAgreementTemplateRecord): DDA template record.
+        connection_id (str): Connection identifier.
+    &#34;&#34;&#34;
+    # Create connection invitation
+    mgr = V2ADAManager(self.context)
+    (connection_record_for_marketplace, connection_invitation_for_marketplace) = \
+        await mgr.create_invitation(
+        auto_accept=True,
+        public=False,
+        multi_use=True,
+        alias=f&#34;DDA_{template_record.template_id}_QR_{publish_dda_record._id}&#34;
+    )
+
+    # Publish dda message
+    publish_dda_message = PublishDDAMessage(
+        body=PublishDDAModel(
+            dda=template_record.dda_model,
+            connection_url=connection_invitation_for_marketplace.to_url()
+        )
+    )
+
+    # Send publish dda message to marketplace connection
+    await mgr.send_reply_message(
+        publish_dda_message,
+        publish_dda_record.connection_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet"><code class="name flex">
+<span>async def <span class="ident">update_dda_template_in_wallet</span></span>(<span>self, template_id: str, *, dda: dict, publish_flag: bool = True) ‑> <a title="dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord" href="../agreements/dda/v1_0/records/dda_template_record.html#dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord">DataDisclosureAgreementTemplateRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update DDA template in wallet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template identifier</dd>
+<dt><strong><code>publish_flag</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Publish flag. Defaults to True.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>DataDisclosureAgreementTemplateRecord</code></dt>
+<dd>Upgraded template record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def update_dda_template_in_wallet(
+    self,
+    template_id: str,
+    *,
+    dda: dict,
+    publish_flag: bool = True,
+) -&gt; DataDisclosureAgreementTemplateRecord:
+    &#34;&#34;&#34;Update DDA template in wallet.
+
+    Args:
+        template_id (str): Template identifier
+        publish_flag (bool, optional): Publish flag. Defaults to True.
+
+    Returns:
+        DataDisclosureAgreementTemplateRecord: Upgraded template record.
+    &#34;&#34;&#34;
+
+    # Fetch the latest template.
+    existing_template = \
+        await DataDisclosureAgreementTemplateRecord.latest_template_by_id(
+            self.context,
+            template_id
+        )
+
+    # Upgrade the existing template to next version.
+    upgraded = await existing_template.upgrade(
+        self.context,
+        dda,
+        bool_to_str(publish_flag)
+    )
+
+    # Post update actions
+    if publish_flag:
+        await self.post_update_dda_template(
+            upgraded
+        )
+
+    return upgraded</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.managers" href="index.html">dexa_sdk.managers</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.managers.dexa_manager.DexaManager" href="#dexa_sdk.managers.dexa_manager.DexaManager">DexaManager</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_marketplace_connection" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_marketplace_connection">add_marketplace_connection</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_task" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_task">add_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain">anchor_dda_instance_to_blockchain</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task">anchor_dda_instance_to_blockchain_async_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task_callback" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task_callback">anchor_dda_instance_to_blockchain_async_task_callback</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.configure_customer_identification_data_agreement" href="#dexa_sdk.managers.dexa_manager.DexaManager.configure_customer_identification_data_agreement">configure_customer_identification_data_agreement</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.context" href="#dexa_sdk.managers.dexa_manager.DexaManager.context">context</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.create_and_store_dda_template_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.create_and_store_dda_template_in_wallet">create_and_store_dda_template_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.delete_dda_template_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.delete_dda_template_in_wallet">delete_dda_template_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.fetch_and_save_controller_details_for_connection" href="#dexa_sdk.managers.dexa_manager.DexaManager.fetch_and_save_controller_details_for_connection">fetch_and_save_controller_details_for_connection</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.fetch_customer_identification_data_agreement" href="#dexa_sdk.managers.dexa_manager.DexaManager.fetch_customer_identification_data_agreement">fetch_customer_identification_data_agreement</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.get_message_class_from_dict" href="#dexa_sdk.managers.dexa_manager.DexaManager.get_message_class_from_dict">get_message_class_from_dict</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.handle_connections_webhook" href="#dexa_sdk.managers.dexa_manager.DexaManager.handle_connections_webhook">handle_connections_webhook</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.list_dda_published_in_marketplace" href="#dexa_sdk.managers.dexa_manager.DexaManager.list_dda_published_in_marketplace">list_dda_published_in_marketplace</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.logger" href="#dexa_sdk.managers.dexa_manager.DexaManager.logger">logger</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions">post_connection_delete_actions</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_delete_dda_template" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_delete_dda_template">post_delete_dda_template</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_update_dda_template" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_update_dda_template">post_update_dda_template</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_accept_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_accept_dda_message">process_accept_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_dda_negotiation_receipt_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_dda_negotiation_receipt_message">process_dda_negotiation_receipt_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_delete_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_delete_dda_message">process_delete_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_list_marketplace_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_list_marketplace_dda_message">process_list_marketplace_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_offer_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_offer_dda_message">process_offer_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_publish_dda_request_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_publish_dda_request_message">process_publish_dda_request_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message">process_request_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_to_marketplace" href="#dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_to_marketplace">publish_dda_template_to_marketplace</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_wallet">publish_dda_template_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_dda_instances" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_dda_instances">query_dda_instances</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_dda_templates_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_dda_templates_in_wallet">query_dda_templates_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_marketplace_connections" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_marketplace_connections">query_marketplace_connections</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_publish_dda_template_records" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_publish_dda_template_records">query_publish_dda_template_records</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds" href="#dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds">request_dda_offer_from_ds</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_list_marketplace_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_list_marketplace_dda_message">send_list_marketplace_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_message_with_return_route_all" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_message_with_return_route_all">send_message_with_return_route_all</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_publish_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_publish_dda_message">send_publish_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet">update_dda_template_in_wallet</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agent.core.conductor API documentation</title>
+<meta name="description" content="The Conductor …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agent.core.conductor</code></h1>
+</header>
+<section id="section-intro">
+<p>The Conductor.</p>
+<p>The conductor is responsible for coordinating messages that are received
+over the network, communicating with the ledger, passing messages to handlers,
+instantiating concrete implementations of required modules and storing data in the wallet.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+The Conductor.
+
+The conductor is responsible for coordinating messages that are received
+over the network, communicating with the ledger, passing messages to handlers,
+instantiating concrete implementations of required modules and storing data in the wallet.
+&#34;&#34;&#34;
+
+import hashlib
+import logging
+from ..config.injection_context import InjectionContext
+from ..admin.server import AdminServer
+from ..config.dexa import smartcontract_config
+from aries_cloudagent.admin.base_server import BaseAdminServer
+from aries_cloudagent.config.default_context import ContextBuilder
+from aries_cloudagent.config.ledger import ledger_config
+from aries_cloudagent.config.logging import LoggingConfigurator
+from aries_cloudagent.config.wallet import wallet_config, BaseWallet
+from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
+from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManager,
+    ConnectionManagerError,
+)
+from aries_cloudagent.transport.inbound.manager import InboundTransportManager
+from aries_cloudagent.transport.inbound.message import InboundMessage
+from aries_cloudagent.transport.outbound.base import OutboundDeliveryError
+from aries_cloudagent.transport.outbound.manager import (
+    OutboundTransportManager,
+    QueuedOutboundMessage,
+)
+from aries_cloudagent.transport.outbound.message import OutboundMessage
+from aries_cloudagent.transport.wire_format import BaseWireFormat
+from aries_cloudagent.utils.task_queue import CompletedTask, TaskQueue
+from aries_cloudagent.utils.stats import Collector
+from aries_cloudagent.core.dispatcher import Dispatcher
+
+LOGGER = logging.getLogger(__name__)
+
+
+class Conductor:
+    &#34;&#34;&#34;
+    Conductor class.
+
+    Class responsible for initializing concrete implementations
+    of our require interfaces and routing inbound and outbound message data.
+    &#34;&#34;&#34;
+
+    def __init__(self, context_builder: ContextBuilder) -&gt; None:
+        &#34;&#34;&#34;
+        Initialize an instance of Conductor.
+
+        Args:
+            inbound_transports: Configuration for inbound transports
+            outbound_transports: Configuration for outbound transports
+            settings: Dictionary of various settings
+
+        &#34;&#34;&#34;
+        self.admin_server = None
+        self.context: InjectionContext = None
+        self.context_builder = context_builder
+        self.dispatcher: Dispatcher = None
+        self.inbound_transport_manager: InboundTransportManager = None
+        self.outbound_transport_manager: OutboundTransportManager = None
+
+    async def setup(self):
+        &#34;&#34;&#34;Initialize the global request context.&#34;&#34;&#34;
+
+        context = await self.context_builder.build()
+
+        self.dispatcher = Dispatcher(context)
+        await self.dispatcher.setup()
+
+        wire_format = await context.inject(BaseWireFormat, required=False)
+        if wire_format and hasattr(wire_format, &#34;task_queue&#34;):
+            wire_format.task_queue = self.dispatcher.task_queue
+
+        # Register all inbound transports
+        self.inbound_transport_manager = InboundTransportManager(
+            context, self.inbound_message_router, self.handle_not_returned
+        )
+        await self.inbound_transport_manager.setup()
+
+        # Register all outbound transports
+        self.outbound_transport_manager = OutboundTransportManager(
+            context, self.handle_not_delivered
+        )
+        await self.outbound_transport_manager.setup()
+
+        # Configure the wallet
+        public_did = await wallet_config(context)
+
+        # Configure the ledger
+        if not await ledger_config(context, public_did):
+            LOGGER.warning(&#34;No ledger configured&#34;)
+
+        # Admin API
+        if context.settings.get(&#34;admin.enabled&#34;):
+            try:
+                admin_host = context.settings.get(&#34;admin.host&#34;, &#34;0.0.0.0&#34;)
+                admin_port = context.settings.get(&#34;admin.port&#34;, &#34;80&#34;)
+                self.admin_server = AdminServer(
+                    admin_host,
+                    admin_port,
+                    context,
+                    self.outbound_message_router,
+                    self.webhook_router,
+                    self.stop,
+                    self.dispatcher.task_queue,
+                    self.get_stats,
+                )
+                webhook_urls = context.settings.get(&#34;admin.webhook_urls&#34;)
+                if webhook_urls:
+                    for url in webhook_urls:
+                        self.admin_server.add_webhook_target(url)
+                context.injector.bind_instance(BaseAdminServer, self.admin_server)
+                if &#34;http&#34; not in self.outbound_transport_manager.registered_schemes:
+                    self.outbound_transport_manager.register(&#34;http&#34;)
+            except Exception:
+                LOGGER.exception(&#34;Unable to register admin server&#34;)
+                raise
+
+        # Fetch stats collector, if any
+        collector = await context.inject(Collector, required=False)
+        if collector:
+            # add stats to our own methods
+            collector.wrap(
+                self,
+                (
+                    # &#34;inbound_message_router&#34;,
+                    &#34;outbound_message_router&#34;,
+                    # &#34;create_inbound_session&#34;,
+                ),
+            )
+            # at the class level (!) should not be performed multiple times
+            collector.wrap(
+                ConnectionManager,
+                (
+                    # &#34;get_connection_targets&#34;,
+                    &#34;fetch_did_document&#34;,
+                    &#34;find_inbound_connection&#34;,
+                ),
+            )
+
+        # Configure smart contract
+        await smartcontract_config(context)
+
+        self.context = context
+
+    async def start(self) -&gt; None:
+        &#34;&#34;&#34;Start the agent.&#34;&#34;&#34;
+
+        context = self.context
+
+        # Start up transports
+        try:
+            await self.inbound_transport_manager.start()
+        except Exception:
+            LOGGER.exception(&#34;Unable to start inbound transports&#34;)
+            raise
+        try:
+            await self.outbound_transport_manager.start()
+        except Exception:
+            LOGGER.exception(&#34;Unable to start outbound transports&#34;)
+            raise
+
+        # Start up Admin server
+        if self.admin_server:
+            try:
+                await self.admin_server.start()
+            except Exception:
+                LOGGER.exception(&#34;Unable to start administration API&#34;)
+            # Make admin responder available during message parsing
+            # This allows webhooks to be called when a connection is marked active,
+            # for example
+            context.injector.bind_instance(BaseResponder, self.admin_server.responder)
+
+        # Get agent label
+        default_label = context.settings.get(&#34;default_label&#34;)
+
+        # Get public did
+        wallet: BaseWallet = await context.inject(BaseWallet)
+        public_did = await wallet.get_public_did()
+
+        # Show some details about the configuration to the user
+        LoggingConfigurator.print_banner(
+            default_label,
+            self.inbound_transport_manager.registered_transports,
+            self.outbound_transport_manager.registered_transports,
+            public_did.did if public_did else None,
+            self.admin_server,
+        )
+
+        # Create a static connection for use by the test-suite
+        if context.settings.get(&#34;debug.test_suite_endpoint&#34;):
+            mgr = ConnectionManager(self.context)
+            their_endpoint = context.settings[&#34;debug.test_suite_endpoint&#34;]
+            test_conn = await mgr.create_static_connection(
+                my_seed=hashlib.sha256(b&#34;aries-protocol-test-subject&#34;).digest(),
+                their_seed=hashlib.sha256(b&#34;aries-protocol-test-suite&#34;).digest(),
+                their_endpoint=their_endpoint,
+                their_role=&#34;tester&#34;,
+                alias=&#34;test-suite&#34;,
+            )
+            print(&#34;Created static connection for test suite&#34;)
+            print(&#34; - My DID:&#34;, test_conn.my_did)
+            print(&#34; - Their DID:&#34;, test_conn.their_did)
+            print(&#34; - Their endpoint:&#34;, their_endpoint)
+            print()
+
+        # Print an invitation to the terminal
+        if context.settings.get(&#34;debug.print_invitation&#34;):
+            try:
+                mgr = ConnectionManager(self.context)
+                _connection, invitation = await mgr.create_invitation(
+                    their_role=context.settings.get(&#34;debug.invite_role&#34;),
+                    my_label=context.settings.get(&#34;debug.invite_label&#34;),
+                    multi_use=context.settings.get(&#34;debug.invite_multi_use&#34;, False),
+                    public=context.settings.get(&#34;debug.invite_public&#34;, False),
+                )
+                base_url = context.settings.get(&#34;invite_base_url&#34;)
+                invite_url = invitation.to_url(base_url)
+                print(&#34;Invitation URL:&#34;)
+                print(invite_url, flush=True)
+            except Exception:
+                LOGGER.exception(&#34;Error creating invitation&#34;)
+
+    async def stop(self, timeout=1.0):
+        &#34;&#34;&#34;Stop the agent.&#34;&#34;&#34;
+        shutdown = TaskQueue()
+        if self.dispatcher:
+            shutdown.run(self.dispatcher.complete())
+        if self.admin_server:
+            shutdown.run(self.admin_server.stop())
+        if self.inbound_transport_manager:
+            shutdown.run(self.inbound_transport_manager.stop())
+        if self.outbound_transport_manager:
+            shutdown.run(self.outbound_transport_manager.stop())
+        await shutdown.complete(timeout)
+
+    def inbound_message_router(
+        self, message: InboundMessage, can_respond: bool = False
+    ):
+        &#34;&#34;&#34;
+        Route inbound messages.
+
+        Args:
+            message: The inbound message instance
+            can_respond: If the session supports return routing
+
+        &#34;&#34;&#34;
+
+        if message.receipt.direct_response_requested and not can_respond:
+            LOGGER.warning(
+                &#34;Direct response requested, but not supported by transport: %s&#34;,
+                message.transport_type,
+            )
+
+        # Note: at this point we could send the message to a shared queue
+        # if this pod is too busy to process it
+
+        try:
+            self.dispatcher.queue_message(
+                message,
+                self.outbound_message_router,
+                self.admin_server and self.admin_server.send_webhook,
+                lambda completed: self.dispatch_complete(message, completed),
+            )
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+            raise
+
+    def dispatch_complete(self, message: InboundMessage, completed: CompletedTask):
+        &#34;&#34;&#34;Handle completion of message dispatch.&#34;&#34;&#34;
+        if completed.exc_info:
+            LOGGER.exception(
+                &#34;Exception in message handler:&#34;, exc_info=completed.exc_info
+            )
+            if isinstance(completed.exc_info[1], LedgerConfigError) or isinstance(
+                completed.exc_info[1], LedgerTransactionError
+            ):
+                LOGGER.error(
+                    &#34;%shutdown on ledger error %s&#34;,
+                    &#34;S&#34; if self.admin_server else &#34;No admin server to s&#34;,
+                    str(completed.exc_info[1]),
+                )
+                if self.admin_server:
+                    self.admin_server.notify_fatal_error()
+            else:
+                LOGGER.error(
+                    &#34;DON&#39;T shutdown on %s %s&#34;,
+                    completed.exc_info[0].__name__,
+                    str(completed.exc_info[1]),
+                )
+        self.inbound_transport_manager.dispatch_complete(message, completed)
+
+    async def get_stats(self) -&gt; dict:
+        &#34;&#34;&#34;Get the current stats tracked by the conductor.&#34;&#34;&#34;
+        stats = {
+            &#34;in_sessions&#34;: len(self.inbound_transport_manager.sessions),
+            &#34;out_encode&#34;: 0,
+            &#34;out_deliver&#34;: 0,
+            &#34;task_active&#34;: self.dispatcher.task_queue.current_active,
+            &#34;task_done&#34;: self.dispatcher.task_queue.total_done,
+            &#34;task_failed&#34;: self.dispatcher.task_queue.total_failed,
+            &#34;task_pending&#34;: self.dispatcher.task_queue.current_pending,
+        }
+        for m in self.outbound_transport_manager.outbound_buffer:
+            if m.state == QueuedOutboundMessage.STATE_ENCODE:
+                stats[&#34;out_encode&#34;] += 1
+            if m.state == QueuedOutboundMessage.STATE_DELIVER:
+                stats[&#34;out_deliver&#34;] += 1
+        return stats
+
+    async def outbound_message_router(
+        self,
+        context: InjectionContext,
+        outbound: OutboundMessage,
+        inbound: InboundMessage = None,
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Route an outbound message.
+
+        Args:
+            context: The request context
+            message: An outbound message to be sent
+            inbound: The inbound message that produced this response, if available
+        &#34;&#34;&#34;
+        if not outbound.target and outbound.reply_to_verkey:
+            if not outbound.reply_from_verkey and inbound:
+                outbound.reply_from_verkey = inbound.receipt.recipient_verkey
+            # return message to an inbound session
+            if self.inbound_transport_manager.return_to_session(outbound):
+                return
+
+        if not outbound.to_session_only:
+            await self.queue_outbound(context, outbound, inbound)
+
+    def handle_not_returned(self, context: InjectionContext, outbound: OutboundMessage):
+        &#34;&#34;&#34;Handle a message that failed delivery via an inbound session.&#34;&#34;&#34;
+        try:
+            self.dispatcher.run_task(self.queue_outbound(context, outbound))
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+            raise
+
+    async def queue_outbound(
+        self,
+        context: InjectionContext,
+        outbound: OutboundMessage,
+        inbound: InboundMessage = None,
+    ):
+        &#34;&#34;&#34;
+        Queue an outbound message.
+
+        Args:
+            context: The request context
+            message: An outbound message to be sent
+            inbound: The inbound message that produced this response, if available
+        &#34;&#34;&#34;
+        # populate connection target(s)
+        if not outbound.target and not outbound.target_list and outbound.connection_id:
+            # using provided request context
+            mgr = ConnectionManager(context)
+            try:
+                outbound.target_list = await self.dispatcher.run_task(
+                    mgr.get_connection_targets(connection_id=outbound.connection_id)
+                )
+            except ConnectionManagerError:
+                LOGGER.exception(&#34;Error preparing outbound message for transmission&#34;)
+                return
+            except (LedgerConfigError, LedgerTransactionError) as e:
+                LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+                if self.admin_server:
+                    self.admin_server.notify_fatal_error()
+                raise
+
+        try:
+            self.outbound_transport_manager.enqueue_message(context, outbound)
+        except OutboundDeliveryError:
+            LOGGER.warning(&#34;Cannot queue message for delivery, no supported transport&#34;)
+            self.handle_not_delivered(context, outbound)
+
+    def handle_not_delivered(
+        self, context: InjectionContext, outbound: OutboundMessage
+    ):
+        &#34;&#34;&#34;Handle a message that failed delivery via outbound transports.&#34;&#34;&#34;
+        self.inbound_transport_manager.return_undelivered(outbound)
+
+    def webhook_router(
+        self, topic: str, payload: dict, endpoint: str, max_attempts: int = None
+    ):
+        &#34;&#34;&#34;
+        Route a webhook through the outbound transport manager.
+
+        Args:
+            topic: The webhook topic
+            payload: The webhook payload
+            endpoint: The endpoint of the webhook target
+            max_attempts: The maximum number of attempts
+        &#34;&#34;&#34;
+        try:
+            self.outbound_transport_manager.enqueue_webhook(
+                topic, payload, endpoint, max_attempts
+            )
+        except OutboundDeliveryError:
+            LOGGER.warning(
+                &#34;Cannot queue message webhook for delivery, no supported transport&#34;
+            )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agent.core.conductor.Conductor"><code class="flex name class">
+<span>class <span class="ident">Conductor</span></span>
+<span>(</span><span>context_builder: aries_cloudagent.config.base_context.ContextBuilder)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Conductor class.</p>
+<p>Class responsible for initializing concrete implementations
+of our require interfaces and routing inbound and outbound message data.</p>
+<p>Initialize an instance of Conductor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>inbound_transports</code></strong></dt>
+<dd>Configuration for inbound transports</dd>
+<dt><strong><code>outbound_transports</code></strong></dt>
+<dd>Configuration for outbound transports</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>Dictionary of various settings</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Conductor:
+    &#34;&#34;&#34;
+    Conductor class.
+
+    Class responsible for initializing concrete implementations
+    of our require interfaces and routing inbound and outbound message data.
+    &#34;&#34;&#34;
+
+    def __init__(self, context_builder: ContextBuilder) -&gt; None:
+        &#34;&#34;&#34;
+        Initialize an instance of Conductor.
+
+        Args:
+            inbound_transports: Configuration for inbound transports
+            outbound_transports: Configuration for outbound transports
+            settings: Dictionary of various settings
+
+        &#34;&#34;&#34;
+        self.admin_server = None
+        self.context: InjectionContext = None
+        self.context_builder = context_builder
+        self.dispatcher: Dispatcher = None
+        self.inbound_transport_manager: InboundTransportManager = None
+        self.outbound_transport_manager: OutboundTransportManager = None
+
+    async def setup(self):
+        &#34;&#34;&#34;Initialize the global request context.&#34;&#34;&#34;
+
+        context = await self.context_builder.build()
+
+        self.dispatcher = Dispatcher(context)
+        await self.dispatcher.setup()
+
+        wire_format = await context.inject(BaseWireFormat, required=False)
+        if wire_format and hasattr(wire_format, &#34;task_queue&#34;):
+            wire_format.task_queue = self.dispatcher.task_queue
+
+        # Register all inbound transports
+        self.inbound_transport_manager = InboundTransportManager(
+            context, self.inbound_message_router, self.handle_not_returned
+        )
+        await self.inbound_transport_manager.setup()
+
+        # Register all outbound transports
+        self.outbound_transport_manager = OutboundTransportManager(
+            context, self.handle_not_delivered
+        )
+        await self.outbound_transport_manager.setup()
+
+        # Configure the wallet
+        public_did = await wallet_config(context)
+
+        # Configure the ledger
+        if not await ledger_config(context, public_did):
+            LOGGER.warning(&#34;No ledger configured&#34;)
+
+        # Admin API
+        if context.settings.get(&#34;admin.enabled&#34;):
+            try:
+                admin_host = context.settings.get(&#34;admin.host&#34;, &#34;0.0.0.0&#34;)
+                admin_port = context.settings.get(&#34;admin.port&#34;, &#34;80&#34;)
+                self.admin_server = AdminServer(
+                    admin_host,
+                    admin_port,
+                    context,
+                    self.outbound_message_router,
+                    self.webhook_router,
+                    self.stop,
+                    self.dispatcher.task_queue,
+                    self.get_stats,
+                )
+                webhook_urls = context.settings.get(&#34;admin.webhook_urls&#34;)
+                if webhook_urls:
+                    for url in webhook_urls:
+                        self.admin_server.add_webhook_target(url)
+                context.injector.bind_instance(BaseAdminServer, self.admin_server)
+                if &#34;http&#34; not in self.outbound_transport_manager.registered_schemes:
+                    self.outbound_transport_manager.register(&#34;http&#34;)
+            except Exception:
+                LOGGER.exception(&#34;Unable to register admin server&#34;)
+                raise
+
+        # Fetch stats collector, if any
+        collector = await context.inject(Collector, required=False)
+        if collector:
+            # add stats to our own methods
+            collector.wrap(
+                self,
+                (
+                    # &#34;inbound_message_router&#34;,
+                    &#34;outbound_message_router&#34;,
+                    # &#34;create_inbound_session&#34;,
+                ),
+            )
+            # at the class level (!) should not be performed multiple times
+            collector.wrap(
+                ConnectionManager,
+                (
+                    # &#34;get_connection_targets&#34;,
+                    &#34;fetch_did_document&#34;,
+                    &#34;find_inbound_connection&#34;,
+                ),
+            )
+
+        # Configure smart contract
+        await smartcontract_config(context)
+
+        self.context = context
+
+    async def start(self) -&gt; None:
+        &#34;&#34;&#34;Start the agent.&#34;&#34;&#34;
+
+        context = self.context
+
+        # Start up transports
+        try:
+            await self.inbound_transport_manager.start()
+        except Exception:
+            LOGGER.exception(&#34;Unable to start inbound transports&#34;)
+            raise
+        try:
+            await self.outbound_transport_manager.start()
+        except Exception:
+            LOGGER.exception(&#34;Unable to start outbound transports&#34;)
+            raise
+
+        # Start up Admin server
+        if self.admin_server:
+            try:
+                await self.admin_server.start()
+            except Exception:
+                LOGGER.exception(&#34;Unable to start administration API&#34;)
+            # Make admin responder available during message parsing
+            # This allows webhooks to be called when a connection is marked active,
+            # for example
+            context.injector.bind_instance(BaseResponder, self.admin_server.responder)
+
+        # Get agent label
+        default_label = context.settings.get(&#34;default_label&#34;)
+
+        # Get public did
+        wallet: BaseWallet = await context.inject(BaseWallet)
+        public_did = await wallet.get_public_did()
+
+        # Show some details about the configuration to the user
+        LoggingConfigurator.print_banner(
+            default_label,
+            self.inbound_transport_manager.registered_transports,
+            self.outbound_transport_manager.registered_transports,
+            public_did.did if public_did else None,
+            self.admin_server,
+        )
+
+        # Create a static connection for use by the test-suite
+        if context.settings.get(&#34;debug.test_suite_endpoint&#34;):
+            mgr = ConnectionManager(self.context)
+            their_endpoint = context.settings[&#34;debug.test_suite_endpoint&#34;]
+            test_conn = await mgr.create_static_connection(
+                my_seed=hashlib.sha256(b&#34;aries-protocol-test-subject&#34;).digest(),
+                their_seed=hashlib.sha256(b&#34;aries-protocol-test-suite&#34;).digest(),
+                their_endpoint=their_endpoint,
+                their_role=&#34;tester&#34;,
+                alias=&#34;test-suite&#34;,
+            )
+            print(&#34;Created static connection for test suite&#34;)
+            print(&#34; - My DID:&#34;, test_conn.my_did)
+            print(&#34; - Their DID:&#34;, test_conn.their_did)
+            print(&#34; - Their endpoint:&#34;, their_endpoint)
+            print()
+
+        # Print an invitation to the terminal
+        if context.settings.get(&#34;debug.print_invitation&#34;):
+            try:
+                mgr = ConnectionManager(self.context)
+                _connection, invitation = await mgr.create_invitation(
+                    their_role=context.settings.get(&#34;debug.invite_role&#34;),
+                    my_label=context.settings.get(&#34;debug.invite_label&#34;),
+                    multi_use=context.settings.get(&#34;debug.invite_multi_use&#34;, False),
+                    public=context.settings.get(&#34;debug.invite_public&#34;, False),
+                )
+                base_url = context.settings.get(&#34;invite_base_url&#34;)
+                invite_url = invitation.to_url(base_url)
+                print(&#34;Invitation URL:&#34;)
+                print(invite_url, flush=True)
+            except Exception:
+                LOGGER.exception(&#34;Error creating invitation&#34;)
+
+    async def stop(self, timeout=1.0):
+        &#34;&#34;&#34;Stop the agent.&#34;&#34;&#34;
+        shutdown = TaskQueue()
+        if self.dispatcher:
+            shutdown.run(self.dispatcher.complete())
+        if self.admin_server:
+            shutdown.run(self.admin_server.stop())
+        if self.inbound_transport_manager:
+            shutdown.run(self.inbound_transport_manager.stop())
+        if self.outbound_transport_manager:
+            shutdown.run(self.outbound_transport_manager.stop())
+        await shutdown.complete(timeout)
+
+    def inbound_message_router(
+        self, message: InboundMessage, can_respond: bool = False
+    ):
+        &#34;&#34;&#34;
+        Route inbound messages.
+
+        Args:
+            message: The inbound message instance
+            can_respond: If the session supports return routing
+
+        &#34;&#34;&#34;
+
+        if message.receipt.direct_response_requested and not can_respond:
+            LOGGER.warning(
+                &#34;Direct response requested, but not supported by transport: %s&#34;,
+                message.transport_type,
+            )
+
+        # Note: at this point we could send the message to a shared queue
+        # if this pod is too busy to process it
+
+        try:
+            self.dispatcher.queue_message(
+                message,
+                self.outbound_message_router,
+                self.admin_server and self.admin_server.send_webhook,
+                lambda completed: self.dispatch_complete(message, completed),
+            )
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+            raise
+
+    def dispatch_complete(self, message: InboundMessage, completed: CompletedTask):
+        &#34;&#34;&#34;Handle completion of message dispatch.&#34;&#34;&#34;
+        if completed.exc_info:
+            LOGGER.exception(
+                &#34;Exception in message handler:&#34;, exc_info=completed.exc_info
+            )
+            if isinstance(completed.exc_info[1], LedgerConfigError) or isinstance(
+                completed.exc_info[1], LedgerTransactionError
+            ):
+                LOGGER.error(
+                    &#34;%shutdown on ledger error %s&#34;,
+                    &#34;S&#34; if self.admin_server else &#34;No admin server to s&#34;,
+                    str(completed.exc_info[1]),
+                )
+                if self.admin_server:
+                    self.admin_server.notify_fatal_error()
+            else:
+                LOGGER.error(
+                    &#34;DON&#39;T shutdown on %s %s&#34;,
+                    completed.exc_info[0].__name__,
+                    str(completed.exc_info[1]),
+                )
+        self.inbound_transport_manager.dispatch_complete(message, completed)
+
+    async def get_stats(self) -&gt; dict:
+        &#34;&#34;&#34;Get the current stats tracked by the conductor.&#34;&#34;&#34;
+        stats = {
+            &#34;in_sessions&#34;: len(self.inbound_transport_manager.sessions),
+            &#34;out_encode&#34;: 0,
+            &#34;out_deliver&#34;: 0,
+            &#34;task_active&#34;: self.dispatcher.task_queue.current_active,
+            &#34;task_done&#34;: self.dispatcher.task_queue.total_done,
+            &#34;task_failed&#34;: self.dispatcher.task_queue.total_failed,
+            &#34;task_pending&#34;: self.dispatcher.task_queue.current_pending,
+        }
+        for m in self.outbound_transport_manager.outbound_buffer:
+            if m.state == QueuedOutboundMessage.STATE_ENCODE:
+                stats[&#34;out_encode&#34;] += 1
+            if m.state == QueuedOutboundMessage.STATE_DELIVER:
+                stats[&#34;out_deliver&#34;] += 1
+        return stats
+
+    async def outbound_message_router(
+        self,
+        context: InjectionContext,
+        outbound: OutboundMessage,
+        inbound: InboundMessage = None,
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Route an outbound message.
+
+        Args:
+            context: The request context
+            message: An outbound message to be sent
+            inbound: The inbound message that produced this response, if available
+        &#34;&#34;&#34;
+        if not outbound.target and outbound.reply_to_verkey:
+            if not outbound.reply_from_verkey and inbound:
+                outbound.reply_from_verkey = inbound.receipt.recipient_verkey
+            # return message to an inbound session
+            if self.inbound_transport_manager.return_to_session(outbound):
+                return
+
+        if not outbound.to_session_only:
+            await self.queue_outbound(context, outbound, inbound)
+
+    def handle_not_returned(self, context: InjectionContext, outbound: OutboundMessage):
+        &#34;&#34;&#34;Handle a message that failed delivery via an inbound session.&#34;&#34;&#34;
+        try:
+            self.dispatcher.run_task(self.queue_outbound(context, outbound))
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+            raise
+
+    async def queue_outbound(
+        self,
+        context: InjectionContext,
+        outbound: OutboundMessage,
+        inbound: InboundMessage = None,
+    ):
+        &#34;&#34;&#34;
+        Queue an outbound message.
+
+        Args:
+            context: The request context
+            message: An outbound message to be sent
+            inbound: The inbound message that produced this response, if available
+        &#34;&#34;&#34;
+        # populate connection target(s)
+        if not outbound.target and not outbound.target_list and outbound.connection_id:
+            # using provided request context
+            mgr = ConnectionManager(context)
+            try:
+                outbound.target_list = await self.dispatcher.run_task(
+                    mgr.get_connection_targets(connection_id=outbound.connection_id)
+                )
+            except ConnectionManagerError:
+                LOGGER.exception(&#34;Error preparing outbound message for transmission&#34;)
+                return
+            except (LedgerConfigError, LedgerTransactionError) as e:
+                LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+                if self.admin_server:
+                    self.admin_server.notify_fatal_error()
+                raise
+
+        try:
+            self.outbound_transport_manager.enqueue_message(context, outbound)
+        except OutboundDeliveryError:
+            LOGGER.warning(&#34;Cannot queue message for delivery, no supported transport&#34;)
+            self.handle_not_delivered(context, outbound)
+
+    def handle_not_delivered(
+        self, context: InjectionContext, outbound: OutboundMessage
+    ):
+        &#34;&#34;&#34;Handle a message that failed delivery via outbound transports.&#34;&#34;&#34;
+        self.inbound_transport_manager.return_undelivered(outbound)
+
+    def webhook_router(
+        self, topic: str, payload: dict, endpoint: str, max_attempts: int = None
+    ):
+        &#34;&#34;&#34;
+        Route a webhook through the outbound transport manager.
+
+        Args:
+            topic: The webhook topic
+            payload: The webhook payload
+            endpoint: The endpoint of the webhook target
+            max_attempts: The maximum number of attempts
+        &#34;&#34;&#34;
+        try:
+            self.outbound_transport_manager.enqueue_webhook(
+                topic, payload, endpoint, max_attempts
+            )
+        except OutboundDeliveryError:
+            LOGGER.warning(
+                &#34;Cannot queue message webhook for delivery, no supported transport&#34;
+            )</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.dispatch_complete"><code class="name flex">
+<span>def <span class="ident">dispatch_complete</span></span>(<span>self, message: aries_cloudagent.transport.inbound.message.InboundMessage, completed: aries_cloudagent.utils.task_queue.CompletedTask)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle completion of message dispatch.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dispatch_complete(self, message: InboundMessage, completed: CompletedTask):
+    &#34;&#34;&#34;Handle completion of message dispatch.&#34;&#34;&#34;
+    if completed.exc_info:
+        LOGGER.exception(
+            &#34;Exception in message handler:&#34;, exc_info=completed.exc_info
+        )
+        if isinstance(completed.exc_info[1], LedgerConfigError) or isinstance(
+            completed.exc_info[1], LedgerTransactionError
+        ):
+            LOGGER.error(
+                &#34;%shutdown on ledger error %s&#34;,
+                &#34;S&#34; if self.admin_server else &#34;No admin server to s&#34;,
+                str(completed.exc_info[1]),
+            )
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+        else:
+            LOGGER.error(
+                &#34;DON&#39;T shutdown on %s %s&#34;,
+                completed.exc_info[0].__name__,
+                str(completed.exc_info[1]),
+            )
+    self.inbound_transport_manager.dispatch_complete(message, completed)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.get_stats"><code class="name flex">
+<span>async def <span class="ident">get_stats</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the current stats tracked by the conductor.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_stats(self) -&gt; dict:
+    &#34;&#34;&#34;Get the current stats tracked by the conductor.&#34;&#34;&#34;
+    stats = {
+        &#34;in_sessions&#34;: len(self.inbound_transport_manager.sessions),
+        &#34;out_encode&#34;: 0,
+        &#34;out_deliver&#34;: 0,
+        &#34;task_active&#34;: self.dispatcher.task_queue.current_active,
+        &#34;task_done&#34;: self.dispatcher.task_queue.total_done,
+        &#34;task_failed&#34;: self.dispatcher.task_queue.total_failed,
+        &#34;task_pending&#34;: self.dispatcher.task_queue.current_pending,
+    }
+    for m in self.outbound_transport_manager.outbound_buffer:
+        if m.state == QueuedOutboundMessage.STATE_ENCODE:
+            stats[&#34;out_encode&#34;] += 1
+        if m.state == QueuedOutboundMessage.STATE_DELIVER:
+            stats[&#34;out_deliver&#34;] += 1
+    return stats</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.handle_not_delivered"><code class="name flex">
+<span>def <span class="ident">handle_not_delivered</span></span>(<span>self, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound: aries_cloudagent.transport.outbound.message.OutboundMessage)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle a message that failed delivery via outbound transports.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_not_delivered(
+    self, context: InjectionContext, outbound: OutboundMessage
+):
+    &#34;&#34;&#34;Handle a message that failed delivery via outbound transports.&#34;&#34;&#34;
+    self.inbound_transport_manager.return_undelivered(outbound)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.handle_not_returned"><code class="name flex">
+<span>def <span class="ident">handle_not_returned</span></span>(<span>self, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound: aries_cloudagent.transport.outbound.message.OutboundMessage)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle a message that failed delivery via an inbound session.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_not_returned(self, context: InjectionContext, outbound: OutboundMessage):
+    &#34;&#34;&#34;Handle a message that failed delivery via an inbound session.&#34;&#34;&#34;
+    try:
+        self.dispatcher.run_task(self.queue_outbound(context, outbound))
+    except (LedgerConfigError, LedgerTransactionError) as e:
+        LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+        if self.admin_server:
+            self.admin_server.notify_fatal_error()
+        raise</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.inbound_message_router"><code class="name flex">
+<span>def <span class="ident">inbound_message_router</span></span>(<span>self, message: aries_cloudagent.transport.inbound.message.InboundMessage, can_respond: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Route inbound messages.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The inbound message instance</dd>
+<dt><strong><code>can_respond</code></strong></dt>
+<dd>If the session supports return routing</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inbound_message_router(
+    self, message: InboundMessage, can_respond: bool = False
+):
+    &#34;&#34;&#34;
+    Route inbound messages.
+
+    Args:
+        message: The inbound message instance
+        can_respond: If the session supports return routing
+
+    &#34;&#34;&#34;
+
+    if message.receipt.direct_response_requested and not can_respond:
+        LOGGER.warning(
+            &#34;Direct response requested, but not supported by transport: %s&#34;,
+            message.transport_type,
+        )
+
+    # Note: at this point we could send the message to a shared queue
+    # if this pod is too busy to process it
+
+    try:
+        self.dispatcher.queue_message(
+            message,
+            self.outbound_message_router,
+            self.admin_server and self.admin_server.send_webhook,
+            lambda completed: self.dispatch_complete(message, completed),
+        )
+    except (LedgerConfigError, LedgerTransactionError) as e:
+        LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+        if self.admin_server:
+            self.admin_server.notify_fatal_error()
+        raise</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.outbound_message_router"><code class="name flex">
+<span>async def <span class="ident">outbound_message_router</span></span>(<span>self, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound: aries_cloudagent.transport.outbound.message.OutboundMessage, inbound: aries_cloudagent.transport.inbound.message.InboundMessage = None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Route an outbound message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong></dt>
+<dd>The request context</dd>
+<dt><strong><code>message</code></strong></dt>
+<dd>An outbound message to be sent</dd>
+<dt><strong><code>inbound</code></strong></dt>
+<dd>The inbound message that produced this response, if available</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def outbound_message_router(
+    self,
+    context: InjectionContext,
+    outbound: OutboundMessage,
+    inbound: InboundMessage = None,
+) -&gt; None:
+    &#34;&#34;&#34;
+    Route an outbound message.
+
+    Args:
+        context: The request context
+        message: An outbound message to be sent
+        inbound: The inbound message that produced this response, if available
+    &#34;&#34;&#34;
+    if not outbound.target and outbound.reply_to_verkey:
+        if not outbound.reply_from_verkey and inbound:
+            outbound.reply_from_verkey = inbound.receipt.recipient_verkey
+        # return message to an inbound session
+        if self.inbound_transport_manager.return_to_session(outbound):
+            return
+
+    if not outbound.to_session_only:
+        await self.queue_outbound(context, outbound, inbound)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.queue_outbound"><code class="name flex">
+<span>async def <span class="ident">queue_outbound</span></span>(<span>self, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound: aries_cloudagent.transport.outbound.message.OutboundMessage, inbound: aries_cloudagent.transport.inbound.message.InboundMessage = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Queue an outbound message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong></dt>
+<dd>The request context</dd>
+<dt><strong><code>message</code></strong></dt>
+<dd>An outbound message to be sent</dd>
+<dt><strong><code>inbound</code></strong></dt>
+<dd>The inbound message that produced this response, if available</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def queue_outbound(
+    self,
+    context: InjectionContext,
+    outbound: OutboundMessage,
+    inbound: InboundMessage = None,
+):
+    &#34;&#34;&#34;
+    Queue an outbound message.
+
+    Args:
+        context: The request context
+        message: An outbound message to be sent
+        inbound: The inbound message that produced this response, if available
+    &#34;&#34;&#34;
+    # populate connection target(s)
+    if not outbound.target and not outbound.target_list and outbound.connection_id:
+        # using provided request context
+        mgr = ConnectionManager(context)
+        try:
+            outbound.target_list = await self.dispatcher.run_task(
+                mgr.get_connection_targets(connection_id=outbound.connection_id)
+            )
+        except ConnectionManagerError:
+            LOGGER.exception(&#34;Error preparing outbound message for transmission&#34;)
+            return
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            LOGGER.error(&#34;Shutdown on ledger error %s&#34;, str(e))
+            if self.admin_server:
+                self.admin_server.notify_fatal_error()
+            raise
+
+    try:
+        self.outbound_transport_manager.enqueue_message(context, outbound)
+    except OutboundDeliveryError:
+        LOGGER.warning(&#34;Cannot queue message for delivery, no supported transport&#34;)
+        self.handle_not_delivered(context, outbound)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.setup"><code class="name flex">
+<span>async def <span class="ident">setup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize the global request context.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def setup(self):
+    &#34;&#34;&#34;Initialize the global request context.&#34;&#34;&#34;
+
+    context = await self.context_builder.build()
+
+    self.dispatcher = Dispatcher(context)
+    await self.dispatcher.setup()
+
+    wire_format = await context.inject(BaseWireFormat, required=False)
+    if wire_format and hasattr(wire_format, &#34;task_queue&#34;):
+        wire_format.task_queue = self.dispatcher.task_queue
+
+    # Register all inbound transports
+    self.inbound_transport_manager = InboundTransportManager(
+        context, self.inbound_message_router, self.handle_not_returned
+    )
+    await self.inbound_transport_manager.setup()
+
+    # Register all outbound transports
+    self.outbound_transport_manager = OutboundTransportManager(
+        context, self.handle_not_delivered
+    )
+    await self.outbound_transport_manager.setup()
+
+    # Configure the wallet
+    public_did = await wallet_config(context)
+
+    # Configure the ledger
+    if not await ledger_config(context, public_did):
+        LOGGER.warning(&#34;No ledger configured&#34;)
+
+    # Admin API
+    if context.settings.get(&#34;admin.enabled&#34;):
+        try:
+            admin_host = context.settings.get(&#34;admin.host&#34;, &#34;0.0.0.0&#34;)
+            admin_port = context.settings.get(&#34;admin.port&#34;, &#34;80&#34;)
+            self.admin_server = AdminServer(
+                admin_host,
+                admin_port,
+                context,
+                self.outbound_message_router,
+                self.webhook_router,
+                self.stop,
+                self.dispatcher.task_queue,
+                self.get_stats,
+            )
+            webhook_urls = context.settings.get(&#34;admin.webhook_urls&#34;)
+            if webhook_urls:
+                for url in webhook_urls:
+                    self.admin_server.add_webhook_target(url)
+            context.injector.bind_instance(BaseAdminServer, self.admin_server)
+            if &#34;http&#34; not in self.outbound_transport_manager.registered_schemes:
+                self.outbound_transport_manager.register(&#34;http&#34;)
+        except Exception:
+            LOGGER.exception(&#34;Unable to register admin server&#34;)
+            raise
+
+    # Fetch stats collector, if any
+    collector = await context.inject(Collector, required=False)
+    if collector:
+        # add stats to our own methods
+        collector.wrap(
+            self,
+            (
+                # &#34;inbound_message_router&#34;,
+                &#34;outbound_message_router&#34;,
+                # &#34;create_inbound_session&#34;,
+            ),
+        )
+        # at the class level (!) should not be performed multiple times
+        collector.wrap(
+            ConnectionManager,
+            (
+                # &#34;get_connection_targets&#34;,
+                &#34;fetch_did_document&#34;,
+                &#34;find_inbound_connection&#34;,
+            ),
+        )
+
+    # Configure smart contract
+    await smartcontract_config(context)
+
+    self.context = context</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.start"><code class="name flex">
+<span>async def <span class="ident">start</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start the agent.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def start(self) -&gt; None:
+    &#34;&#34;&#34;Start the agent.&#34;&#34;&#34;
+
+    context = self.context
+
+    # Start up transports
+    try:
+        await self.inbound_transport_manager.start()
+    except Exception:
+        LOGGER.exception(&#34;Unable to start inbound transports&#34;)
+        raise
+    try:
+        await self.outbound_transport_manager.start()
+    except Exception:
+        LOGGER.exception(&#34;Unable to start outbound transports&#34;)
+        raise
+
+    # Start up Admin server
+    if self.admin_server:
+        try:
+            await self.admin_server.start()
+        except Exception:
+            LOGGER.exception(&#34;Unable to start administration API&#34;)
+        # Make admin responder available during message parsing
+        # This allows webhooks to be called when a connection is marked active,
+        # for example
+        context.injector.bind_instance(BaseResponder, self.admin_server.responder)
+
+    # Get agent label
+    default_label = context.settings.get(&#34;default_label&#34;)
+
+    # Get public did
+    wallet: BaseWallet = await context.inject(BaseWallet)
+    public_did = await wallet.get_public_did()
+
+    # Show some details about the configuration to the user
+    LoggingConfigurator.print_banner(
+        default_label,
+        self.inbound_transport_manager.registered_transports,
+        self.outbound_transport_manager.registered_transports,
+        public_did.did if public_did else None,
+        self.admin_server,
+    )
+
+    # Create a static connection for use by the test-suite
+    if context.settings.get(&#34;debug.test_suite_endpoint&#34;):
+        mgr = ConnectionManager(self.context)
+        their_endpoint = context.settings[&#34;debug.test_suite_endpoint&#34;]
+        test_conn = await mgr.create_static_connection(
+            my_seed=hashlib.sha256(b&#34;aries-protocol-test-subject&#34;).digest(),
+            their_seed=hashlib.sha256(b&#34;aries-protocol-test-suite&#34;).digest(),
+            their_endpoint=their_endpoint,
+            their_role=&#34;tester&#34;,
+            alias=&#34;test-suite&#34;,
+        )
+        print(&#34;Created static connection for test suite&#34;)
+        print(&#34; - My DID:&#34;, test_conn.my_did)
+        print(&#34; - Their DID:&#34;, test_conn.their_did)
+        print(&#34; - Their endpoint:&#34;, their_endpoint)
+        print()
+
+    # Print an invitation to the terminal
+    if context.settings.get(&#34;debug.print_invitation&#34;):
+        try:
+            mgr = ConnectionManager(self.context)
+            _connection, invitation = await mgr.create_invitation(
+                their_role=context.settings.get(&#34;debug.invite_role&#34;),
+                my_label=context.settings.get(&#34;debug.invite_label&#34;),
+                multi_use=context.settings.get(&#34;debug.invite_multi_use&#34;, False),
+                public=context.settings.get(&#34;debug.invite_public&#34;, False),
+            )
+            base_url = context.settings.get(&#34;invite_base_url&#34;)
+            invite_url = invitation.to_url(base_url)
+            print(&#34;Invitation URL:&#34;)
+            print(invite_url, flush=True)
+        except Exception:
+            LOGGER.exception(&#34;Error creating invitation&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.stop"><code class="name flex">
+<span>async def <span class="ident">stop</span></span>(<span>self, timeout=1.0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop the agent.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def stop(self, timeout=1.0):
+    &#34;&#34;&#34;Stop the agent.&#34;&#34;&#34;
+    shutdown = TaskQueue()
+    if self.dispatcher:
+        shutdown.run(self.dispatcher.complete())
+    if self.admin_server:
+        shutdown.run(self.admin_server.stop())
+    if self.inbound_transport_manager:
+        shutdown.run(self.inbound_transport_manager.stop())
+    if self.outbound_transport_manager:
+        shutdown.run(self.outbound_transport_manager.stop())
+    await shutdown.complete(timeout)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.core.conductor.Conductor.webhook_router"><code class="name flex">
+<span>def <span class="ident">webhook_router</span></span>(<span>self, topic: str, payload: dict, endpoint: str, max_attempts: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Route a webhook through the outbound transport manager.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>topic</code></strong></dt>
+<dd>The webhook topic</dd>
+<dt><strong><code>payload</code></strong></dt>
+<dd>The webhook payload</dd>
+<dt><strong><code>endpoint</code></strong></dt>
+<dd>The endpoint of the webhook target</dd>
+<dt><strong><code>max_attempts</code></strong></dt>
+<dd>The maximum number of attempts</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def webhook_router(
+    self, topic: str, payload: dict, endpoint: str, max_attempts: int = None
+):
+    &#34;&#34;&#34;
+    Route a webhook through the outbound transport manager.
+
+    Args:
+        topic: The webhook topic
+        payload: The webhook payload
+        endpoint: The endpoint of the webhook target
+        max_attempts: The maximum number of attempts
+    &#34;&#34;&#34;
+    try:
+        self.outbound_transport_manager.enqueue_webhook(
+            topic, payload, endpoint, max_attempts
+        )
+    except OutboundDeliveryError:
+        LOGGER.warning(
+            &#34;Cannot queue message webhook for delivery, no supported transport&#34;
+        )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agent.core" href="index.html">dexa_sdk.agent.core</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agent.core.conductor.Conductor" href="#dexa_sdk.agent.core.conductor.Conductor">Conductor</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.dispatch_complete" href="#dexa_sdk.agent.core.conductor.Conductor.dispatch_complete">dispatch_complete</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.get_stats" href="#dexa_sdk.agent.core.conductor.Conductor.get_stats">get_stats</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.handle_not_delivered" href="#dexa_sdk.agent.core.conductor.Conductor.handle_not_delivered">handle_not_delivered</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.handle_not_returned" href="#dexa_sdk.agent.core.conductor.Conductor.handle_not_returned">handle_not_returned</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.inbound_message_router" href="#dexa_sdk.agent.core.conductor.Conductor.inbound_message_router">inbound_message_router</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.outbound_message_router" href="#dexa_sdk.agent.core.conductor.Conductor.outbound_message_router">outbound_message_router</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.queue_outbound" href="#dexa_sdk.agent.core.conductor.Conductor.queue_outbound">queue_outbound</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.setup" href="#dexa_sdk.agent.core.conductor.Conductor.setup">setup</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.start" href="#dexa_sdk.agent.core.conductor.Conductor.start">start</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.stop" href="#dexa_sdk.agent.core.conductor.Conductor.stop">stop</a></code></li>
+<li><code><a title="dexa_sdk.agent.core.conductor.Conductor.webhook_router" href="#dexa_sdk.agent.core.conductor.Conductor.webhook_router">webhook_router</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

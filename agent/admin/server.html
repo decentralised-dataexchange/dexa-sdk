@@ -1,0 +1,2396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agent.admin.server API documentation</title>
+<meta name="description" content="Admin server classes." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agent.admin.server</code></h1>
+</header>
+<section id="section-intro">
+<p>Admin server classes.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Admin server classes.&#34;&#34;&#34;
+
+import asyncio
+import logging
+from typing import Callable, Coroutine, Sequence, Set
+import uuid
+
+from aiohttp import web
+from aiohttp_apispec import (
+    docs,
+    response_schema,
+    validation_middleware,
+)
+import aiohttp_cors
+
+from marshmallow import fields, Schema
+
+from ..config.injection_context import InjectionContext
+from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
+from aries_cloudagent.core.plugin_registry import PluginRegistry
+from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
+from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.transport.queue.basic import BasicMessageQueue
+from aries_cloudagent.transport.outbound.message import OutboundMessage
+from aries_cloudagent.utils.stats import Collector
+from aries_cloudagent.utils.task_queue import TaskQueue
+from aries_cloudagent.version import __version__
+from aries_cloudagent.admin.base_server import BaseAdminServer
+from aries_cloudagent.admin.error import AdminSetupError
+from ...managers.dexa_manager import DexaManager
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+class AdminModulesSchema(Schema):
+    &#34;&#34;&#34;Schema for the modules endpoint.&#34;&#34;&#34;
+
+    result = fields.List(
+        fields.Str(description=&#34;admin module&#34;), description=&#34;List of admin modules&#34;
+    )
+
+
+class AdminStatusSchema(Schema):
+    &#34;&#34;&#34;Schema for the status endpoint.&#34;&#34;&#34;
+
+
+class AdminStatusLivelinessSchema(Schema):
+    &#34;&#34;&#34;Schema for the liveliness endpoint.&#34;&#34;&#34;
+
+    alive = fields.Boolean(description=&#34;Liveliness status&#34;, example=True)
+
+
+class AdminStatusReadinessSchema(Schema):
+    &#34;&#34;&#34;Schema for the readiness endpoint.&#34;&#34;&#34;
+
+    ready = fields.Boolean(description=&#34;Readiness status&#34;, example=True)
+
+
+class AdminResponder(BaseResponder):
+    &#34;&#34;&#34;Handle outgoing messages from message handlers.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        context: InjectionContext,
+        send: Coroutine,
+        webhook: Coroutine,
+        **kwargs,
+    ):
+        &#34;&#34;&#34;
+        Initialize an instance of `AdminResponder`.
+
+        Args:
+            send: Function to send outbound message
+
+        &#34;&#34;&#34;
+        super().__init__(**kwargs)
+        self._context = context
+        self._send = send
+        self._webhook = webhook
+
+    async def send_outbound(self, message: OutboundMessage):
+        &#34;&#34;&#34;
+        Send outbound message.
+
+        Args:
+            message: The `OutboundMessage` to be sent
+        &#34;&#34;&#34;
+        await self._send(self._context, message)
+
+    async def send_webhook(self, topic: str, payload: dict):
+        &#34;&#34;&#34;
+        Dispatch a webhook.
+
+        Args:
+            topic: the webhook topic identifier
+            payload: the webhook payload value
+        &#34;&#34;&#34;
+        await self._webhook(topic, payload)
+
+
+class WebhookTarget:
+    &#34;&#34;&#34;Class for managing webhook target information.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        endpoint: str,
+        topic_filter: Sequence[str] = None,
+        max_attempts: int = None,
+    ):
+        &#34;&#34;&#34;Initialize the webhook target.&#34;&#34;&#34;
+        self.endpoint = endpoint
+        self.max_attempts = max_attempts
+        self._topic_filter = None
+        self.topic_filter = topic_filter  # call setter
+
+    @property
+    def topic_filter(self) -&gt; Set[str]:
+        &#34;&#34;&#34;Accessor for the target&#39;s topic filter.&#34;&#34;&#34;
+        return self._topic_filter
+
+    @topic_filter.setter
+    def topic_filter(self, val: Sequence[str]):
+        &#34;&#34;&#34;Setter for the target&#39;s topic filter.&#34;&#34;&#34;
+        filter = set(val) if val else None
+        if filter and &#34;*&#34; in filter:
+            filter = None
+        self._topic_filter = filter
+
+
+@web.middleware
+async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
+    &#34;&#34;&#34;Only continue if application is ready to take work.&#34;&#34;&#34;
+
+    if (
+        str(request.rel_url).rstrip(&#34;/&#34;)
+        in (
+            &#34;/status/live&#34;,
+            &#34;/status/ready&#34;,
+        )
+        or request.app._state.get(&#34;ready&#34;)
+    ):
+        try:
+            return await handler(request)
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            # fatal, signal server shutdown
+            LOGGER.error(&#34;Shutdown with %s&#34;, str(e))
+            request.app._state[&#34;ready&#34;] = False
+            request.app._state[&#34;alive&#34;] = False
+            raise
+        except web.HTTPFound as e:
+            # redirect, typically / -&gt; /api/doc
+            LOGGER.info(&#34;Handler redirect to: %s&#34;, e.location)
+            raise
+        except asyncio.CancelledError:
+            # redirection spawns new task and cancels old
+            LOGGER.debug(&#34;Task cancelled&#34;)
+            raise
+        except Exception as e:
+            # some other error?
+            LOGGER.error(&#34;Handler error with exception: %s&#34;, str(e))
+            raise
+
+    raise web.HTTPServiceUnavailable(reason=&#34;Shutdown in progress&#34;)
+
+
+@web.middleware
+async def debug_middleware(request: web.BaseRequest, handler: Coroutine):
+    &#34;&#34;&#34;Show request detail in debug log.&#34;&#34;&#34;
+
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        LOGGER.debug(f&#34;Incoming request: {request.method} {request.path_qs}&#34;)
+        LOGGER.debug(f&#34;Match info: {request.match_info}&#34;)
+        body = await request.text()
+        LOGGER.debug(f&#34;Body: {body}&#34;)
+
+    return await handler(request)
+
+
+class AdminServer(BaseAdminServer):
+    &#34;&#34;&#34;Admin HTTP server class.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        context: InjectionContext,
+        outbound_message_router: Coroutine,
+        webhook_router: Callable,
+        conductor_stop: Coroutine,
+        task_queue: TaskQueue = None,
+        conductor_stats: Coroutine = None,
+    ):
+        &#34;&#34;&#34;
+        Initialize an AdminServer instance.
+
+        Args:
+            host: Host to listen on
+            port: Port to listen on
+            context: The application context instance
+            outbound_message_router: Coroutine for delivering outbound messages
+            webhook_router: Callable for delivering webhooks
+            conductor_stop: Conductor (graceful) stop for shutdown API call
+            task_queue: An optional task queue for handlers
+        &#34;&#34;&#34;
+        self.app = None
+        self.admin_api_key = context.settings.get(&#34;admin.admin_api_key&#34;)
+        self.admin_insecure_mode = bool(
+            context.settings.get(&#34;admin.admin_insecure_mode&#34;)
+        )
+        self.host = host
+        self.port = port
+        self.conductor_stop = conductor_stop
+        self.conductor_stats = conductor_stats
+        self.loaded_modules = []
+        self.task_queue = task_queue
+        self.webhook_router = webhook_router
+        self.webhook_targets = {}
+        self.websocket_queues = {}
+        self.site = None
+
+        self.context = context.start_scope(&#34;admin&#34;)
+        self.responder = AdminResponder(
+            self.context,
+            outbound_message_router,
+            self.send_webhook,
+        )
+        self.context.injector.bind_instance(BaseResponder, self.responder)
+
+    async def make_application(self) -&gt; web.Application:
+        &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
+
+        middlewares = [ready_middleware,
+                       debug_middleware, validation_middleware]
+
+        # admin-token and admin-token are mutually exclusive and required.
+        # This should be enforced during parameter parsing but to be sure,
+        # we check here.
+        assert self.admin_insecure_mode ^ bool(self.admin_api_key)
+
+        def is_unprotected_path(path: str):
+            return (
+                path
+                in [
+                    &#34;/api/doc&#34;,
+                    &#34;/api/docs/swagger.json&#34;,
+                    &#34;/favicon.ico&#34;,
+                    &#34;/ws&#34;,  # ws handler checks authentication
+                ]
+                or path.startswith(&#34;/static/swagger/&#34;)
+            )
+
+        # If admin_api_key is None, then admin_insecure_mode must be set so
+        # we can safely enable the admin server with no security
+        if self.admin_api_key:
+
+            @web.middleware
+            async def check_token(request, handler):
+                header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+                valid_key = self.admin_api_key == header_admin_api_key
+
+                if valid_key or is_unprotected_path(request.path):
+                    return await handler(request)
+                else:
+                    raise web.HTTPUnauthorized()
+
+            middlewares.append(check_token)
+
+        collector: Collector = await self.context.inject(Collector, required=False)
+
+        if self.task_queue:
+
+            @web.middleware
+            async def apply_limiter(request, handler):
+                task = await self.task_queue.put(handler(request))
+                return await task
+
+            middlewares.append(apply_limiter)
+
+        elif collector:
+
+            @web.middleware
+            async def collect_stats(request, handler):
+                handler = collector.wrap_coro(handler, [handler.__qualname__])
+                return await handler(request)
+
+            middlewares.append(collect_stats)
+
+        app = web.Application(middlewares=middlewares)
+        app[&#34;request_context&#34;] = self.context
+        app[&#34;outbound_message_router&#34;] = self.responder.send
+
+        app.add_routes(
+            [
+                web.get(&#34;/&#34;, self.redirect_handler, allow_head=False),
+                web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
+                web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
+                web.post(&#34;/status/reset&#34;, self.status_reset_handler),
+                web.get(&#34;/status/live&#34;, self.liveliness_handler,
+                        allow_head=False),
+                web.get(&#34;/status/ready&#34;, self.readiness_handler,
+                        allow_head=False),
+                web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
+                web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
+                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+            ]
+        )
+
+        plugin_registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        if plugin_registry:
+            await plugin_registry.register_admin_routes(app)
+
+        cors = aiohttp_cors.setup(
+            app,
+            defaults={
+                &#34;*&#34;: aiohttp_cors.ResourceOptions(
+                    allow_credentials=True,
+                    expose_headers=&#34;*&#34;,
+                    allow_headers=&#34;*&#34;,
+                    allow_methods=&#34;*&#34;,
+                )
+            },
+        )
+        for route in app.router.routes():
+            cors.add(route)
+        # get agent label
+        agent_label = self.context.settings.get(&#34;default_label&#34;)
+        version_string = f&#34;v{__version__}&#34;
+
+        custom_setup_aiohttp_apispec(
+            app=app,
+            title=agent_label,
+            version=version_string,
+            swagger_path=&#34;/api/doc&#34;
+        )
+        app.on_startup.append(self.on_startup)
+
+        # ensure we always have status values
+        app._state[&#34;ready&#34;] = False
+        app._state[&#34;alive&#34;] = False
+
+        return app
+
+    async def start(self) -&gt; None:
+        &#34;&#34;&#34;
+        Start the webserver.
+
+        Raises:
+            AdminSetupError: If there was an error starting the webserver
+
+        &#34;&#34;&#34;
+
+        def sort_dict(raw: dict) -&gt; dict:
+            &#34;&#34;&#34;Order (JSON, string keys) dict asciibetically by key, recursively.&#34;&#34;&#34;
+            for (k, v) in raw.items():
+                if isinstance(v, dict):
+                    raw[k] = sort_dict(v)
+            return dict(sorted([item for item in raw.items()], key=lambda x: x[0]))
+
+        self.app = await self.make_application()
+        runner = web.AppRunner(self.app)
+        await runner.setup()
+
+        plugin_registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        if plugin_registry:
+            plugin_registry.post_process_routes(self.app)
+
+        # order tags alphabetically, parameters deterministically and pythonically
+        swagger_dict = self.app._state[&#34;swagger_dict&#34;]
+        swagger_dict.get(&#34;tags&#34;, []).sort(key=lambda t: t[&#34;name&#34;])
+        for path in swagger_dict[&#34;paths&#34;].values():
+            for method_spec in path.values():
+                method_spec[&#34;parameters&#34;].sort(
+                    key=lambda p: (p[&#34;in&#34;], not p[&#34;required&#34;], p[&#34;name&#34;])
+                )
+
+        # order definitions alphabetically by dict key
+        swagger_dict[&#34;definitions&#34;] = sort_dict(swagger_dict[&#34;definitions&#34;])
+
+        self.site = web.TCPSite(runner, host=self.host, port=self.port)
+
+        try:
+            await self.site.start()
+            self.app._state[&#34;ready&#34;] = True
+            self.app._state[&#34;alive&#34;] = True
+        except OSError:
+            raise AdminSetupError(
+                &#34;Unable to start webserver with host &#34;
+                + f&#34;&#39;{self.host}&#39; and port &#39;{self.port}&#39;\n&#34;
+            )
+
+    async def stop(self) -&gt; None:
+        &#34;&#34;&#34;Stop the webserver.&#34;&#34;&#34;
+        self.app._state[&#34;ready&#34;] = False  # in case call does not come through OpenAPI
+        for queue in self.websocket_queues.values():
+            queue.stop()
+        if self.site:
+            await self.site.stop()
+            self.site = None
+
+    async def on_startup(self, app: web.Application):
+        &#34;&#34;&#34;Perform webserver startup actions.&#34;&#34;&#34;
+        if self.admin_api_key:
+            swagger = app[&#34;swagger_dict&#34;]
+            swagger[&#34;securityDefinitions&#34;] = {
+                &#34;ApiKeyHeader&#34;: {&#34;type&#34;: &#34;apiKey&#34;, &#34;in&#34;: &#34;header&#34;, &#34;name&#34;: &#34;X-API-KEY&#34;}
+            }
+            swagger[&#34;security&#34;] = [{&#34;ApiKeyHeader&#34;: []}]
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Fetch the list of loaded plugins&#34;)
+    @response_schema(AdminModulesSchema(), 200)
+    async def plugins_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for the loaded plugins list.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The module list response
+
+        &#34;&#34;&#34;
+        registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        plugins = registry and sorted(registry.plugin_names) or []
+        return web.json_response({&#34;result&#34;: plugins})
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Fetch the server status&#34;)
+    @response_schema(AdminStatusSchema(), 200)
+    async def status_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for the server status information.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+        status = {&#34;version&#34;: __version__}
+        status[&#34;label&#34;] = self.context.settings.get(&#34;default_label&#34;)
+        collector: Collector = await self.context.inject(Collector, required=False)
+        if collector:
+            status[&#34;timing&#34;] = collector.results
+        if self.conductor_stats:
+            status[&#34;conductor&#34;] = await self.conductor_stats()
+        return web.json_response(status)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Reset statistics&#34;)
+    @response_schema(AdminStatusSchema(), 200)
+    async def status_reset_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for resetting the timing statistics.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+        collector: Collector = await self.context.inject(Collector, required=False)
+        if collector:
+            collector.reset()
+        return web.json_response({})
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
+    async def connections_webhook_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for webhooks
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+
+        # Request body
+        body = await request.json()
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
+
+        return web.json_response({})
+
+    async def redirect_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;Perform redirect to documentation.&#34;&#34;&#34;
+        raise web.HTTPFound(&#34;/api/doc&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Liveliness check&#34;)
+    @response_schema(AdminStatusLivelinessSchema(), 200)
+    async def liveliness_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for liveliness check.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response, always indicating True
+
+        &#34;&#34;&#34;
+        app_live = self.app._state[&#34;alive&#34;]
+        if app_live:
+            return web.json_response({&#34;alive&#34;: app_live})
+        else:
+            raise web.HTTPServiceUnavailable(reason=&#34;Service not available&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Readiness check&#34;)
+    @response_schema(AdminStatusReadinessSchema(), 200)
+    async def readiness_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for liveliness check.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response, indicating readiness for further calls
+
+        &#34;&#34;&#34;
+        app_ready = self.app._state[&#34;ready&#34;] and self.app._state[&#34;alive&#34;]
+        if app_ready:
+            return web.json_response({&#34;ready&#34;: app_ready})
+        else:
+            raise web.HTTPServiceUnavailable(reason=&#34;Service not ready&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Shut down server&#34;)
+    async def shutdown_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for server shutdown.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response (empty production)
+
+        &#34;&#34;&#34;
+        self.app._state[&#34;ready&#34;] = False
+        loop = asyncio.get_event_loop()
+        asyncio.ensure_future(self.conductor_stop(), loop=loop)
+
+        return web.json_response({})
+
+    def notify_fatal_error(self):
+        &#34;&#34;&#34;Set our readiness flags to force a restart (openshift).&#34;&#34;&#34;
+        LOGGER.error(&#34;Received shutdown request notify_fatal_error()&#34;)
+        self.app._state[&#34;ready&#34;] = False
+        self.app._state[&#34;alive&#34;] = False
+
+    async def websocket_handler(self, request):
+        &#34;&#34;&#34;Send notifications to admin client over websocket.&#34;&#34;&#34;
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        socket_id = str(uuid.uuid4())
+        queue = BasicMessageQueue()
+        loop = asyncio.get_event_loop()
+
+        if self.admin_insecure_mode:
+            # open to send websocket messages without api key auth
+            queue.authenticated = True
+        else:
+            header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+            # authenticated via http header?
+            queue.authenticated = header_admin_api_key == self.admin_api_key
+
+        try:
+            self.websocket_queues[socket_id] = queue
+            await queue.enqueue(
+                {
+                    &#34;topic&#34;: &#34;settings&#34;,
+                    &#34;payload&#34;: {
+                        &#34;authenticated&#34;: queue.authenticated,
+                        &#34;label&#34;: self.context.settings.get(&#34;default_label&#34;),
+                        &#34;endpoint&#34;: self.context.settings.get(&#34;default_endpoint&#34;),
+                        &#34;no_receive_invites&#34;: self.context.settings.get(
+                            &#34;admin.no_receive_invites&#34;, False
+                        ),
+                        &#34;help_link&#34;: self.context.settings.get(&#34;admin.help_link&#34;),
+                    },
+                }
+            )
+
+            closed = False
+            receive = loop.create_task(ws.receive_json())
+            send = loop.create_task(queue.dequeue(timeout=5.0))
+
+            while not closed:
+                try:
+                    await asyncio.wait(
+                        (receive, send), return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if ws.closed:
+                        closed = True
+
+                    if receive.done():
+                        if not closed:
+                            msg_received = None
+                            msg_api_key = None
+                            try:
+                                # this call can re-raise exeptions from inside the task
+                                msg_received = receive.result()
+                                msg_api_key = msg_received.get(&#34;x-api-key&#34;)
+                            except Exception:
+                                LOGGER.exception(
+                                    &#34;Exception in websocket receiving task:&#34;
+                                )
+                            if self.admin_api_key and self.admin_api_key == msg_api_key:
+                                # authenticated via websocket message
+                                queue.authenticated = True
+
+                            receive = loop.create_task(ws.receive_json())
+
+                    if send.done():
+                        try:
+                            msg = send.result()
+                        except asyncio.TimeoutError:
+                            msg = None
+
+                        if msg is None:
+                            # we send fake pings because the JS client
+                            # can&#39;t detect real ones
+                            msg = {
+                                &#34;topic&#34;: &#34;ping&#34;,
+                                &#34;authenticated&#34;: queue.authenticated,
+                            }
+                        if not closed:
+                            if msg:
+                                await ws.send_json(msg)
+                            send = loop.create_task(queue.dequeue(timeout=5.0))
+
+                except asyncio.CancelledError:
+                    closed = True
+
+            if not receive.done():
+                receive.cancel()
+            if not send.done():
+                send.cancel()
+
+        finally:
+            del self.websocket_queues[socket_id]
+
+        return ws
+
+    def add_webhook_target(
+        self,
+        target_url: str,
+        topic_filter: Sequence[str] = None,
+        max_attempts: int = None,
+    ):
+        &#34;&#34;&#34;Add a webhook target.&#34;&#34;&#34;
+        self.webhook_targets[target_url] = WebhookTarget(
+            target_url, topic_filter, max_attempts
+        )
+
+    def remove_webhook_target(self, target_url: str):
+        &#34;&#34;&#34;Remove a webhook target.&#34;&#34;&#34;
+        if target_url in self.webhook_targets:
+            del self.webhook_targets[target_url]
+
+    async def send_webhook(self, topic: str, payload: dict):
+        &#34;&#34;&#34;Add a webhook to the queue, to send to all registered targets.&#34;&#34;&#34;
+        if self.webhook_router:
+            for idx, target in self.webhook_targets.items():
+                if not target.topic_filter or topic in target.topic_filter:
+                    self.webhook_router(
+                        topic, payload, target.endpoint, target.max_attempts
+                    )
+
+        for queue in self.websocket_queues.values():
+            if queue.authenticated or topic in (&#34;ping&#34;, &#34;settings&#34;):
+                await queue.enqueue({&#34;topic&#34;: topic, &#34;payload&#34;: payload})</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.debug_middleware"><code class="name flex">
+<span>async def <span class="ident">debug_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine[+T_co, -T_contra, +V_co])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show request detail in debug log.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@web.middleware
+async def debug_middleware(request: web.BaseRequest, handler: Coroutine):
+    &#34;&#34;&#34;Show request detail in debug log.&#34;&#34;&#34;
+
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        LOGGER.debug(f&#34;Incoming request: {request.method} {request.path_qs}&#34;)
+        LOGGER.debug(f&#34;Match info: {request.match_info}&#34;)
+        body = await request.text()
+        LOGGER.debug(f&#34;Body: {body}&#34;)
+
+    return await handler(request)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.ready_middleware"><code class="name flex">
+<span>async def <span class="ident">ready_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine[+T_co, -T_contra, +V_co])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Only continue if application is ready to take work.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@web.middleware
+async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
+    &#34;&#34;&#34;Only continue if application is ready to take work.&#34;&#34;&#34;
+
+    if (
+        str(request.rel_url).rstrip(&#34;/&#34;)
+        in (
+            &#34;/status/live&#34;,
+            &#34;/status/ready&#34;,
+        )
+        or request.app._state.get(&#34;ready&#34;)
+    ):
+        try:
+            return await handler(request)
+        except (LedgerConfigError, LedgerTransactionError) as e:
+            # fatal, signal server shutdown
+            LOGGER.error(&#34;Shutdown with %s&#34;, str(e))
+            request.app._state[&#34;ready&#34;] = False
+            request.app._state[&#34;alive&#34;] = False
+            raise
+        except web.HTTPFound as e:
+            # redirect, typically / -&gt; /api/doc
+            LOGGER.info(&#34;Handler redirect to: %s&#34;, e.location)
+            raise
+        except asyncio.CancelledError:
+            # redirection spawns new task and cancels old
+            LOGGER.debug(&#34;Task cancelled&#34;)
+            raise
+        except Exception as e:
+            # some other error?
+            LOGGER.error(&#34;Handler error with exception: %s&#34;, str(e))
+            raise
+
+    raise web.HTTPServiceUnavailable(reason=&#34;Shutdown in progress&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminModulesSchema"><code class="flex name class">
+<span>class <span class="ident">AdminModulesSchema</span></span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Schema for the modules endpoint.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminModulesSchema(Schema):
+    &#34;&#34;&#34;Schema for the modules endpoint.&#34;&#34;&#34;
+
+    result = fields.List(
+        fields.Str(description=&#34;admin module&#34;), description=&#34;List of admin modules&#34;
+    )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminModulesSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminResponder"><code class="flex name class">
+<span>class <span class="ident">AdminResponder</span></span>
+<span>(</span><span>context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, send: Coroutine[+T_co, -T_contra, +V_co], webhook: Coroutine[+T_co, -T_contra, +V_co], **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle outgoing messages from message handlers.</p>
+<p>Initialize an instance of <code><a title="dexa_sdk.agent.admin.server.AdminResponder" href="#dexa_sdk.agent.admin.server.AdminResponder">AdminResponder</a></code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>send</code></strong></dt>
+<dd>Function to send outbound message</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminResponder(BaseResponder):
+    &#34;&#34;&#34;Handle outgoing messages from message handlers.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        context: InjectionContext,
+        send: Coroutine,
+        webhook: Coroutine,
+        **kwargs,
+    ):
+        &#34;&#34;&#34;
+        Initialize an instance of `AdminResponder`.
+
+        Args:
+            send: Function to send outbound message
+
+        &#34;&#34;&#34;
+        super().__init__(**kwargs)
+        self._context = context
+        self._send = send
+        self._webhook = webhook
+
+    async def send_outbound(self, message: OutboundMessage):
+        &#34;&#34;&#34;
+        Send outbound message.
+
+        Args:
+            message: The `OutboundMessage` to be sent
+        &#34;&#34;&#34;
+        await self._send(self._context, message)
+
+    async def send_webhook(self, topic: str, payload: dict):
+        &#34;&#34;&#34;
+        Dispatch a webhook.
+
+        Args:
+            topic: the webhook topic identifier
+            payload: the webhook payload value
+        &#34;&#34;&#34;
+        await self._webhook(topic, payload)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.responder.BaseResponder</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminResponder.send_outbound"><code class="name flex">
+<span>async def <span class="ident">send_outbound</span></span>(<span>self, message: aries_cloudagent.transport.outbound.message.OutboundMessage)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send outbound message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The <code>OutboundMessage</code> to be sent</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_outbound(self, message: OutboundMessage):
+    &#34;&#34;&#34;
+    Send outbound message.
+
+    Args:
+        message: The `OutboundMessage` to be sent
+    &#34;&#34;&#34;
+    await self._send(self._context, message)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminResponder.send_webhook"><code class="name flex">
+<span>async def <span class="ident">send_webhook</span></span>(<span>self, topic: str, payload: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dispatch a webhook.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>topic</code></strong></dt>
+<dd>the webhook topic identifier</dd>
+<dt><strong><code>payload</code></strong></dt>
+<dd>the webhook payload value</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_webhook(self, topic: str, payload: dict):
+    &#34;&#34;&#34;
+    Dispatch a webhook.
+
+    Args:
+        topic: the webhook topic identifier
+        payload: the webhook payload value
+    &#34;&#34;&#34;
+    await self._webhook(topic, payload)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer"><code class="flex name class">
+<span>class <span class="ident">AdminServer</span></span>
+<span>(</span><span>host: str, port: int, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound_message_router: Coroutine[+T_co, -T_contra, +V_co], webhook_router: Callable, conductor_stop: Coroutine[+T_co, -T_contra, +V_co], task_queue: aries_cloudagent.utils.task_queue.TaskQueue = None, conductor_stats: Coroutine[+T_co, -T_contra, +V_co] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Admin HTTP server class.</p>
+<p>Initialize an AdminServer instance.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>Host to listen on</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>Port to listen on</dd>
+<dt><strong><code>context</code></strong></dt>
+<dd>The application context instance</dd>
+<dt><strong><code>outbound_message_router</code></strong></dt>
+<dd>Coroutine for delivering outbound messages</dd>
+<dt><strong><code>webhook_router</code></strong></dt>
+<dd>Callable for delivering webhooks</dd>
+<dt><strong><code>conductor_stop</code></strong></dt>
+<dd>Conductor (graceful) stop for shutdown API call</dd>
+<dt><strong><code>task_queue</code></strong></dt>
+<dd>An optional task queue for handlers</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminServer(BaseAdminServer):
+    &#34;&#34;&#34;Admin HTTP server class.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        context: InjectionContext,
+        outbound_message_router: Coroutine,
+        webhook_router: Callable,
+        conductor_stop: Coroutine,
+        task_queue: TaskQueue = None,
+        conductor_stats: Coroutine = None,
+    ):
+        &#34;&#34;&#34;
+        Initialize an AdminServer instance.
+
+        Args:
+            host: Host to listen on
+            port: Port to listen on
+            context: The application context instance
+            outbound_message_router: Coroutine for delivering outbound messages
+            webhook_router: Callable for delivering webhooks
+            conductor_stop: Conductor (graceful) stop for shutdown API call
+            task_queue: An optional task queue for handlers
+        &#34;&#34;&#34;
+        self.app = None
+        self.admin_api_key = context.settings.get(&#34;admin.admin_api_key&#34;)
+        self.admin_insecure_mode = bool(
+            context.settings.get(&#34;admin.admin_insecure_mode&#34;)
+        )
+        self.host = host
+        self.port = port
+        self.conductor_stop = conductor_stop
+        self.conductor_stats = conductor_stats
+        self.loaded_modules = []
+        self.task_queue = task_queue
+        self.webhook_router = webhook_router
+        self.webhook_targets = {}
+        self.websocket_queues = {}
+        self.site = None
+
+        self.context = context.start_scope(&#34;admin&#34;)
+        self.responder = AdminResponder(
+            self.context,
+            outbound_message_router,
+            self.send_webhook,
+        )
+        self.context.injector.bind_instance(BaseResponder, self.responder)
+
+    async def make_application(self) -&gt; web.Application:
+        &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
+
+        middlewares = [ready_middleware,
+                       debug_middleware, validation_middleware]
+
+        # admin-token and admin-token are mutually exclusive and required.
+        # This should be enforced during parameter parsing but to be sure,
+        # we check here.
+        assert self.admin_insecure_mode ^ bool(self.admin_api_key)
+
+        def is_unprotected_path(path: str):
+            return (
+                path
+                in [
+                    &#34;/api/doc&#34;,
+                    &#34;/api/docs/swagger.json&#34;,
+                    &#34;/favicon.ico&#34;,
+                    &#34;/ws&#34;,  # ws handler checks authentication
+                ]
+                or path.startswith(&#34;/static/swagger/&#34;)
+            )
+
+        # If admin_api_key is None, then admin_insecure_mode must be set so
+        # we can safely enable the admin server with no security
+        if self.admin_api_key:
+
+            @web.middleware
+            async def check_token(request, handler):
+                header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+                valid_key = self.admin_api_key == header_admin_api_key
+
+                if valid_key or is_unprotected_path(request.path):
+                    return await handler(request)
+                else:
+                    raise web.HTTPUnauthorized()
+
+            middlewares.append(check_token)
+
+        collector: Collector = await self.context.inject(Collector, required=False)
+
+        if self.task_queue:
+
+            @web.middleware
+            async def apply_limiter(request, handler):
+                task = await self.task_queue.put(handler(request))
+                return await task
+
+            middlewares.append(apply_limiter)
+
+        elif collector:
+
+            @web.middleware
+            async def collect_stats(request, handler):
+                handler = collector.wrap_coro(handler, [handler.__qualname__])
+                return await handler(request)
+
+            middlewares.append(collect_stats)
+
+        app = web.Application(middlewares=middlewares)
+        app[&#34;request_context&#34;] = self.context
+        app[&#34;outbound_message_router&#34;] = self.responder.send
+
+        app.add_routes(
+            [
+                web.get(&#34;/&#34;, self.redirect_handler, allow_head=False),
+                web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
+                web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
+                web.post(&#34;/status/reset&#34;, self.status_reset_handler),
+                web.get(&#34;/status/live&#34;, self.liveliness_handler,
+                        allow_head=False),
+                web.get(&#34;/status/ready&#34;, self.readiness_handler,
+                        allow_head=False),
+                web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
+                web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
+                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+            ]
+        )
+
+        plugin_registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        if plugin_registry:
+            await plugin_registry.register_admin_routes(app)
+
+        cors = aiohttp_cors.setup(
+            app,
+            defaults={
+                &#34;*&#34;: aiohttp_cors.ResourceOptions(
+                    allow_credentials=True,
+                    expose_headers=&#34;*&#34;,
+                    allow_headers=&#34;*&#34;,
+                    allow_methods=&#34;*&#34;,
+                )
+            },
+        )
+        for route in app.router.routes():
+            cors.add(route)
+        # get agent label
+        agent_label = self.context.settings.get(&#34;default_label&#34;)
+        version_string = f&#34;v{__version__}&#34;
+
+        custom_setup_aiohttp_apispec(
+            app=app,
+            title=agent_label,
+            version=version_string,
+            swagger_path=&#34;/api/doc&#34;
+        )
+        app.on_startup.append(self.on_startup)
+
+        # ensure we always have status values
+        app._state[&#34;ready&#34;] = False
+        app._state[&#34;alive&#34;] = False
+
+        return app
+
+    async def start(self) -&gt; None:
+        &#34;&#34;&#34;
+        Start the webserver.
+
+        Raises:
+            AdminSetupError: If there was an error starting the webserver
+
+        &#34;&#34;&#34;
+
+        def sort_dict(raw: dict) -&gt; dict:
+            &#34;&#34;&#34;Order (JSON, string keys) dict asciibetically by key, recursively.&#34;&#34;&#34;
+            for (k, v) in raw.items():
+                if isinstance(v, dict):
+                    raw[k] = sort_dict(v)
+            return dict(sorted([item for item in raw.items()], key=lambda x: x[0]))
+
+        self.app = await self.make_application()
+        runner = web.AppRunner(self.app)
+        await runner.setup()
+
+        plugin_registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        if plugin_registry:
+            plugin_registry.post_process_routes(self.app)
+
+        # order tags alphabetically, parameters deterministically and pythonically
+        swagger_dict = self.app._state[&#34;swagger_dict&#34;]
+        swagger_dict.get(&#34;tags&#34;, []).sort(key=lambda t: t[&#34;name&#34;])
+        for path in swagger_dict[&#34;paths&#34;].values():
+            for method_spec in path.values():
+                method_spec[&#34;parameters&#34;].sort(
+                    key=lambda p: (p[&#34;in&#34;], not p[&#34;required&#34;], p[&#34;name&#34;])
+                )
+
+        # order definitions alphabetically by dict key
+        swagger_dict[&#34;definitions&#34;] = sort_dict(swagger_dict[&#34;definitions&#34;])
+
+        self.site = web.TCPSite(runner, host=self.host, port=self.port)
+
+        try:
+            await self.site.start()
+            self.app._state[&#34;ready&#34;] = True
+            self.app._state[&#34;alive&#34;] = True
+        except OSError:
+            raise AdminSetupError(
+                &#34;Unable to start webserver with host &#34;
+                + f&#34;&#39;{self.host}&#39; and port &#39;{self.port}&#39;\n&#34;
+            )
+
+    async def stop(self) -&gt; None:
+        &#34;&#34;&#34;Stop the webserver.&#34;&#34;&#34;
+        self.app._state[&#34;ready&#34;] = False  # in case call does not come through OpenAPI
+        for queue in self.websocket_queues.values():
+            queue.stop()
+        if self.site:
+            await self.site.stop()
+            self.site = None
+
+    async def on_startup(self, app: web.Application):
+        &#34;&#34;&#34;Perform webserver startup actions.&#34;&#34;&#34;
+        if self.admin_api_key:
+            swagger = app[&#34;swagger_dict&#34;]
+            swagger[&#34;securityDefinitions&#34;] = {
+                &#34;ApiKeyHeader&#34;: {&#34;type&#34;: &#34;apiKey&#34;, &#34;in&#34;: &#34;header&#34;, &#34;name&#34;: &#34;X-API-KEY&#34;}
+            }
+            swagger[&#34;security&#34;] = [{&#34;ApiKeyHeader&#34;: []}]
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Fetch the list of loaded plugins&#34;)
+    @response_schema(AdminModulesSchema(), 200)
+    async def plugins_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for the loaded plugins list.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The module list response
+
+        &#34;&#34;&#34;
+        registry: PluginRegistry = await self.context.inject(
+            PluginRegistry, required=False
+        )
+        plugins = registry and sorted(registry.plugin_names) or []
+        return web.json_response({&#34;result&#34;: plugins})
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Fetch the server status&#34;)
+    @response_schema(AdminStatusSchema(), 200)
+    async def status_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for the server status information.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+        status = {&#34;version&#34;: __version__}
+        status[&#34;label&#34;] = self.context.settings.get(&#34;default_label&#34;)
+        collector: Collector = await self.context.inject(Collector, required=False)
+        if collector:
+            status[&#34;timing&#34;] = collector.results
+        if self.conductor_stats:
+            status[&#34;conductor&#34;] = await self.conductor_stats()
+        return web.json_response(status)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Reset statistics&#34;)
+    @response_schema(AdminStatusSchema(), 200)
+    async def status_reset_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for resetting the timing statistics.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+        collector: Collector = await self.context.inject(Collector, required=False)
+        if collector:
+            collector.reset()
+        return web.json_response({})
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
+    async def connections_webhook_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for webhooks
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response
+
+        &#34;&#34;&#34;
+
+        # Request body
+        body = await request.json()
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
+
+        return web.json_response({})
+
+    async def redirect_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;Perform redirect to documentation.&#34;&#34;&#34;
+        raise web.HTTPFound(&#34;/api/doc&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Liveliness check&#34;)
+    @response_schema(AdminStatusLivelinessSchema(), 200)
+    async def liveliness_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for liveliness check.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response, always indicating True
+
+        &#34;&#34;&#34;
+        app_live = self.app._state[&#34;alive&#34;]
+        if app_live:
+            return web.json_response({&#34;alive&#34;: app_live})
+        else:
+            raise web.HTTPServiceUnavailable(reason=&#34;Service not available&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Readiness check&#34;)
+    @response_schema(AdminStatusReadinessSchema(), 200)
+    async def readiness_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for liveliness check.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response, indicating readiness for further calls
+
+        &#34;&#34;&#34;
+        app_ready = self.app._state[&#34;ready&#34;] and self.app._state[&#34;alive&#34;]
+        if app_ready:
+            return web.json_response({&#34;ready&#34;: app_ready})
+        else:
+            raise web.HTTPServiceUnavailable(reason=&#34;Service not ready&#34;)
+
+    @docs(tags=[&#34;server&#34;], summary=&#34;Shut down server&#34;)
+    async def shutdown_handler(self, request: web.BaseRequest):
+        &#34;&#34;&#34;
+        Request handler for server shutdown.
+
+        Args:
+            request: aiohttp request object
+
+        Returns:
+            The web response (empty production)
+
+        &#34;&#34;&#34;
+        self.app._state[&#34;ready&#34;] = False
+        loop = asyncio.get_event_loop()
+        asyncio.ensure_future(self.conductor_stop(), loop=loop)
+
+        return web.json_response({})
+
+    def notify_fatal_error(self):
+        &#34;&#34;&#34;Set our readiness flags to force a restart (openshift).&#34;&#34;&#34;
+        LOGGER.error(&#34;Received shutdown request notify_fatal_error()&#34;)
+        self.app._state[&#34;ready&#34;] = False
+        self.app._state[&#34;alive&#34;] = False
+
+    async def websocket_handler(self, request):
+        &#34;&#34;&#34;Send notifications to admin client over websocket.&#34;&#34;&#34;
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        socket_id = str(uuid.uuid4())
+        queue = BasicMessageQueue()
+        loop = asyncio.get_event_loop()
+
+        if self.admin_insecure_mode:
+            # open to send websocket messages without api key auth
+            queue.authenticated = True
+        else:
+            header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+            # authenticated via http header?
+            queue.authenticated = header_admin_api_key == self.admin_api_key
+
+        try:
+            self.websocket_queues[socket_id] = queue
+            await queue.enqueue(
+                {
+                    &#34;topic&#34;: &#34;settings&#34;,
+                    &#34;payload&#34;: {
+                        &#34;authenticated&#34;: queue.authenticated,
+                        &#34;label&#34;: self.context.settings.get(&#34;default_label&#34;),
+                        &#34;endpoint&#34;: self.context.settings.get(&#34;default_endpoint&#34;),
+                        &#34;no_receive_invites&#34;: self.context.settings.get(
+                            &#34;admin.no_receive_invites&#34;, False
+                        ),
+                        &#34;help_link&#34;: self.context.settings.get(&#34;admin.help_link&#34;),
+                    },
+                }
+            )
+
+            closed = False
+            receive = loop.create_task(ws.receive_json())
+            send = loop.create_task(queue.dequeue(timeout=5.0))
+
+            while not closed:
+                try:
+                    await asyncio.wait(
+                        (receive, send), return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if ws.closed:
+                        closed = True
+
+                    if receive.done():
+                        if not closed:
+                            msg_received = None
+                            msg_api_key = None
+                            try:
+                                # this call can re-raise exeptions from inside the task
+                                msg_received = receive.result()
+                                msg_api_key = msg_received.get(&#34;x-api-key&#34;)
+                            except Exception:
+                                LOGGER.exception(
+                                    &#34;Exception in websocket receiving task:&#34;
+                                )
+                            if self.admin_api_key and self.admin_api_key == msg_api_key:
+                                # authenticated via websocket message
+                                queue.authenticated = True
+
+                            receive = loop.create_task(ws.receive_json())
+
+                    if send.done():
+                        try:
+                            msg = send.result()
+                        except asyncio.TimeoutError:
+                            msg = None
+
+                        if msg is None:
+                            # we send fake pings because the JS client
+                            # can&#39;t detect real ones
+                            msg = {
+                                &#34;topic&#34;: &#34;ping&#34;,
+                                &#34;authenticated&#34;: queue.authenticated,
+                            }
+                        if not closed:
+                            if msg:
+                                await ws.send_json(msg)
+                            send = loop.create_task(queue.dequeue(timeout=5.0))
+
+                except asyncio.CancelledError:
+                    closed = True
+
+            if not receive.done():
+                receive.cancel()
+            if not send.done():
+                send.cancel()
+
+        finally:
+            del self.websocket_queues[socket_id]
+
+        return ws
+
+    def add_webhook_target(
+        self,
+        target_url: str,
+        topic_filter: Sequence[str] = None,
+        max_attempts: int = None,
+    ):
+        &#34;&#34;&#34;Add a webhook target.&#34;&#34;&#34;
+        self.webhook_targets[target_url] = WebhookTarget(
+            target_url, topic_filter, max_attempts
+        )
+
+    def remove_webhook_target(self, target_url: str):
+        &#34;&#34;&#34;Remove a webhook target.&#34;&#34;&#34;
+        if target_url in self.webhook_targets:
+            del self.webhook_targets[target_url]
+
+    async def send_webhook(self, topic: str, payload: dict):
+        &#34;&#34;&#34;Add a webhook to the queue, to send to all registered targets.&#34;&#34;&#34;
+        if self.webhook_router:
+            for idx, target in self.webhook_targets.items():
+                if not target.topic_filter or topic in target.topic_filter:
+                    self.webhook_router(
+                        topic, payload, target.endpoint, target.max_attempts
+                    )
+
+        for queue in self.websocket_queues.values():
+            if queue.authenticated or topic in (&#34;ping&#34;, &#34;settings&#34;):
+                await queue.enqueue({&#34;topic&#34;: topic, &#34;payload&#34;: payload})</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.admin.base_server.BaseAdminServer</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.add_webhook_target"><code class="name flex">
+<span>def <span class="ident">add_webhook_target</span></span>(<span>self, target_url: str, topic_filter: Sequence[str] = None, max_attempts: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a webhook target.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_webhook_target(
+    self,
+    target_url: str,
+    topic_filter: Sequence[str] = None,
+    max_attempts: int = None,
+):
+    &#34;&#34;&#34;Add a webhook target.&#34;&#34;&#34;
+    self.webhook_targets[target_url] = WebhookTarget(
+        target_url, topic_filter, max_attempts
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler"><code class="name flex">
+<span>async def <span class="ident">connections_webhook_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for webhooks</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
+async def connections_webhook_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for webhooks
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response
+
+    &#34;&#34;&#34;
+
+    # Request body
+    body = await request.json()
+
+    # Initialise manager
+    mgr = DexaManager(self.context)
+
+    # Handle webhook.
+    await mgr.handle_connections_webhook(body)
+
+    return web.json_response({})</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler"><code class="name flex">
+<span>async def <span class="ident">liveliness_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for liveliness check.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response, always indicating True</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Liveliness check&#34;)
+@response_schema(AdminStatusLivelinessSchema(), 200)
+async def liveliness_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for liveliness check.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response, always indicating True
+
+    &#34;&#34;&#34;
+    app_live = self.app._state[&#34;alive&#34;]
+    if app_live:
+        return web.json_response({&#34;alive&#34;: app_live})
+    else:
+        raise web.HTTPServiceUnavailable(reason=&#34;Service not available&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.make_application"><code class="name flex">
+<span>async def <span class="ident">make_application</span></span>(<span>self) ‑> aiohttp.web_app.Application</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the aiohttp application instance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def make_application(self) -&gt; web.Application:
+    &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
+
+    middlewares = [ready_middleware,
+                   debug_middleware, validation_middleware]
+
+    # admin-token and admin-token are mutually exclusive and required.
+    # This should be enforced during parameter parsing but to be sure,
+    # we check here.
+    assert self.admin_insecure_mode ^ bool(self.admin_api_key)
+
+    def is_unprotected_path(path: str):
+        return (
+            path
+            in [
+                &#34;/api/doc&#34;,
+                &#34;/api/docs/swagger.json&#34;,
+                &#34;/favicon.ico&#34;,
+                &#34;/ws&#34;,  # ws handler checks authentication
+            ]
+            or path.startswith(&#34;/static/swagger/&#34;)
+        )
+
+    # If admin_api_key is None, then admin_insecure_mode must be set so
+    # we can safely enable the admin server with no security
+    if self.admin_api_key:
+
+        @web.middleware
+        async def check_token(request, handler):
+            header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+            valid_key = self.admin_api_key == header_admin_api_key
+
+            if valid_key or is_unprotected_path(request.path):
+                return await handler(request)
+            else:
+                raise web.HTTPUnauthorized()
+
+        middlewares.append(check_token)
+
+    collector: Collector = await self.context.inject(Collector, required=False)
+
+    if self.task_queue:
+
+        @web.middleware
+        async def apply_limiter(request, handler):
+            task = await self.task_queue.put(handler(request))
+            return await task
+
+        middlewares.append(apply_limiter)
+
+    elif collector:
+
+        @web.middleware
+        async def collect_stats(request, handler):
+            handler = collector.wrap_coro(handler, [handler.__qualname__])
+            return await handler(request)
+
+        middlewares.append(collect_stats)
+
+    app = web.Application(middlewares=middlewares)
+    app[&#34;request_context&#34;] = self.context
+    app[&#34;outbound_message_router&#34;] = self.responder.send
+
+    app.add_routes(
+        [
+            web.get(&#34;/&#34;, self.redirect_handler, allow_head=False),
+            web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
+            web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
+            web.post(&#34;/status/reset&#34;, self.status_reset_handler),
+            web.get(&#34;/status/live&#34;, self.liveliness_handler,
+                    allow_head=False),
+            web.get(&#34;/status/ready&#34;, self.readiness_handler,
+                    allow_head=False),
+            web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
+            web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
+            web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+        ]
+    )
+
+    plugin_registry: PluginRegistry = await self.context.inject(
+        PluginRegistry, required=False
+    )
+    if plugin_registry:
+        await plugin_registry.register_admin_routes(app)
+
+    cors = aiohttp_cors.setup(
+        app,
+        defaults={
+            &#34;*&#34;: aiohttp_cors.ResourceOptions(
+                allow_credentials=True,
+                expose_headers=&#34;*&#34;,
+                allow_headers=&#34;*&#34;,
+                allow_methods=&#34;*&#34;,
+            )
+        },
+    )
+    for route in app.router.routes():
+        cors.add(route)
+    # get agent label
+    agent_label = self.context.settings.get(&#34;default_label&#34;)
+    version_string = f&#34;v{__version__}&#34;
+
+    custom_setup_aiohttp_apispec(
+        app=app,
+        title=agent_label,
+        version=version_string,
+        swagger_path=&#34;/api/doc&#34;
+    )
+    app.on_startup.append(self.on_startup)
+
+    # ensure we always have status values
+    app._state[&#34;ready&#34;] = False
+    app._state[&#34;alive&#34;] = False
+
+    return app</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error"><code class="name flex">
+<span>def <span class="ident">notify_fatal_error</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set our readiness flags to force a restart (openshift).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def notify_fatal_error(self):
+    &#34;&#34;&#34;Set our readiness flags to force a restart (openshift).&#34;&#34;&#34;
+    LOGGER.error(&#34;Received shutdown request notify_fatal_error()&#34;)
+    self.app._state[&#34;ready&#34;] = False
+    self.app._state[&#34;alive&#34;] = False</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.on_startup"><code class="name flex">
+<span>async def <span class="ident">on_startup</span></span>(<span>self, app: aiohttp.web_app.Application)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform webserver startup actions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_startup(self, app: web.Application):
+    &#34;&#34;&#34;Perform webserver startup actions.&#34;&#34;&#34;
+    if self.admin_api_key:
+        swagger = app[&#34;swagger_dict&#34;]
+        swagger[&#34;securityDefinitions&#34;] = {
+            &#34;ApiKeyHeader&#34;: {&#34;type&#34;: &#34;apiKey&#34;, &#34;in&#34;: &#34;header&#34;, &#34;name&#34;: &#34;X-API-KEY&#34;}
+        }
+        swagger[&#34;security&#34;] = [{&#34;ApiKeyHeader&#34;: []}]</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.plugins_handler"><code class="name flex">
+<span>async def <span class="ident">plugins_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for the loaded plugins list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The module list response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Fetch the list of loaded plugins&#34;)
+@response_schema(AdminModulesSchema(), 200)
+async def plugins_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for the loaded plugins list.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The module list response
+
+    &#34;&#34;&#34;
+    registry: PluginRegistry = await self.context.inject(
+        PluginRegistry, required=False
+    )
+    plugins = registry and sorted(registry.plugin_names) or []
+    return web.json_response({&#34;result&#34;: plugins})</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.readiness_handler"><code class="name flex">
+<span>async def <span class="ident">readiness_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for liveliness check.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response, indicating readiness for further calls</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Readiness check&#34;)
+@response_schema(AdminStatusReadinessSchema(), 200)
+async def readiness_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for liveliness check.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response, indicating readiness for further calls
+
+    &#34;&#34;&#34;
+    app_ready = self.app._state[&#34;ready&#34;] and self.app._state[&#34;alive&#34;]
+    if app_ready:
+        return web.json_response({&#34;ready&#34;: app_ready})
+    else:
+        raise web.HTTPServiceUnavailable(reason=&#34;Service not ready&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.redirect_handler"><code class="name flex">
+<span>async def <span class="ident">redirect_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform redirect to documentation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def redirect_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;Perform redirect to documentation.&#34;&#34;&#34;
+    raise web.HTTPFound(&#34;/api/doc&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.remove_webhook_target"><code class="name flex">
+<span>def <span class="ident">remove_webhook_target</span></span>(<span>self, target_url: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove a webhook target.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_webhook_target(self, target_url: str):
+    &#34;&#34;&#34;Remove a webhook target.&#34;&#34;&#34;
+    if target_url in self.webhook_targets:
+        del self.webhook_targets[target_url]</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.send_webhook"><code class="name flex">
+<span>async def <span class="ident">send_webhook</span></span>(<span>self, topic: str, payload: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a webhook to the queue, to send to all registered targets.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_webhook(self, topic: str, payload: dict):
+    &#34;&#34;&#34;Add a webhook to the queue, to send to all registered targets.&#34;&#34;&#34;
+    if self.webhook_router:
+        for idx, target in self.webhook_targets.items():
+            if not target.topic_filter or topic in target.topic_filter:
+                self.webhook_router(
+                    topic, payload, target.endpoint, target.max_attempts
+                )
+
+    for queue in self.websocket_queues.values():
+        if queue.authenticated or topic in (&#34;ping&#34;, &#34;settings&#34;):
+            await queue.enqueue({&#34;topic&#34;: topic, &#34;payload&#34;: payload})</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.shutdown_handler"><code class="name flex">
+<span>async def <span class="ident">shutdown_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for server shutdown.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response (empty production)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Shut down server&#34;)
+async def shutdown_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for server shutdown.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response (empty production)
+
+    &#34;&#34;&#34;
+    self.app._state[&#34;ready&#34;] = False
+    loop = asyncio.get_event_loop()
+    asyncio.ensure_future(self.conductor_stop(), loop=loop)
+
+    return web.json_response({})</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.start"><code class="name flex">
+<span>async def <span class="ident">start</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start the webserver.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>AdminSetupError</code></dt>
+<dd>If there was an error starting the webserver</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def start(self) -&gt; None:
+    &#34;&#34;&#34;
+    Start the webserver.
+
+    Raises:
+        AdminSetupError: If there was an error starting the webserver
+
+    &#34;&#34;&#34;
+
+    def sort_dict(raw: dict) -&gt; dict:
+        &#34;&#34;&#34;Order (JSON, string keys) dict asciibetically by key, recursively.&#34;&#34;&#34;
+        for (k, v) in raw.items():
+            if isinstance(v, dict):
+                raw[k] = sort_dict(v)
+        return dict(sorted([item for item in raw.items()], key=lambda x: x[0]))
+
+    self.app = await self.make_application()
+    runner = web.AppRunner(self.app)
+    await runner.setup()
+
+    plugin_registry: PluginRegistry = await self.context.inject(
+        PluginRegistry, required=False
+    )
+    if plugin_registry:
+        plugin_registry.post_process_routes(self.app)
+
+    # order tags alphabetically, parameters deterministically and pythonically
+    swagger_dict = self.app._state[&#34;swagger_dict&#34;]
+    swagger_dict.get(&#34;tags&#34;, []).sort(key=lambda t: t[&#34;name&#34;])
+    for path in swagger_dict[&#34;paths&#34;].values():
+        for method_spec in path.values():
+            method_spec[&#34;parameters&#34;].sort(
+                key=lambda p: (p[&#34;in&#34;], not p[&#34;required&#34;], p[&#34;name&#34;])
+            )
+
+    # order definitions alphabetically by dict key
+    swagger_dict[&#34;definitions&#34;] = sort_dict(swagger_dict[&#34;definitions&#34;])
+
+    self.site = web.TCPSite(runner, host=self.host, port=self.port)
+
+    try:
+        await self.site.start()
+        self.app._state[&#34;ready&#34;] = True
+        self.app._state[&#34;alive&#34;] = True
+    except OSError:
+        raise AdminSetupError(
+            &#34;Unable to start webserver with host &#34;
+            + f&#34;&#39;{self.host}&#39; and port &#39;{self.port}&#39;\n&#34;
+        )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.status_handler"><code class="name flex">
+<span>async def <span class="ident">status_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for the server status information.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Fetch the server status&#34;)
+@response_schema(AdminStatusSchema(), 200)
+async def status_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for the server status information.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response
+
+    &#34;&#34;&#34;
+    status = {&#34;version&#34;: __version__}
+    status[&#34;label&#34;] = self.context.settings.get(&#34;default_label&#34;)
+    collector: Collector = await self.context.inject(Collector, required=False)
+    if collector:
+        status[&#34;timing&#34;] = collector.results
+    if self.conductor_stats:
+        status[&#34;conductor&#34;] = await self.conductor_stats()
+    return web.json_response(status)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.status_reset_handler"><code class="name flex">
+<span>async def <span class="ident">status_reset_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for resetting the timing statistics.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Reset statistics&#34;)
+@response_schema(AdminStatusSchema(), 200)
+async def status_reset_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for resetting the timing statistics.
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response
+
+    &#34;&#34;&#34;
+    collector: Collector = await self.context.inject(Collector, required=False)
+    if collector:
+        collector.reset()
+    return web.json_response({})</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.stop"><code class="name flex">
+<span>async def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop the webserver.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def stop(self) -&gt; None:
+    &#34;&#34;&#34;Stop the webserver.&#34;&#34;&#34;
+    self.app._state[&#34;ready&#34;] = False  # in case call does not come through OpenAPI
+    for queue in self.websocket_queues.values():
+        queue.stop()
+    if self.site:
+        await self.site.stop()
+        self.site = None</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.websocket_handler"><code class="name flex">
+<span>async def <span class="ident">websocket_handler</span></span>(<span>self, request)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send notifications to admin client over websocket.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def websocket_handler(self, request):
+    &#34;&#34;&#34;Send notifications to admin client over websocket.&#34;&#34;&#34;
+
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    socket_id = str(uuid.uuid4())
+    queue = BasicMessageQueue()
+    loop = asyncio.get_event_loop()
+
+    if self.admin_insecure_mode:
+        # open to send websocket messages without api key auth
+        queue.authenticated = True
+    else:
+        header_admin_api_key = request.headers.get(&#34;x-api-key&#34;)
+        # authenticated via http header?
+        queue.authenticated = header_admin_api_key == self.admin_api_key
+
+    try:
+        self.websocket_queues[socket_id] = queue
+        await queue.enqueue(
+            {
+                &#34;topic&#34;: &#34;settings&#34;,
+                &#34;payload&#34;: {
+                    &#34;authenticated&#34;: queue.authenticated,
+                    &#34;label&#34;: self.context.settings.get(&#34;default_label&#34;),
+                    &#34;endpoint&#34;: self.context.settings.get(&#34;default_endpoint&#34;),
+                    &#34;no_receive_invites&#34;: self.context.settings.get(
+                        &#34;admin.no_receive_invites&#34;, False
+                    ),
+                    &#34;help_link&#34;: self.context.settings.get(&#34;admin.help_link&#34;),
+                },
+            }
+        )
+
+        closed = False
+        receive = loop.create_task(ws.receive_json())
+        send = loop.create_task(queue.dequeue(timeout=5.0))
+
+        while not closed:
+            try:
+                await asyncio.wait(
+                    (receive, send), return_when=asyncio.FIRST_COMPLETED
+                )
+                if ws.closed:
+                    closed = True
+
+                if receive.done():
+                    if not closed:
+                        msg_received = None
+                        msg_api_key = None
+                        try:
+                            # this call can re-raise exeptions from inside the task
+                            msg_received = receive.result()
+                            msg_api_key = msg_received.get(&#34;x-api-key&#34;)
+                        except Exception:
+                            LOGGER.exception(
+                                &#34;Exception in websocket receiving task:&#34;
+                            )
+                        if self.admin_api_key and self.admin_api_key == msg_api_key:
+                            # authenticated via websocket message
+                            queue.authenticated = True
+
+                        receive = loop.create_task(ws.receive_json())
+
+                if send.done():
+                    try:
+                        msg = send.result()
+                    except asyncio.TimeoutError:
+                        msg = None
+
+                    if msg is None:
+                        # we send fake pings because the JS client
+                        # can&#39;t detect real ones
+                        msg = {
+                            &#34;topic&#34;: &#34;ping&#34;,
+                            &#34;authenticated&#34;: queue.authenticated,
+                        }
+                    if not closed:
+                        if msg:
+                            await ws.send_json(msg)
+                        send = loop.create_task(queue.dequeue(timeout=5.0))
+
+            except asyncio.CancelledError:
+                closed = True
+
+        if not receive.done():
+            receive.cancel()
+        if not send.done():
+            send.cancel()
+
+    finally:
+        del self.websocket_queues[socket_id]
+
+    return ws</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema"><code class="flex name class">
+<span>class <span class="ident">AdminStatusLivelinessSchema</span></span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Schema for the liveliness endpoint.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminStatusLivelinessSchema(Schema):
+    &#34;&#34;&#34;Schema for the liveliness endpoint.&#34;&#34;&#34;
+
+    alive = fields.Boolean(description=&#34;Liveliness status&#34;, example=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusReadinessSchema"><code class="flex name class">
+<span>class <span class="ident">AdminStatusReadinessSchema</span></span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Schema for the readiness endpoint.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminStatusReadinessSchema(Schema):
+    &#34;&#34;&#34;Schema for the readiness endpoint.&#34;&#34;&#34;
+
+    ready = fields.Boolean(description=&#34;Readiness status&#34;, example=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusReadinessSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusSchema"><code class="flex name class">
+<span>class <span class="ident">AdminStatusSchema</span></span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Schema for the status endpoint.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdminStatusSchema(Schema):
+    &#34;&#34;&#34;Schema for the status endpoint.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.AdminStatusSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agent.admin.server.WebhookTarget"><code class="flex name class">
+<span>class <span class="ident">WebhookTarget</span></span>
+<span>(</span><span>endpoint: str, topic_filter: Sequence[str] = None, max_attempts: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class for managing webhook target information.</p>
+<p>Initialize the webhook target.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class WebhookTarget:
+    &#34;&#34;&#34;Class for managing webhook target information.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        endpoint: str,
+        topic_filter: Sequence[str] = None,
+        max_attempts: int = None,
+    ):
+        &#34;&#34;&#34;Initialize the webhook target.&#34;&#34;&#34;
+        self.endpoint = endpoint
+        self.max_attempts = max_attempts
+        self._topic_filter = None
+        self.topic_filter = topic_filter  # call setter
+
+    @property
+    def topic_filter(self) -&gt; Set[str]:
+        &#34;&#34;&#34;Accessor for the target&#39;s topic filter.&#34;&#34;&#34;
+        return self._topic_filter
+
+    @topic_filter.setter
+    def topic_filter(self, val: Sequence[str]):
+        &#34;&#34;&#34;Setter for the target&#39;s topic filter.&#34;&#34;&#34;
+        filter = set(val) if val else None
+        if filter and &#34;*&#34; in filter:
+            filter = None
+        self._topic_filter = filter</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.agent.admin.server.WebhookTarget.topic_filter"><code class="name">var <span class="ident">topic_filter</span> : Set[str]</code></dt>
+<dd>
+<div class="desc"><p>Accessor for the target's topic filter.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def topic_filter(self) -&gt; Set[str]:
+    &#34;&#34;&#34;Accessor for the target&#39;s topic filter.&#34;&#34;&#34;
+    return self._topic_filter</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agent.admin" href="index.html">dexa_sdk.agent.admin</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.debug_middleware" href="#dexa_sdk.agent.admin.server.debug_middleware">debug_middleware</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.ready_middleware" href="#dexa_sdk.agent.admin.server.ready_middleware">ready_middleware</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminModulesSchema" href="#dexa_sdk.agent.admin.server.AdminModulesSchema">AdminModulesSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminModulesSchema.opts" href="#dexa_sdk.agent.admin.server.AdminModulesSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminResponder" href="#dexa_sdk.agent.admin.server.AdminResponder">AdminResponder</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminResponder.send_outbound" href="#dexa_sdk.agent.admin.server.AdminResponder.send_outbound">send_outbound</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminResponder.send_webhook" href="#dexa_sdk.agent.admin.server.AdminResponder.send_webhook">send_webhook</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminServer" href="#dexa_sdk.agent.admin.server.AdminServer">AdminServer</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.add_webhook_target" href="#dexa_sdk.agent.admin.server.AdminServer.add_webhook_target">add_webhook_target</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler" href="#dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler">connections_webhook_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler" href="#dexa_sdk.agent.admin.server.AdminServer.liveliness_handler">liveliness_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.make_application" href="#dexa_sdk.agent.admin.server.AdminServer.make_application">make_application</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error" href="#dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error">notify_fatal_error</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.on_startup" href="#dexa_sdk.agent.admin.server.AdminServer.on_startup">on_startup</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.plugins_handler" href="#dexa_sdk.agent.admin.server.AdminServer.plugins_handler">plugins_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.readiness_handler" href="#dexa_sdk.agent.admin.server.AdminServer.readiness_handler">readiness_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.redirect_handler" href="#dexa_sdk.agent.admin.server.AdminServer.redirect_handler">redirect_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.remove_webhook_target" href="#dexa_sdk.agent.admin.server.AdminServer.remove_webhook_target">remove_webhook_target</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.send_webhook" href="#dexa_sdk.agent.admin.server.AdminServer.send_webhook">send_webhook</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.shutdown_handler" href="#dexa_sdk.agent.admin.server.AdminServer.shutdown_handler">shutdown_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.start" href="#dexa_sdk.agent.admin.server.AdminServer.start">start</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_handler">status_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_reset_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_reset_handler">status_reset_handler</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.stop" href="#dexa_sdk.agent.admin.server.AdminServer.stop">stop</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.websocket_handler" href="#dexa_sdk.agent.admin.server.AdminServer.websocket_handler">websocket_handler</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema" href="#dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema">AdminStatusLivelinessSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema.opts" href="#dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminStatusReadinessSchema" href="#dexa_sdk.agent.admin.server.AdminStatusReadinessSchema">AdminStatusReadinessSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminStatusReadinessSchema.opts" href="#dexa_sdk.agent.admin.server.AdminStatusReadinessSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.AdminStatusSchema" href="#dexa_sdk.agent.admin.server.AdminStatusSchema">AdminStatusSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.AdminStatusSchema.opts" href="#dexa_sdk.agent.admin.server.AdminStatusSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agent.admin.server.WebhookTarget" href="#dexa_sdk.agent.admin.server.WebhookTarget">WebhookTarget</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agent.admin.server.WebhookTarget.topic_filter" href="#dexa_sdk.agent.admin.server.WebhookTarget.topic_filter">topic_filter</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

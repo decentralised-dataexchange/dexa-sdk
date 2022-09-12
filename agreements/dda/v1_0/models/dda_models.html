@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agreements.dda.v1_0.models.dda_models API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agreements.dda.v1_0.models.dda_models</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+from marshmallow import fields, EXCLUDE
+from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
+from .fields.context_field import ContextField
+
+DDA_DEFAULT_CONTEXT = [
+    (
+        &#34;https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements&#34;
+        &#34;/main/interface-specs/jsonld/contexts/dexa-context.jsonld&#34;
+    ),
+    &#34;https://w3id.org/security/v2&#34;,
+]
+
+DDA_TYPE = [&#34;DataDisclosureAgreement&#34;]
+
+
+class DataControllerModel(BaseModel):
+    &#34;&#34;&#34;Data controller model class&#34;&#34;&#34;
+
+    class Meta:
+        &#34;&#34;&#34;Meta data&#34;&#34;&#34;
+
+        # Schema class
+        schema_class = &#34;DataControllerSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        did: str = None,
+        name: str = None,
+        legal_id: str = None,
+        url: str = None,
+        industry_sector: str = None,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.did = did
+        self.name = name
+        self.legal_id = legal_id
+        self.url = url
+        self.industry_sector = industry_sector
+
+
+class DataControllerSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data controller schema class&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataControllerModel
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # This is the DID of the data source preparing the agreement
+    did = fields.Str(data_key=&#34;did&#34;, required=False)
+
+    # The name of the data source exposing the data
+    name = fields.Str(data_key=&#34;name&#34;, required=True)
+
+    # This is the legal ID to the data source.
+    # E.g. Swedish Organisation Number
+    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=False)
+
+    # This is the data source organisation URL
+    url = fields.Str(data_key=&#34;url&#34;, required=False)
+
+    # Industry sector that the DS belongs to
+    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
+
+
+class DataSharingRestrictionsModel(BaseModel):
+    &#34;&#34;&#34;Data sharing restrictions model&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataSharingRestrictionsSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        policy_url: str,
+        jurisdiction: str,
+        industry_sector: str,
+        data_retention_period: int,
+        geographic_restriction: str,
+        storage_location: str,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.policy_url = policy_url
+        self.jurisdiction = jurisdiction
+        self.industry_sector = industry_sector
+        self.data_retention_period = data_retention_period
+        self.geographic_restriction = geographic_restriction
+        self.storage_location = storage_location
+
+
+class DataSharingRestrictionsSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data sharing restrictions schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataSharingRestrictionsModel
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # URL to the privacy policy document of the data source organisation
+    policy_url = fields.Str(data_key=&#34;policyUrl&#34;, required=True)
+
+    # The jurisdiction associated with the data source exposing
+    # the personal data that the privacy regulation is followed.
+    # These can be country, economic union, law, location or region.
+    # [value based on W3C Location and Jurisdiction]
+    jurisdiction = fields.Str(data_key=&#34;jurisdiction&#34;, required=True)
+
+    # The sector to which the data source restricts the use of data
+    # by any data using services. If no restriction, leave blank
+    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
+
+    # The amount of time that the data source holds onto
+    # any personal data, in seconds.
+    data_retention_period = fields.Int(data_key=&#34;dataRetentionPeriod&#34;, required=True)
+
+    # The country or economic union is restricted from
+    # processing personal data.[value based on W3C
+    # Location and Jurisdiction] for the data source
+    geographic_restriction = fields.Str(data_key=&#34;geographicRestriction&#34;, required=True)
+
+    # The geographic location where the personal
+    # data is stored by the data source
+    storage_location = fields.Str(data_key=&#34;storageLocation&#34;, required=True)
+
+
+class PersonalDataModel(BaseModel):
+    &#34;&#34;&#34;Personal data model class&#34;&#34;&#34;
+
+    class Meta:
+        schema_class = &#34;PersonalDataSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        attribute_id: str = None,
+        attribute_name: str = None,
+        attribute_description: str = None,
+        attribute_sensitive: str = &#34;true&#34;,
+        attribute_category: str = &#34;personaldata&#34;,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set the model attributes
+        self.attribute_id = attribute_id
+        self.attribute_name = attribute_name
+        self.attribute_sensitive = attribute_sensitive
+        self.attribute_category = attribute_category
+        self.attribute_description = attribute_description
+
+
+class PersonalDataSchema(BaseModelSchema):
+    &#34;&#34;&#34;Personal data schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = PersonalDataModel
+
+        # Exclude unknown fields
+        unknown = EXCLUDE
+
+    # Identifier of the attribute
+    attribute_id = fields.Str(data_key=&#34;attributeId&#34;, required=False)
+
+    # Name of the attributes that is being shared
+    attribute_name = fields.Str(data_key=&#34;attributeName&#34;, required=True)
+
+    # Defines the sensitivity of the data as per PII
+    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;, required=False)
+
+    # An explicit list of personal data categories to be shared.
+    # The categories shall be defined using language meaningful to
+    # the users and consistent with the purposes of the processing.
+    # [values based on W3C DPV-DP]
+    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;, required=False)
+
+    # Attribute description.
+    attribute_description = fields.Str(data_key=&#34;attributeDescription&#34;, required=True)
+
+
+class DataDisclosureAgreementModel(BaseModel):
+    &#34;&#34;&#34;Data disclosure agreement model&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataDisclosureAgreementSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        context: typing.Union[str, typing.List[str]] = DDA_DEFAULT_CONTEXT,
+        id: str,
+        type: typing.List[str] = DDA_TYPE,
+        language: str,
+        version: str,
+        data_controller: DataControllerModel,
+        agreement_period: int,
+        data_sharing_restrictions: DataSharingRestrictionsModel,
+        purpose: str,
+        purpose_description: str,
+        lawful_basis: str,
+        personal_data: typing.List[PersonalDataModel],
+        code_of_conduct: str,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.context = context
+        self.id = id
+        self.type = type
+        self.version = version
+        self.language = language
+        self.data_controller = data_controller
+        self.agreement_period = agreement_period
+        self.data_sharing_restrictions = data_sharing_restrictions
+        self.purpose = purpose
+        self.purpose_description = purpose_description
+        self.lawful_basis = lawful_basis
+        self.personal_data = personal_data
+        self.code_of_conduct = code_of_conduct
+
+
+class DataDisclosureAgreementSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data disclosure agreement schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataDisclosureAgreementModel
+
+        # Exclude unknown fields
+        unknown = EXCLUDE
+
+    # Defines the context of this document. E.g. the link the JSON-LD
+    context = ContextField(
+        data_key=&#34;@context&#34;, required=True, example=DDA_DEFAULT_CONTEXT
+    )
+
+    # Data disclosure agreement template identifier
+    id = fields.Str(data_key=&#34;@id&#34;, required=True)
+
+    # Type of the agreement
+    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True, example=DDA_TYPE)
+
+    # Data disclosure agreement version
+    version = fields.Str(data_key=&#34;version&#34;, required=True)
+
+    # language used. If not present default language is English
+    language = fields.Str(data_key=&#34;language&#34;, required=True)
+
+    # Encapsulates the data controller data
+    data_controller = fields.Nested(
+        DataControllerSchema, data_key=&#34;dataController&#34;, required=True
+    )
+
+    # Duration of the agreement after which the
+    # data disclosure agreement expires
+    agreement_period = fields.Int(data_key=&#34;agreementPeriod&#34;, required=True)
+
+    # Used by the DS to configure any data sharing restrictions
+    # towards the DUS. This could reuse the
+    # data agreement policy parameters as is.
+    data_sharing_restrictions = fields.Nested(
+        DataSharingRestrictionsSchema, data_key=&#34;dataSharingRestrictions&#34;, required=True
+    )
+
+    # Describes the purpose for which the data source shares
+    # personal data as described in the
+    # data agreement [values based on W3C DPV Purposes]
+    purpose = fields.Str(data_key=&#34;purpose&#34;, required=True)
+
+    # Additional description of the purpose
+    # for which the data source shares personal data
+    purpose_description = fields.Str(data_key=&#34;purposeDescription&#34;, required=True)
+
+    # Indicate the lawful basis for sharing personal data.
+    # These can be consent, legal obligation, contract, vital interest,
+    # public task or legitimate_interest. [values based on W3C DPV legal basis]
+    lawful_basis = fields.Str(data_key=&#34;lawfulBasis&#34;, required=True)
+
+    # Encapsulates the attributes shared by the data source
+    personal_data = fields.List(
+        fields.Nested(PersonalDataSchema), data_key=&#34;personalData&#34;, required=True
+    )
+
+    # The code of conduct is followed by the data source.
+    # This provides the proper application of privacy regulation
+    # taking into account specific features within a sector.
+    # The code of conduct shall reference the name of the code of conduct
+    # and with a publicly accessible reference.
+    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel"><code class="flex name class">
+<span>class <span class="ident">DataControllerModel</span></span>
+<span>(</span><span>*, did: str = None, name: str = None, legal_id: str = None, url: str = None, industry_sector: str = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data controller model class</p>
+<p>Initialize BaseModel.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If schema_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataControllerModel(BaseModel):
+    &#34;&#34;&#34;Data controller model class&#34;&#34;&#34;
+
+    class Meta:
+        &#34;&#34;&#34;Meta data&#34;&#34;&#34;
+
+        # Schema class
+        schema_class = &#34;DataControllerSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        did: str = None,
+        name: str = None,
+        legal_id: str = None,
+        url: str = None,
+        industry_sector: str = None,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.did = did
+        self.name = name
+        self.legal_id = legal_id
+        self.url = url
+        self.industry_sector = industry_sector</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"><p>Meta data</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema"><code class="flex name class">
+<span>class <span class="ident">DataControllerSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data controller schema class</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataControllerSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data controller schema class&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataControllerModel
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # This is the DID of the data source preparing the agreement
+    did = fields.Str(data_key=&#34;did&#34;, required=False)
+
+    # The name of the data source exposing the data
+    name = fields.Str(data_key=&#34;name&#34;, required=True)
+
+    # This is the legal ID to the data source.
+    # E.g. Swedish Organisation Number
+    legal_id = fields.Str(data_key=&#34;legalId&#34;, required=False)
+
+    # This is the data source organisation URL
+    url = fields.Str(data_key=&#34;url&#34;, required=False)
+
+    # Industry sector that the DS belongs to
+    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel"><code class="flex name class">
+<span>class <span class="ident">DataDisclosureAgreementModel</span></span>
+<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str, type: List[str] = ['DataDisclosureAgreement'], language: str, version: str, data_controller: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel">DataControllerModel</a>, agreement_period: int, data_sharing_restrictions: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel">DataSharingRestrictionsModel</a>, purpose: str, purpose_description: str, lawful_basis: str, personal_data: List[<a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel">PersonalDataModel</a>], code_of_conduct: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data disclosure agreement model</p>
+<p>Initialize BaseModel.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If schema_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataDisclosureAgreementModel(BaseModel):
+    &#34;&#34;&#34;Data disclosure agreement model&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataDisclosureAgreementSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        context: typing.Union[str, typing.List[str]] = DDA_DEFAULT_CONTEXT,
+        id: str,
+        type: typing.List[str] = DDA_TYPE,
+        language: str,
+        version: str,
+        data_controller: DataControllerModel,
+        agreement_period: int,
+        data_sharing_restrictions: DataSharingRestrictionsModel,
+        purpose: str,
+        purpose_description: str,
+        lawful_basis: str,
+        personal_data: typing.List[PersonalDataModel],
+        code_of_conduct: str,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.context = context
+        self.id = id
+        self.type = type
+        self.version = version
+        self.language = language
+        self.data_controller = data_controller
+        self.agreement_period = agreement_period
+        self.data_sharing_restrictions = data_sharing_restrictions
+        self.purpose = purpose
+        self.purpose_description = purpose_description
+        self.lawful_basis = lawful_basis
+        self.personal_data = personal_data
+        self.code_of_conduct = code_of_conduct</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema"><code class="flex name class">
+<span>class <span class="ident">DataDisclosureAgreementSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data disclosure agreement schema</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataDisclosureAgreementSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data disclosure agreement schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataDisclosureAgreementModel
+
+        # Exclude unknown fields
+        unknown = EXCLUDE
+
+    # Defines the context of this document. E.g. the link the JSON-LD
+    context = ContextField(
+        data_key=&#34;@context&#34;, required=True, example=DDA_DEFAULT_CONTEXT
+    )
+
+    # Data disclosure agreement template identifier
+    id = fields.Str(data_key=&#34;@id&#34;, required=True)
+
+    # Type of the agreement
+    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True, example=DDA_TYPE)
+
+    # Data disclosure agreement version
+    version = fields.Str(data_key=&#34;version&#34;, required=True)
+
+    # language used. If not present default language is English
+    language = fields.Str(data_key=&#34;language&#34;, required=True)
+
+    # Encapsulates the data controller data
+    data_controller = fields.Nested(
+        DataControllerSchema, data_key=&#34;dataController&#34;, required=True
+    )
+
+    # Duration of the agreement after which the
+    # data disclosure agreement expires
+    agreement_period = fields.Int(data_key=&#34;agreementPeriod&#34;, required=True)
+
+    # Used by the DS to configure any data sharing restrictions
+    # towards the DUS. This could reuse the
+    # data agreement policy parameters as is.
+    data_sharing_restrictions = fields.Nested(
+        DataSharingRestrictionsSchema, data_key=&#34;dataSharingRestrictions&#34;, required=True
+    )
+
+    # Describes the purpose for which the data source shares
+    # personal data as described in the
+    # data agreement [values based on W3C DPV Purposes]
+    purpose = fields.Str(data_key=&#34;purpose&#34;, required=True)
+
+    # Additional description of the purpose
+    # for which the data source shares personal data
+    purpose_description = fields.Str(data_key=&#34;purposeDescription&#34;, required=True)
+
+    # Indicate the lawful basis for sharing personal data.
+    # These can be consent, legal obligation, contract, vital interest,
+    # public task or legitimate_interest. [values based on W3C DPV legal basis]
+    lawful_basis = fields.Str(data_key=&#34;lawfulBasis&#34;, required=True)
+
+    # Encapsulates the attributes shared by the data source
+    personal_data = fields.List(
+        fields.Nested(PersonalDataSchema), data_key=&#34;personalData&#34;, required=True
+    )
+
+    # The code of conduct is followed by the data source.
+    # This provides the proper application of privacy regulation
+    # taking into account specific features within a sector.
+    # The code of conduct shall reference the name of the code of conduct
+    # and with a publicly accessible reference.
+    code_of_conduct = fields.Str(data_key=&#34;codeOfConduct&#34;, required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel"><code class="flex name class">
+<span>class <span class="ident">DataSharingRestrictionsModel</span></span>
+<span>(</span><span>*, policy_url: str, jurisdiction: str, industry_sector: str, data_retention_period: int, geographic_restriction: str, storage_location: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data sharing restrictions model</p>
+<p>Initialize BaseModel.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If schema_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataSharingRestrictionsModel(BaseModel):
+    &#34;&#34;&#34;Data sharing restrictions model&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataSharingRestrictionsSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        policy_url: str,
+        jurisdiction: str,
+        industry_sector: str,
+        data_retention_period: int,
+        geographic_restriction: str,
+        storage_location: str,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set model attributes
+        self.policy_url = policy_url
+        self.jurisdiction = jurisdiction
+        self.industry_sector = industry_sector
+        self.data_retention_period = data_retention_period
+        self.geographic_restriction = geographic_restriction
+        self.storage_location = storage_location</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema"><code class="flex name class">
+<span>class <span class="ident">DataSharingRestrictionsSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data sharing restrictions schema</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataSharingRestrictionsSchema(BaseModelSchema):
+    &#34;&#34;&#34;Data sharing restrictions schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataSharingRestrictionsModel
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # URL to the privacy policy document of the data source organisation
+    policy_url = fields.Str(data_key=&#34;policyUrl&#34;, required=True)
+
+    # The jurisdiction associated with the data source exposing
+    # the personal data that the privacy regulation is followed.
+    # These can be country, economic union, law, location or region.
+    # [value based on W3C Location and Jurisdiction]
+    jurisdiction = fields.Str(data_key=&#34;jurisdiction&#34;, required=True)
+
+    # The sector to which the data source restricts the use of data
+    # by any data using services. If no restriction, leave blank
+    industry_sector = fields.Str(data_key=&#34;industrySector&#34;, required=True)
+
+    # The amount of time that the data source holds onto
+    # any personal data, in seconds.
+    data_retention_period = fields.Int(data_key=&#34;dataRetentionPeriod&#34;, required=True)
+
+    # The country or economic union is restricted from
+    # processing personal data.[value based on W3C
+    # Location and Jurisdiction] for the data source
+    geographic_restriction = fields.Str(data_key=&#34;geographicRestriction&#34;, required=True)
+
+    # The geographic location where the personal
+    # data is stored by the data source
+    storage_location = fields.Str(data_key=&#34;storageLocation&#34;, required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel"><code class="flex name class">
+<span>class <span class="ident">PersonalDataModel</span></span>
+<span>(</span><span>*, attribute_id: str = None, attribute_name: str = None, attribute_description: str = None, attribute_sensitive: str = 'true', attribute_category: str = 'personaldata', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Personal data model class</p>
+<p>Initialize BaseModel.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If schema_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PersonalDataModel(BaseModel):
+    &#34;&#34;&#34;Personal data model class&#34;&#34;&#34;
+
+    class Meta:
+        schema_class = &#34;PersonalDataSchema&#34;
+
+    def __init__(
+        self,
+        *,
+        attribute_id: str = None,
+        attribute_name: str = None,
+        attribute_description: str = None,
+        attribute_sensitive: str = &#34;true&#34;,
+        attribute_category: str = &#34;personaldata&#34;,
+        **kwargs
+    ):
+        # Call the parent constructor
+        super().__init__(**kwargs)
+
+        # Set the model attributes
+        self.attribute_id = attribute_id
+        self.attribute_name = attribute_name
+        self.attribute_sensitive = attribute_sensitive
+        self.attribute_category = attribute_category
+        self.attribute_description = attribute_description</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema"><code class="flex name class">
+<span>class <span class="ident">PersonalDataSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Personal data schema</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PersonalDataSchema(BaseModelSchema):
+    &#34;&#34;&#34;Personal data schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = PersonalDataModel
+
+        # Exclude unknown fields
+        unknown = EXCLUDE
+
+    # Identifier of the attribute
+    attribute_id = fields.Str(data_key=&#34;attributeId&#34;, required=False)
+
+    # Name of the attributes that is being shared
+    attribute_name = fields.Str(data_key=&#34;attributeName&#34;, required=True)
+
+    # Defines the sensitivity of the data as per PII
+    attribute_sensitive = fields.Str(data_key=&#34;attributeSensitive&#34;, required=False)
+
+    # An explicit list of personal data categories to be shared.
+    # The categories shall be defined using language meaningful to
+    # the users and consistent with the purposes of the processing.
+    # [values based on W3C DPV-DP]
+    attribute_category = fields.Str(data_key=&#34;attributeCategory&#34;, required=False)
+
+    # Attribute description.
+    attribute_description = fields.Str(data_key=&#34;attributeDescription&#34;, required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models" href="index.html">dexa_sdk.agreements.dda.v1_0.models</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel">DataControllerModel</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerModel.Meta">Meta</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema">DataControllerSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataControllerSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel">DataDisclosureAgreementModel</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel.Meta">Meta</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema">DataDisclosureAgreementSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel">DataSharingRestrictionsModel</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsModel.Meta">Meta</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema">DataSharingRestrictionsSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataSharingRestrictionsSchema.opts">opts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel">PersonalDataModel</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel.Meta">Meta</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema">PersonalDataSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataSchema.opts">opts</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

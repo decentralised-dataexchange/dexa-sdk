@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agreements.dda.v1_0.base.base API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agreements.dda.v1_0.base.base</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+import base64
+from pyld import jsonld
+from merklelib import MerkleTree
+from abc import ABC
+from .....did_mydata.core import DidMyData
+from .....jsonld.core import jsonld_context_fingerprint
+from .....utils import jcs_rfc8785
+from ..models.dda_models import DataDisclosureAgreementModel
+
+
+class BaseDataDisclosureAgreementTemplate(ABC):
+    &#34;&#34;&#34;Base data disclosure agreement template&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        *,
+        dda: DataDisclosureAgreementModel,
+        did: str = None,
+    ) -&gt; None:
+        &#34;&#34;&#34;Initialise a new BaseDataDisclosureAgreementTemplate
+
+        Args:
+            dda (DataDisclosureAgreementModel): data disclosure agreement model
+            did (str, optional): did:mydata identifier. Defaults to None.
+        &#34;&#34;&#34;
+
+        self._dda = dda
+        self._mydata_did = did
+        self._merkle_tree = None
+
+    def nquads(self) -&gt; typing.List[str]:
+        &#34;&#34;&#34;JSON-LD normalise document using URDNA2015.
+        For reference: https://json-ld.github.io/normalization/spec/
+
+        Returns:
+            typing.List[str]: n-quads statements
+        &#34;&#34;&#34;
+
+        # Config for JSONLD normalisation
+        config = {&#34;algorithm&#34;: &#34;URDNA2015&#34;, &#34;format&#34;: &#34;application/n-quads&#34;}
+
+        # Obtains the dictionary representation of the document
+        doc = self._dda.serialize()
+
+        # Convert the doc to nquads statements
+        normalized = jsonld.normalize(doc, config)
+
+        # Split normalised string into multiple statements
+        normalized = normalized.split(&#34;\n&#34;)
+
+        # Return the statements
+        return normalized[:-1]
+
+    def build_merkle_tree(self) -&gt; MerkleTree:
+        &#34;&#34;&#34;Build merkle tree from nquads statements about the agreement
+
+        Returns:
+            MerkleTree: merkle tree
+        &#34;&#34;&#34;
+        # Normalise document to n-quads
+        data = self.nquads()
+
+        # Build merkle tree
+        mt = MerkleTree(data)
+
+        # Store the merkle tree in the instance
+        self._merkle_tree = mt
+
+        return mt
+
+    def jcs(self) -&gt; bytes:
+        &#34;&#34;&#34;Canonicalise the agreement using JCS IETF RFC8785
+
+        Returns:
+            bytes: jcs bytes
+        &#34;&#34;&#34;
+        return jcs_rfc8785(self._dda.serialize())
+
+    def base64(self) -&gt; str:
+        &#34;&#34;&#34;Returns output string after performing base64 encoding
+        on JSON Canonicalisation Schema (JCS) on the document.
+
+        Returns:
+            str: base64 encoded string
+        &#34;&#34;&#34;
+        return base64.urlsafe_b64encode(self.jcs()).decode()
+
+    def generate_did(self) -&gt; str:
+        &#34;&#34;&#34;
+        Generate the did:mydata identifier for the agreement
+
+        Returns:
+            did (str): did:mydata identifier
+        &#34;&#34;&#34;
+
+        # Merkle tree
+        mt = self.build_merkle_tree()
+
+        # Merkle root (sha256 fingerprint)
+        mr = mt.merkle_root
+
+        # Obtain SHA2-256 fingerprint for agreement JSONLD context
+        at = jsonld_context_fingerprint(context_type=&#34;DataDisclosureAgreement&#34;)
+
+        # Create did:mydata v2 identifier
+        mydata_did = DidMyData(agreement_type=at, agreement_merkle_root=mr)
+        did = mydata_did.did
+
+        # Store the did:mydata identifier in the instance
+        self._mydata_did = did
+
+        return did
+
+    @property
+    def mydata_did(self) -&gt; str:
+        &#34;&#34;&#34;Returns did:mydata identifier
+
+        Returns:
+            str: did:mydata identifier
+        &#34;&#34;&#34;
+        # If did:mydata identifier not generated.
+        if not self._mydata_did:
+            # Generate did:mydata identifier
+            return self.generate_did()
+        return self._mydata_did
+
+    @mydata_did.setter
+    def mydata_did(self, did: str) -&gt; None:
+        &#34;&#34;&#34;Set did:mydata identifier
+
+        Args:
+            did (str): did:mydata identifier
+        &#34;&#34;&#34;
+        self._mydata_did = did
+
+    @property
+    def merkle_tree(self) -&gt; MerkleTree:
+        &#34;&#34;&#34;Returns merkle tree
+
+        Returns:
+            MerkleTree: merkle tree
+        &#34;&#34;&#34;
+        # If merkle tree not available
+        if not self._merkle_tree:
+            # Build merkle tree and return it.
+            return self.build_merkle_tree()
+        return self._merkle_tree
+
+    @property
+    def merkle_root(self) -&gt; str:
+        &#34;&#34;&#34;Returns merkle root
+
+        Returns:
+            str: merkle root
+        &#34;&#34;&#34;
+        return self.merkle_tree.merkle_root
+
+    @property
+    def dda(self) -&gt; DataDisclosureAgreementModel:
+        &#34;&#34;&#34;Returns data disclosure agreement
+
+        Returns:
+            DataDisclosureAgreementModel: data disclosure agreement
+        &#34;&#34;&#34;
+        return self._dda</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate"><code class="flex name class">
+<span>class <span class="ident">BaseDataDisclosureAgreementTemplate</span></span>
+<span>(</span><span>*, dda: <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel" href="../models/dda_models.html#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel">DataDisclosureAgreementModel</a>, did: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base data disclosure agreement template</p>
+<p>Initialise a new BaseDataDisclosureAgreementTemplate</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dda</code></strong> :&ensp;<code>DataDisclosureAgreementModel</code></dt>
+<dd>data disclosure agreement model</dd>
+<dt><strong><code>did</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>did:mydata identifier. Defaults to None.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseDataDisclosureAgreementTemplate(ABC):
+    &#34;&#34;&#34;Base data disclosure agreement template&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        *,
+        dda: DataDisclosureAgreementModel,
+        did: str = None,
+    ) -&gt; None:
+        &#34;&#34;&#34;Initialise a new BaseDataDisclosureAgreementTemplate
+
+        Args:
+            dda (DataDisclosureAgreementModel): data disclosure agreement model
+            did (str, optional): did:mydata identifier. Defaults to None.
+        &#34;&#34;&#34;
+
+        self._dda = dda
+        self._mydata_did = did
+        self._merkle_tree = None
+
+    def nquads(self) -&gt; typing.List[str]:
+        &#34;&#34;&#34;JSON-LD normalise document using URDNA2015.
+        For reference: https://json-ld.github.io/normalization/spec/
+
+        Returns:
+            typing.List[str]: n-quads statements
+        &#34;&#34;&#34;
+
+        # Config for JSONLD normalisation
+        config = {&#34;algorithm&#34;: &#34;URDNA2015&#34;, &#34;format&#34;: &#34;application/n-quads&#34;}
+
+        # Obtains the dictionary representation of the document
+        doc = self._dda.serialize()
+
+        # Convert the doc to nquads statements
+        normalized = jsonld.normalize(doc, config)
+
+        # Split normalised string into multiple statements
+        normalized = normalized.split(&#34;\n&#34;)
+
+        # Return the statements
+        return normalized[:-1]
+
+    def build_merkle_tree(self) -&gt; MerkleTree:
+        &#34;&#34;&#34;Build merkle tree from nquads statements about the agreement
+
+        Returns:
+            MerkleTree: merkle tree
+        &#34;&#34;&#34;
+        # Normalise document to n-quads
+        data = self.nquads()
+
+        # Build merkle tree
+        mt = MerkleTree(data)
+
+        # Store the merkle tree in the instance
+        self._merkle_tree = mt
+
+        return mt
+
+    def jcs(self) -&gt; bytes:
+        &#34;&#34;&#34;Canonicalise the agreement using JCS IETF RFC8785
+
+        Returns:
+            bytes: jcs bytes
+        &#34;&#34;&#34;
+        return jcs_rfc8785(self._dda.serialize())
+
+    def base64(self) -&gt; str:
+        &#34;&#34;&#34;Returns output string after performing base64 encoding
+        on JSON Canonicalisation Schema (JCS) on the document.
+
+        Returns:
+            str: base64 encoded string
+        &#34;&#34;&#34;
+        return base64.urlsafe_b64encode(self.jcs()).decode()
+
+    def generate_did(self) -&gt; str:
+        &#34;&#34;&#34;
+        Generate the did:mydata identifier for the agreement
+
+        Returns:
+            did (str): did:mydata identifier
+        &#34;&#34;&#34;
+
+        # Merkle tree
+        mt = self.build_merkle_tree()
+
+        # Merkle root (sha256 fingerprint)
+        mr = mt.merkle_root
+
+        # Obtain SHA2-256 fingerprint for agreement JSONLD context
+        at = jsonld_context_fingerprint(context_type=&#34;DataDisclosureAgreement&#34;)
+
+        # Create did:mydata v2 identifier
+        mydata_did = DidMyData(agreement_type=at, agreement_merkle_root=mr)
+        did = mydata_did.did
+
+        # Store the did:mydata identifier in the instance
+        self._mydata_did = did
+
+        return did
+
+    @property
+    def mydata_did(self) -&gt; str:
+        &#34;&#34;&#34;Returns did:mydata identifier
+
+        Returns:
+            str: did:mydata identifier
+        &#34;&#34;&#34;
+        # If did:mydata identifier not generated.
+        if not self._mydata_did:
+            # Generate did:mydata identifier
+            return self.generate_did()
+        return self._mydata_did
+
+    @mydata_did.setter
+    def mydata_did(self, did: str) -&gt; None:
+        &#34;&#34;&#34;Set did:mydata identifier
+
+        Args:
+            did (str): did:mydata identifier
+        &#34;&#34;&#34;
+        self._mydata_did = did
+
+    @property
+    def merkle_tree(self) -&gt; MerkleTree:
+        &#34;&#34;&#34;Returns merkle tree
+
+        Returns:
+            MerkleTree: merkle tree
+        &#34;&#34;&#34;
+        # If merkle tree not available
+        if not self._merkle_tree:
+            # Build merkle tree and return it.
+            return self.build_merkle_tree()
+        return self._merkle_tree
+
+    @property
+    def merkle_root(self) -&gt; str:
+        &#34;&#34;&#34;Returns merkle root
+
+        Returns:
+            str: merkle root
+        &#34;&#34;&#34;
+        return self.merkle_tree.merkle_root
+
+    @property
+    def dda(self) -&gt; DataDisclosureAgreementModel:
+        &#34;&#34;&#34;Returns data disclosure agreement
+
+        Returns:
+            DataDisclosureAgreementModel: data disclosure agreement
+        &#34;&#34;&#34;
+        return self._dda</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="dexa_sdk.agreements.dda.v1_0.instances.dda_instance.DataDisclosureAgreementInstance" href="../instances/dda_instance.html#dexa_sdk.agreements.dda.v1_0.instances.dda_instance.DataDisclosureAgreementInstance">DataDisclosureAgreementInstance</a></li>
+<li><a title="dexa_sdk.agreements.dda.v1_0.templates.dda_template.DataDisclosureAgreementTemplate" href="../templates/dda_template.html#dexa_sdk.agreements.dda.v1_0.templates.dda_template.DataDisclosureAgreementTemplate">DataDisclosureAgreementTemplate</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.dda"><code class="name">var <span class="ident">dda</span> : <a title="dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel" href="../models/dda_models.html#dexa_sdk.agreements.dda.v1_0.models.dda_models.DataDisclosureAgreementModel">DataDisclosureAgreementModel</a></code></dt>
+<dd>
+<div class="desc"><p>Returns data disclosure agreement</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>DataDisclosureAgreementModel</code></dt>
+<dd>data disclosure agreement</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def dda(self) -&gt; DataDisclosureAgreementModel:
+    &#34;&#34;&#34;Returns data disclosure agreement
+
+    Returns:
+        DataDisclosureAgreementModel: data disclosure agreement
+    &#34;&#34;&#34;
+    return self._dda</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_root"><code class="name">var <span class="ident">merkle_root</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Returns merkle root</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>merkle root</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def merkle_root(self) -&gt; str:
+    &#34;&#34;&#34;Returns merkle root
+
+    Returns:
+        str: merkle root
+    &#34;&#34;&#34;
+    return self.merkle_tree.merkle_root</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_tree"><code class="name">var <span class="ident">merkle_tree</span> : merklelib.merkle.MerkleTree</code></dt>
+<dd>
+<div class="desc"><p>Returns merkle tree</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>MerkleTree</code></dt>
+<dd>merkle tree</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def merkle_tree(self) -&gt; MerkleTree:
+    &#34;&#34;&#34;Returns merkle tree
+
+    Returns:
+        MerkleTree: merkle tree
+    &#34;&#34;&#34;
+    # If merkle tree not available
+    if not self._merkle_tree:
+        # Build merkle tree and return it.
+        return self.build_merkle_tree()
+    return self._merkle_tree</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.mydata_did"><code class="name">var <span class="ident">mydata_did</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Returns did:mydata identifier</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>did:mydata identifier</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mydata_did(self) -&gt; str:
+    &#34;&#34;&#34;Returns did:mydata identifier
+
+    Returns:
+        str: did:mydata identifier
+    &#34;&#34;&#34;
+    # If did:mydata identifier not generated.
+    if not self._mydata_did:
+        # Generate did:mydata identifier
+        return self.generate_did()
+    return self._mydata_did</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.base64"><code class="name flex">
+<span>def <span class="ident">base64</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns output string after performing base64 encoding
+on JSON Canonicalisation Schema (JCS) on the document.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>base64 encoded string</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def base64(self) -&gt; str:
+    &#34;&#34;&#34;Returns output string after performing base64 encoding
+    on JSON Canonicalisation Schema (JCS) on the document.
+
+    Returns:
+        str: base64 encoded string
+    &#34;&#34;&#34;
+    return base64.urlsafe_b64encode(self.jcs()).decode()</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.build_merkle_tree"><code class="name flex">
+<span>def <span class="ident">build_merkle_tree</span></span>(<span>self) ‑> merklelib.merkle.MerkleTree</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build merkle tree from nquads statements about the agreement</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>MerkleTree</code></dt>
+<dd>merkle tree</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build_merkle_tree(self) -&gt; MerkleTree:
+    &#34;&#34;&#34;Build merkle tree from nquads statements about the agreement
+
+    Returns:
+        MerkleTree: merkle tree
+    &#34;&#34;&#34;
+    # Normalise document to n-quads
+    data = self.nquads()
+
+    # Build merkle tree
+    mt = MerkleTree(data)
+
+    # Store the merkle tree in the instance
+    self._merkle_tree = mt
+
+    return mt</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.generate_did"><code class="name flex">
+<span>def <span class="ident">generate_did</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the did:mydata identifier for the agreement</p>
+<h2 id="returns">Returns</h2>
+<p>did (str): did:mydata identifier</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_did(self) -&gt; str:
+    &#34;&#34;&#34;
+    Generate the did:mydata identifier for the agreement
+
+    Returns:
+        did (str): did:mydata identifier
+    &#34;&#34;&#34;
+
+    # Merkle tree
+    mt = self.build_merkle_tree()
+
+    # Merkle root (sha256 fingerprint)
+    mr = mt.merkle_root
+
+    # Obtain SHA2-256 fingerprint for agreement JSONLD context
+    at = jsonld_context_fingerprint(context_type=&#34;DataDisclosureAgreement&#34;)
+
+    # Create did:mydata v2 identifier
+    mydata_did = DidMyData(agreement_type=at, agreement_merkle_root=mr)
+    did = mydata_did.did
+
+    # Store the did:mydata identifier in the instance
+    self._mydata_did = did
+
+    return did</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.jcs"><code class="name flex">
+<span>def <span class="ident">jcs</span></span>(<span>self) ‑> bytes</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Canonicalise the agreement using JCS IETF RFC8785</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bytes</code></dt>
+<dd>jcs bytes</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def jcs(self) -&gt; bytes:
+    &#34;&#34;&#34;Canonicalise the agreement using JCS IETF RFC8785
+
+    Returns:
+        bytes: jcs bytes
+    &#34;&#34;&#34;
+    return jcs_rfc8785(self._dda.serialize())</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.nquads"><code class="name flex">
+<span>def <span class="ident">nquads</span></span>(<span>self) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>JSON-LD normalise document using URDNA2015.
+For reference: <a href="https://json-ld.github.io/normalization/spec/">https://json-ld.github.io/normalization/spec/</a></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.List[str]</code></dt>
+<dd>n-quads statements</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nquads(self) -&gt; typing.List[str]:
+    &#34;&#34;&#34;JSON-LD normalise document using URDNA2015.
+    For reference: https://json-ld.github.io/normalization/spec/
+
+    Returns:
+        typing.List[str]: n-quads statements
+    &#34;&#34;&#34;
+
+    # Config for JSONLD normalisation
+    config = {&#34;algorithm&#34;: &#34;URDNA2015&#34;, &#34;format&#34;: &#34;application/n-quads&#34;}
+
+    # Obtains the dictionary representation of the document
+    doc = self._dda.serialize()
+
+    # Convert the doc to nquads statements
+    normalized = jsonld.normalize(doc, config)
+
+    # Split normalised string into multiple statements
+    normalized = normalized.split(&#34;\n&#34;)
+
+    # Return the statements
+    return normalized[:-1]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base" href="index.html">dexa_sdk.agreements.dda.v1_0.base</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate">BaseDataDisclosureAgreementTemplate</a></code></h4>
+<ul class="two-column">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.base64" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.base64">base64</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.build_merkle_tree" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.build_merkle_tree">build_merkle_tree</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.dda" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.dda">dda</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.generate_did" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.generate_did">generate_did</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.jcs" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.jcs">jcs</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_root" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_root">merkle_root</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_tree" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.merkle_tree">merkle_tree</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.mydata_did" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.mydata_did">mydata_did</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.nquads" href="#dexa_sdk.agreements.dda.v1_0.base.base.BaseDataDisclosureAgreementTemplate.nquads">nquads</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
