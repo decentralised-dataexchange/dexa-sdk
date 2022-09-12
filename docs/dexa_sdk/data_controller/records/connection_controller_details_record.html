@@ -31,8 +31,11 @@
     BaseRecordSchema
 )
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from marshmallow import fields
-from ...marketplace.models.controller_details import ControllerDetailModel
+from mydata_did.v1_0.models.data_controller_model import (
+    DataController
+)
 
 
 class ConnectionControllerDetailsRecord(BaseRecord):
@@ -51,13 +54,15 @@ class ConnectionControllerDetailsRecord(BaseRecord):
 
     # Record tags
     TAG_NAMES = {
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
+        &#34;~organisation_did&#34;
     }
 
     def __init__(
         self,
         id: str = None,
         connection_id: str = None,
+        organisation_did: str = None,
         controller_details: dict = None,
         state: str = None,
         **kwargs
@@ -67,6 +72,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
 
         self.connection_id = connection_id
         self.controller_details = controller_details
+        self.organisation_did = organisation_did
 
     @property
     def record_value(self) -&gt; dict:
@@ -76,31 +82,43 @@ class ConnectionControllerDetailsRecord(BaseRecord):
             for prop in (
                 &#34;connection_id&#34;,
                 &#34;state&#34;,
-                &#34;controller_details&#34;
+                &#34;controller_details&#34;,
+                &#34;organisation_did&#34;
             )
         }
 
     @property
-    def controller_details_model(self) -&gt; ControllerDetailModel:
+    def controller_details_model(self) -&gt; DataController:
         &#34;&#34;&#34;Retreive controller details model.
 
         Returns:
-            ControllerDetailModel: Controller details model
+            DataController: Controller details model
         &#34;&#34;&#34;
-        return ControllerDetailModel.deserialize(self.controller_details)
+        return DataController.deserialize(self.controller_details)
+
+    async def fetch_connection_record(
+        self,
+        context: InjectionContext
+    ) -&gt; ConnectionRecord:
+        &#34;&#34;&#34;Retreive connection record.
+
+        Returns:
+            ConnectionRecord: Connection record.
+        &#34;&#34;&#34;
+        return await ConnectionRecord.retrieve_by_id(context, self.connection_id)
 
     @classmethod
     async def set_controller_details_for_connection(
             cls,
             context: InjectionContext,
-            connection_id: str,
-            controller_details: dict
+            connection_record: ConnectionRecord,
+            controller_details: DataController
     ) -&gt; &#34;ConnectionControllerDetailsRecord&#34;:
         &#34;&#34;&#34;Set controller details for connection.
 
         Args:
             context (InjectionContext): Injection context to be used.
-            connection_id (str): Connection identifier
+            connection_id (ConnectionRecord): Connection identifier
             controller_details (dict): Controller details
 
         Returns:
@@ -108,18 +126,21 @@ class ConnectionControllerDetailsRecord(BaseRecord):
         &#34;&#34;&#34;
 
         tag_filter = {
-            &#34;connection_id&#34;: connection_id
+            &#34;organisation_did&#34;: controller_details.organisation_did
         }
         records = await cls.query(context, tag_filter)
 
         if records:
-            record: ConnectionControllerDetailsRecord = records[0]
-            record.controller_details = controller_details
+            # Existing connection found.
+
+            # Delete the new connection.
+            await connection_record.delete_record(context)
         else:
             # Create marketplace connection record.
             record = cls(
-                connection_id=connection_id,
-                controller_details=controller_details
+                connection_id=connection_record.connection_id,
+                controller_details=controller_details.serialize(),
+                organisation_did=controller_details.organisation_did
             )
 
         await record.save(context)
@@ -134,7 +155,8 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
         model_class = ConnectionControllerDetailsRecord
 
     connection_id = fields.Str()
-    controller_details = fields.Dict()</code></pre>
+    controller_details = fields.Dict()
+    organisation_did = fields.Str()</code></pre>
 </details>
 </section>
 <section>
@@ -148,7 +170,7 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 <dl>
 <dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord"><code class="flex name class">
 <span>class <span class="ident">ConnectionControllerDetailsRecord</span></span>
-<span>(</span><span>id: str = None, connection_id: str = None, controller_details: dict = None, state: str = None, **kwargs)</span>
+<span>(</span><span>id: str = None, connection_id: str = None, organisation_did: str = None, controller_details: dict = None, state: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Connection controller details record model</p>
@@ -173,13 +195,15 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 
     # Record tags
     TAG_NAMES = {
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
+        &#34;~organisation_did&#34;
     }
 
     def __init__(
         self,
         id: str = None,
         connection_id: str = None,
+        organisation_did: str = None,
         controller_details: dict = None,
         state: str = None,
         **kwargs
@@ -189,6 +213,7 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 
         self.connection_id = connection_id
         self.controller_details = controller_details
+        self.organisation_did = organisation_did
 
     @property
     def record_value(self) -&gt; dict:
@@ -198,31 +223,43 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
             for prop in (
                 &#34;connection_id&#34;,
                 &#34;state&#34;,
-                &#34;controller_details&#34;
+                &#34;controller_details&#34;,
+                &#34;organisation_did&#34;
             )
         }
 
     @property
-    def controller_details_model(self) -&gt; ControllerDetailModel:
+    def controller_details_model(self) -&gt; DataController:
         &#34;&#34;&#34;Retreive controller details model.
 
         Returns:
-            ControllerDetailModel: Controller details model
+            DataController: Controller details model
         &#34;&#34;&#34;
-        return ControllerDetailModel.deserialize(self.controller_details)
+        return DataController.deserialize(self.controller_details)
+
+    async def fetch_connection_record(
+        self,
+        context: InjectionContext
+    ) -&gt; ConnectionRecord:
+        &#34;&#34;&#34;Retreive connection record.
+
+        Returns:
+            ConnectionRecord: Connection record.
+        &#34;&#34;&#34;
+        return await ConnectionRecord.retrieve_by_id(context, self.connection_id)
 
     @classmethod
     async def set_controller_details_for_connection(
             cls,
             context: InjectionContext,
-            connection_id: str,
-            controller_details: dict
+            connection_record: ConnectionRecord,
+            controller_details: DataController
     ) -&gt; &#34;ConnectionControllerDetailsRecord&#34;:
         &#34;&#34;&#34;Set controller details for connection.
 
         Args:
             context (InjectionContext): Injection context to be used.
-            connection_id (str): Connection identifier
+            connection_id (ConnectionRecord): Connection identifier
             controller_details (dict): Controller details
 
         Returns:
@@ -230,18 +267,21 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
         &#34;&#34;&#34;
 
         tag_filter = {
-            &#34;connection_id&#34;: connection_id
+            &#34;organisation_did&#34;: controller_details.organisation_did
         }
         records = await cls.query(context, tag_filter)
 
         if records:
-            record: ConnectionControllerDetailsRecord = records[0]
-            record.controller_details = controller_details
+            # Existing connection found.
+
+            # Delete the new connection.
+            await connection_record.delete_record(context)
         else:
             # Create marketplace connection record.
             record = cls(
-                connection_id=connection_id,
-                controller_details=controller_details
+                connection_id=connection_record.connection_id,
+                controller_details=controller_details.serialize(),
+                organisation_did=controller_details.organisation_did
             )
 
         await record.save(context)
@@ -280,7 +320,7 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 <h3>Static methods</h3>
 <dl>
 <dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.set_controller_details_for_connection"><code class="name flex">
-<span>async def <span class="ident">set_controller_details_for_connection</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, connection_id: str, controller_details: dict) ‑> <a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord">ConnectionControllerDetailsRecord</a></span>
+<span>async def <span class="ident">set_controller_details_for_connection</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord, controller_details: mydata_did.v1_0.models.data_controller_model.DataController) ‑> <a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord">ConnectionControllerDetailsRecord</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set controller details for connection.</p>
@@ -288,7 +328,7 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 <dl>
 <dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
 <dd>Injection context to be used.</dd>
-<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
 <dd>Connection identifier</dd>
 <dt><strong><code>controller_details</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Controller details</dd>
@@ -306,14 +346,14 @@ class ConnectionControllerDetailsRecordSchema(BaseRecordSchema):
 async def set_controller_details_for_connection(
         cls,
         context: InjectionContext,
-        connection_id: str,
-        controller_details: dict
+        connection_record: ConnectionRecord,
+        controller_details: DataController
 ) -&gt; &#34;ConnectionControllerDetailsRecord&#34;:
     &#34;&#34;&#34;Set controller details for connection.
 
     Args:
         context (InjectionContext): Injection context to be used.
-        connection_id (str): Connection identifier
+        connection_id (ConnectionRecord): Connection identifier
         controller_details (dict): Controller details
 
     Returns:
@@ -321,18 +361,21 @@ async def set_controller_details_for_connection(
     &#34;&#34;&#34;
 
     tag_filter = {
-        &#34;connection_id&#34;: connection_id
+        &#34;organisation_did&#34;: controller_details.organisation_did
     }
     records = await cls.query(context, tag_filter)
 
     if records:
-        record: ConnectionControllerDetailsRecord = records[0]
-        record.controller_details = controller_details
+        # Existing connection found.
+
+        # Delete the new connection.
+        await connection_record.delete_record(context)
     else:
         # Create marketplace connection record.
         record = cls(
-            connection_id=connection_id,
-            controller_details=controller_details
+            connection_id=connection_record.connection_id,
+            controller_details=controller_details.serialize(),
+            organisation_did=controller_details.organisation_did
         )
 
     await record.save(context)
@@ -343,12 +386,12 @@ async def set_controller_details_for_connection(
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.controller_details_model"><code class="name">var <span class="ident">controller_details_model</span> : <a title="dexa_sdk.marketplace.models.controller_details.ControllerDetailModel" href="../../marketplace/models/controller_details.html#dexa_sdk.marketplace.models.controller_details.ControllerDetailModel">ControllerDetailModel</a></code></dt>
+<dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.controller_details_model"><code class="name">var <span class="ident">controller_details_model</span> : mydata_did.v1_0.models.data_controller_model.DataController</code></dt>
 <dd>
 <div class="desc"><p>Retreive controller details model.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ControllerDetailModel</code></dt>
+<dt><code>DataController</code></dt>
 <dd>Controller details model</dd>
 </dl></div>
 <details class="source">
@@ -356,13 +399,13 @@ async def set_controller_details_for_connection(
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def controller_details_model(self) -&gt; ControllerDetailModel:
+def controller_details_model(self) -&gt; DataController:
     &#34;&#34;&#34;Retreive controller details model.
 
     Returns:
-        ControllerDetailModel: Controller details model
+        DataController: Controller details model
     &#34;&#34;&#34;
-    return ControllerDetailModel.deserialize(self.controller_details)</code></pre>
+    return DataController.deserialize(self.controller_details)</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.record_value"><code class="name">var <span class="ident">record_value</span> : dict</code></dt>
@@ -380,9 +423,39 @@ def record_value(self) -&gt; dict:
         for prop in (
             &#34;connection_id&#34;,
             &#34;state&#34;,
-            &#34;controller_details&#34;
+            &#34;controller_details&#34;,
+            &#34;organisation_did&#34;
         )
     }</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.fetch_connection_record"><code class="name flex">
+<span>async def <span class="ident">fetch_connection_record</span></span>(<span>self, context: aries_cloudagent.config.injection_context.InjectionContext) ‑> aries_cloudagent.connections.models.connection_record.ConnectionRecord</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retreive connection record.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def fetch_connection_record(
+    self,
+    context: InjectionContext
+) -&gt; ConnectionRecord:
+    &#34;&#34;&#34;Retreive connection record.
+
+    Returns:
+        ConnectionRecord: Connection record.
+    &#34;&#34;&#34;
+    return await ConnectionRecord.retrieve_by_id(context, self.connection_id)</code></pre>
 </details>
 </dd>
 </dl>
@@ -410,7 +483,8 @@ def record_value(self) -&gt; dict:
         model_class = ConnectionControllerDetailsRecord
 
     connection_id = fields.Str()
-    controller_details = fields.Dict()</code></pre>
+    controller_details = fields.Dict()
+    organisation_did = fields.Str()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -456,6 +530,7 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.TAG_NAMES" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.TAG_NAMES">TAG_NAMES</a></code></li>
 <li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.WEBHOOK_TOPIC" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
 <li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.controller_details_model" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.controller_details_model">controller_details_model</a></code></li>
+<li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.fetch_connection_record" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.fetch_connection_record">fetch_connection_record</a></code></li>
 <li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.record_value" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.record_value">record_value</a></code></li>
 <li><code><a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.set_controller_details_for_connection" href="#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord.set_controller_details_for_connection">set_controller_details_for_connection</a></code></li>
 </ul>

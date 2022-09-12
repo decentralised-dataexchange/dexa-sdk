@@ -35,6 +35,7 @@ from aries_cloudagent.config.injection_context import InjectionContext
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 from .....utils import bump_major_for_semver_string
 from .personal_data_record import PersonalDataRecord
+from ..models.da_models import DataAgreementModel
 
 
 class DataAgreementTemplateRecord(BaseRecord):
@@ -468,6 +469,12 @@ class DataAgreementTemplateRecord(BaseRecord):
             self.template_id,
             self.template_version
         )
+
+    @property
+    def data_agreement_model(self) -&gt; DataAgreementModel:
+        &#34;&#34;&#34;Accessor for data agreement as model.
+        &#34;&#34;&#34;
+        return DataAgreementModel.deserialize(self.data_agreement)
 
 
 class DataAgreementTemplateRecordSchema(BaseRecordSchema):
@@ -1078,7 +1085,13 @@ Defaults to "false".</dd>
             context,
             self.template_id,
             self.template_version
-        )</code></pre>
+        )
+
+    @property
+    def data_agreement_model(self) -&gt; DataAgreementModel:
+        &#34;&#34;&#34;Accessor for data agreement as model.
+        &#34;&#34;&#34;
+        return DataAgreementModel.deserialize(self.data_agreement)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1398,6 +1411,20 @@ async def published_templates(cls, context: InjectionContext) \
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.data_agreement_model"><code class="name">var <span class="ident">data_agreement_model</span> : <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementModel" href="../models/da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementModel">DataAgreementModel</a></code></dt>
+<dd>
+<div class="desc"><p>Accessor for data agreement as model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def data_agreement_model(self) -&gt; DataAgreementModel:
+    &#34;&#34;&#34;Accessor for data agreement as model.
+    &#34;&#34;&#34;
+    return DataAgreementModel.deserialize(self.data_agreement)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.is_deleted"><code class="name">var <span class="ident">is_deleted</span> : bool</code></dt>
 <dd>
 <div class="desc"><p>Check if data agreemnent is deleted.</p></div>
@@ -1866,6 +1893,7 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.STATE_PROOF" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.STATE_PROOF">STATE_PROOF</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.TAG_NAMES" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.TAG_NAMES">TAG_NAMES</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.WEBHOOK_TOPIC" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.data_agreement_model" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.data_agreement_model">data_agreement_model</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.delete_template" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.delete_template">delete_template</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.fetch_personal_data_records" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.fetch_personal_data_records">fetch_personal_data_records</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.is_deleted" href="#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord.is_deleted">is_deleted</a></code></li>

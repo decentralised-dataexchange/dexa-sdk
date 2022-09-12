@@ -31,18 +31,22 @@ import asyncio
 import uuid
 import typing
 import json
+import aiohttp
 from loguru import logger
 from web3._utils.encoding import to_json
 from marshmallow.exceptions import ValidationError
-from aries_cloudagent.wallet.base import BaseWallet
+from aries_cloudagent.wallet.base import BaseWallet, DIDInfo
+from aries_cloudagent.wallet.indy import IndyWallet
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.core.error import BaseError
 from aries_cloudagent.core.dispatcher import DispatcherResponder
 from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
+from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
 from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.decorators.default import DecoratorSet
 from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.messaging.models.base_record import match_post_filter
 from aries_cloudagent.messaging.agent_message import AgentMessage
 from aries_cloudagent.cache.basic import BaseCache
 from aries_cloudagent.protocols.basicmessage.v1_0.messages.basicmessage import BasicMessage
@@ -99,6 +103,18 @@ from mydata_did.v1_0.messages.data_controller_details_response import (
 from mydata_did.v1_0.models.data_controller_model import (
     DataController
 )
+from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMessage
+from mydata_did.v1_0.models.existing_connections_model import (
+    ExistingConnectionsBody
+)
+from mydata_did.v1_0.messages.da_negotiation_receipt import (
+    DataAgreementNegotiationReceiptMessage,
+    DataAgreementNegotiationReceiptBody
+)
+from dexa_sdk.marketplace.records.marketplace_connection_record import MarketplaceConnectionRecord
+from ..connections.records.existing_connections_record import (
+    ExistingConnectionRecord
+)
 from ..agreements.da.v1_0.models.da_models import (
     DataAgreementModel,
     DA_DEFAULT_CONTEXT,
@@ -116,6 +132,7 @@ from ..ledgers.indy.core import (
     create_schema_def_and_anchor_to_ledger
 )
 from ..utils import (
+    paginate,
     paginate_records,
     PaginationResult,
     drop_none_dict,
@@ -125,6 +142,9 @@ from ..utils import (
 )
 from ..did_mydata.core import DIDMyDataBuilder
 from ..ledgers.ethereum.core import EthereumClient
+from ..data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord
+)
 
 
 class V2ADAManagerError(BaseError):
@@ -487,9 +507,6 @@ class V2ADAManager:
         Returns:
             PaginationResult: Pagination results.
         &#34;&#34;&#34;
-
-        # Sample queue snippet
-        await self.sample_queue_snippet()
 
         # Query by version is only possible if the template id is provided
         if template_version:
@@ -1171,6 +1188,28 @@ class V2ADAManager:
 
         await da_instance_record.save(self.context)
 
+        # Send receipt.
+        message = DataAgreementNegotiationReceiptMessage(
+            body=DataAgreementNegotiationReceiptBody(
+                instance_id=da_instance_record.instance_id,
+                blockchain_receipt=transaction_receipt,
+                blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+                mydata_did=mydata_did
+            )
+        )
+
+        # Find the connection record.
+        data_subject_did = da_instance_record.data_subject_did.replace(&#34;did:sov:&#34;, &#34;&#34;)
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=data_subject_did,
+        )
+
+        self.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
     async def anchor_da_instance_to_blockchain_async_task(
         self,
         instance_id: str
@@ -1270,6 +1309,38 @@ class V2ADAManager:
 
         return res
 
+    async def create_connection_qr_code(
+        self,
+        connection_id: str
+    ) -&gt; dict:
+        &#34;&#34;&#34;Create connection QR code.
+
+        Args:
+            connection_id (str): Connection identifier.
+
+        Returns:
+            dict: Dict with dynamic link.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        # Connection invitation
+        connection_invitation: ConnectionInvitation = await connection_record.retrieve_invitation(
+            self.context
+        )
+
+        # Generate firebase dynamic link.
+        payload = connection_invitation.to_url()
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+
+        res = {&#34;dynamic_link&#34;: firebase_dynamic_link}
+
+        return res
+
     async def query_data_agreement_qr_codes(
         self,
         template_id: str,
@@ -1284,7 +1355,7 @@ class V2ADAManager:
         pagination_result = paginate_records(records, page=1, page_size=1000000)
         return pagination_result
 
-    async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+    async def send_reply_message(self, message: AgentMessage, connection_id: str = None) -&gt; None:
         &#34;&#34;&#34;Send reply message to remote agent.
 
         Args:
@@ -1585,6 +1656,300 @@ class V2ADAManager:
 
         return record
 
+    async def process_existing_connections_message(
+        self,
+        message: ExistingConnectionsMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process existing connections message.
+
+        Args:
+            message (ExistingConnectionsMessage): Existing connections message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Invitation key.
+        invitation_key = message_receipt.recipient_verkey
+
+        # Fetch current connection record using invitation key
+        connection_record = await ConnectionRecord.retrieve_by_invitation_key(
+            self.context,
+            invitation_key
+        )
+
+        # Fetch existing connections record for the current connection.
+        tag_filter = {
+            &#34;connection_id&#34;: connection_record.connection_id
+        }
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        if existing_connection_records:
+            # Existing connection record.
+            existing_connection_record: ExistingConnectionRecord = existing_connection_records[0]
+
+            # Delete the record.
+            await existing_connection_record.delete_record(self.context)
+
+        # Fetch associated connection record.
+        old_connection_record = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=None,
+            my_did=message.body.theirdid
+        )
+
+        # Create a new existing connection record.
+        existing_connection_record = ExistingConnectionRecord(
+            existing_connection_id=old_connection_record.connection_id,
+            my_did=old_connection_record.my_did,
+            connection_status=&#34;available&#34;,
+            connection_id=connection_record.connection_id
+        )
+
+        await existing_connection_record.save(self.context)
+
+        # updating the current connection invitation status to inactive
+        connection_record.state = ConnectionRecord.STATE_INACTIVE
+        await connection_record.save(context=self.context)
+
+    async def get_existing_connection_record_for_new_connection_id(
+        self,
+        connection_id: str
+    ) -&gt; ExistingConnectionRecord:
+        &#34;&#34;&#34;Get existing connection record for new connection id.
+
+        Args:
+            connection_id (str): Connection id.
+
+        Returns:
+            ExistingConnectionRecord: Existing connection record.
+        &#34;&#34;&#34;
+
+        # Tag filter.
+        tag_filter = {
+            &#34;connection_id&#34;: connection_id
+        }
+
+        # Fetch existing connection records.
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        res = None
+        if existing_connection_records:
+            res = existing_connection_records[0]
+
+        return res
+
+    async def send_message_with_connection_invitation_and_return_route_all(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -&gt; typing.Tuple[str, str, dict]:
+        &#34;&#34;&#34;Send message with connection invitation and return route all.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        &#34;&#34;&#34;
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Set transport return route all
+        message._decorators[&#34;transport&#34;] = TransportDecorator(
+            return_route=&#34;all&#34;
+        )
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    message_body = await response.read()
+
+                    # Unpack message
+                    unpacked = await wallet.unpack_message(message_body)
+                    (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                    # Convert message to dict.
+                    message_dict = json.loads(message_json)
+
+                    return (sender_verkey, recipient_verkey, message_dict)
+
+    async def send_message_with_connection_invitation(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -&gt; None:
+        &#34;&#34;&#34;Send message with connection invitation.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+        &#34;&#34;&#34;
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    self._logger.info(&#34;Posted existing connection message...&#34;)
+
+    async def send_existing_connections_message(
+        self,
+        theirdid: str,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Send existing connections notification message.
+
+        Args:
+            theirdid (str): Their DID of remote agent in old connection.
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+
+        # Construct existing connection message.
+        message = ExistingConnectionsMessage(
+            body=ExistingConnectionsBody(
+                theirdid=theirdid
+            )
+        )
+
+        # Send the message to remote agent.
+        await self.send_message_with_connection_invitation(
+            message,
+            connection_id
+        )
+
+    async def query_connections_and_categorise_results(
+        self,
+        tag_filter: dict = None,
+        post_filter_positive: dict = None,
+        page: int = 1,
+        page_size: int = 10,
+        org_flag: bool = False,
+        marketplace_flag: bool = False,
+    ) -&gt; PaginationResult:
+
+        # Query the connection records.
+        records = await ConnectionRecord.query(
+            self.context,
+            tag_filter,
+            post_filter_positive
+        )
+
+        # Sort the connection records.
+        records = sorted(
+            records,
+            key=lambda k: k.created_at,
+            reverse=True
+        )
+
+        res = []
+        for record in records:
+            tag_filter = {&#34;connection_id&#34;: record.connection_id}
+
+            # Fetch controller details attached to the connection.
+            controller_details: typing.List[ConnectionControllerDetailsRecord] = \
+                await ConnectionControllerDetailsRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            # Fetch marketplace connection record.
+            marketplace_connections: typing.List[MarketplaceConnectionRecord] = \
+                await MarketplaceConnectionRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            connection = record.serialize()
+
+            # Update controller details to the connection dict.
+            if controller_details:
+                connection.update({
+                    &#34;org_flag&#34;: True,
+                    &#34;controller_details&#34;: controller_details[0].controller_details
+                })
+            else:
+                connection.update({
+                    &#34;controller_details&#34;: {},
+                    &#34;org_flag&#34;: False
+                })
+
+            if marketplace_connections:
+                connection.update({
+                    &#34;marketplace_flag&#34;: True
+                })
+            else:
+                connection.update({&#34;marketplace_flag&#34;: False})
+
+            # Apply category filter on connections.
+            categorise_filter = {
+                &#34;org_flag&#34;: org_flag,
+                &#34;marketplace_flag&#34;: marketplace_flag
+            }
+
+            categorise_filter = drop_none_dict(categorise_filter)
+
+            if match_post_filter(connection, categorise_filter, True):
+                res.append(connection)
+
+        pagination_result = paginate(res, page if page else 1, page_size if page_size else 10)
+
+        return pagination_result
+
     async def add_task(self,
                        context: InjectionContext,
                        coro: typing.Coroutine,
@@ -1605,42 +1970,39 @@ class V2ADAManager:
         pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
         return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
 
-    async def sample_queue_snippet(self):
-        &#34;&#34;&#34;Sample queue snippet&#34;&#34;&#34;
-        pending_task = await self.add_task(self.context,
-                                           self.long_running_task(),
-                                           self.queue_callback)
-        print(pending_task)
+    async def process_da_negotiation_receipt_message(
+        self,
+        message: DataAgreementNegotiationReceiptMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process DA negotiation receipt message.
 
-    async def long_running_task(self):
-        &#34;&#34;&#34;Sample long running task&#34;&#34;&#34;
-        print(&#34;Long running task commenced...&#34;)
-        await asyncio.sleep(10)
-        return &#34;msg: Hi from long running task!&#34;
+        Args:
+            message (DataAgreementNegotiationReceiptMessage): DA negotiation receipt message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
 
-    async def queue_callback(self, *args, **kwargs):
-        &#34;&#34;&#34;Sample queue callback function&#34;&#34;&#34;
-        print(&#34;Recieved call back...&#34;)
-        completed_task: CompletedTask = args[0]
-        result: str = completed_task.task.result()
+        instance_id = message.body.instance_id
+        blockchain_receipt = message.body.blockchain_receipt
+        blink = message.body.blink
+        mydata_did = message.body.mydata_did
 
-        print(result)
-        print(self.context)
+        # Fetch the DDA instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+        instance_record: DataAgreementInstanceRecord = \
+            await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context,
+                tag_filter
+            )
 
-        # Send a basic message to available active connection
-        tag_filter = {}
-        post_filter = {&#34;state&#34;: &#34;active&#34;}
-        records: typing.List[ConnectionRecord] = await ConnectionRecord.query(
-            self.context,
-            tag_filter,
-            post_filter
-        )
+        # Update instance record.
+        instance_record.blockchain_receipt = blockchain_receipt
+        instance_record.blink = blink
+        instance_record.mydata_did = mydata_did
 
-        responder: BaseResponder = await self.context.inject(BaseResponder, required=False)
-        basic_message = BasicMessage(content=&#34;Triggered by task queue callback...&#34;)
-        if responder:
-            for record in records:
-                await responder.send(basic_message, connection_id=record.connection_id)</code></pre>
+        await instance_record.save(self.context)</code></pre>
 </details>
 </section>
 <section>
@@ -2025,9 +2387,6 @@ class V2ADAManager:
             PaginationResult: Pagination results.
         &#34;&#34;&#34;
 
-        # Sample queue snippet
-        await self.sample_queue_snippet()
-
         # Query by version is only possible if the template id is provided
         if template_version:
             assert template_id, &#34;Template identifier is required to query by version&#34;
@@ -2708,6 +3067,28 @@ class V2ADAManager:
 
         await da_instance_record.save(self.context)
 
+        # Send receipt.
+        message = DataAgreementNegotiationReceiptMessage(
+            body=DataAgreementNegotiationReceiptBody(
+                instance_id=da_instance_record.instance_id,
+                blockchain_receipt=transaction_receipt,
+                blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+                mydata_did=mydata_did
+            )
+        )
+
+        # Find the connection record.
+        data_subject_did = da_instance_record.data_subject_did.replace(&#34;did:sov:&#34;, &#34;&#34;)
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=data_subject_did,
+        )
+
+        self.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
     async def anchor_da_instance_to_blockchain_async_task(
         self,
         instance_id: str
@@ -2807,6 +3188,38 @@ class V2ADAManager:
 
         return res
 
+    async def create_connection_qr_code(
+        self,
+        connection_id: str
+    ) -&gt; dict:
+        &#34;&#34;&#34;Create connection QR code.
+
+        Args:
+            connection_id (str): Connection identifier.
+
+        Returns:
+            dict: Dict with dynamic link.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context,
+            connection_id
+        )
+
+        # Connection invitation
+        connection_invitation: ConnectionInvitation = await connection_record.retrieve_invitation(
+            self.context
+        )
+
+        # Generate firebase dynamic link.
+        payload = connection_invitation.to_url()
+        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+
+        res = {&#34;dynamic_link&#34;: firebase_dynamic_link}
+
+        return res
+
     async def query_data_agreement_qr_codes(
         self,
         template_id: str,
@@ -2821,7 +3234,7 @@ class V2ADAManager:
         pagination_result = paginate_records(records, page=1, page_size=1000000)
         return pagination_result
 
-    async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+    async def send_reply_message(self, message: AgentMessage, connection_id: str = None) -&gt; None:
         &#34;&#34;&#34;Send reply message to remote agent.
 
         Args:
@@ -3122,6 +3535,300 @@ class V2ADAManager:
 
         return record
 
+    async def process_existing_connections_message(
+        self,
+        message: ExistingConnectionsMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process existing connections message.
+
+        Args:
+            message (ExistingConnectionsMessage): Existing connections message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Invitation key.
+        invitation_key = message_receipt.recipient_verkey
+
+        # Fetch current connection record using invitation key
+        connection_record = await ConnectionRecord.retrieve_by_invitation_key(
+            self.context,
+            invitation_key
+        )
+
+        # Fetch existing connections record for the current connection.
+        tag_filter = {
+            &#34;connection_id&#34;: connection_record.connection_id
+        }
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        if existing_connection_records:
+            # Existing connection record.
+            existing_connection_record: ExistingConnectionRecord = existing_connection_records[0]
+
+            # Delete the record.
+            await existing_connection_record.delete_record(self.context)
+
+        # Fetch associated connection record.
+        old_connection_record = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=None,
+            my_did=message.body.theirdid
+        )
+
+        # Create a new existing connection record.
+        existing_connection_record = ExistingConnectionRecord(
+            existing_connection_id=old_connection_record.connection_id,
+            my_did=old_connection_record.my_did,
+            connection_status=&#34;available&#34;,
+            connection_id=connection_record.connection_id
+        )
+
+        await existing_connection_record.save(self.context)
+
+        # updating the current connection invitation status to inactive
+        connection_record.state = ConnectionRecord.STATE_INACTIVE
+        await connection_record.save(context=self.context)
+
+    async def get_existing_connection_record_for_new_connection_id(
+        self,
+        connection_id: str
+    ) -&gt; ExistingConnectionRecord:
+        &#34;&#34;&#34;Get existing connection record for new connection id.
+
+        Args:
+            connection_id (str): Connection id.
+
+        Returns:
+            ExistingConnectionRecord: Existing connection record.
+        &#34;&#34;&#34;
+
+        # Tag filter.
+        tag_filter = {
+            &#34;connection_id&#34;: connection_id
+        }
+
+        # Fetch existing connection records.
+        existing_connection_records = await ExistingConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        res = None
+        if existing_connection_records:
+            res = existing_connection_records[0]
+
+        return res
+
+    async def send_message_with_connection_invitation_and_return_route_all(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -&gt; typing.Tuple[str, str, dict]:
+        &#34;&#34;&#34;Send message with connection invitation and return route all.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        &#34;&#34;&#34;
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Set transport return route all
+        message._decorators[&#34;transport&#34;] = TransportDecorator(
+            return_route=&#34;all&#34;
+        )
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    message_body = await response.read()
+
+                    # Unpack message
+                    unpacked = await wallet.unpack_message(message_body)
+                    (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                    # Convert message to dict.
+                    message_dict = json.loads(message_json)
+
+                    return (sender_verkey, recipient_verkey, message_dict)
+
+    async def send_message_with_connection_invitation(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -&gt; None:
+        &#34;&#34;&#34;Send message with connection invitation.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+        &#34;&#34;&#34;
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    self._logger.info(&#34;Posted existing connection message...&#34;)
+
+    async def send_existing_connections_message(
+        self,
+        theirdid: str,
+        connection_id: str
+    ):
+        &#34;&#34;&#34;Send existing connections notification message.
+
+        Args:
+            theirdid (str): Their DID of remote agent in old connection.
+            connection_id (str): Connection identifier.
+        &#34;&#34;&#34;
+
+        # Construct existing connection message.
+        message = ExistingConnectionsMessage(
+            body=ExistingConnectionsBody(
+                theirdid=theirdid
+            )
+        )
+
+        # Send the message to remote agent.
+        await self.send_message_with_connection_invitation(
+            message,
+            connection_id
+        )
+
+    async def query_connections_and_categorise_results(
+        self,
+        tag_filter: dict = None,
+        post_filter_positive: dict = None,
+        page: int = 1,
+        page_size: int = 10,
+        org_flag: bool = False,
+        marketplace_flag: bool = False,
+    ) -&gt; PaginationResult:
+
+        # Query the connection records.
+        records = await ConnectionRecord.query(
+            self.context,
+            tag_filter,
+            post_filter_positive
+        )
+
+        # Sort the connection records.
+        records = sorted(
+            records,
+            key=lambda k: k.created_at,
+            reverse=True
+        )
+
+        res = []
+        for record in records:
+            tag_filter = {&#34;connection_id&#34;: record.connection_id}
+
+            # Fetch controller details attached to the connection.
+            controller_details: typing.List[ConnectionControllerDetailsRecord] = \
+                await ConnectionControllerDetailsRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            # Fetch marketplace connection record.
+            marketplace_connections: typing.List[MarketplaceConnectionRecord] = \
+                await MarketplaceConnectionRecord.query(
+                self.context,
+                tag_filter
+            )
+
+            connection = record.serialize()
+
+            # Update controller details to the connection dict.
+            if controller_details:
+                connection.update({
+                    &#34;org_flag&#34;: True,
+                    &#34;controller_details&#34;: controller_details[0].controller_details
+                })
+            else:
+                connection.update({
+                    &#34;controller_details&#34;: {},
+                    &#34;org_flag&#34;: False
+                })
+
+            if marketplace_connections:
+                connection.update({
+                    &#34;marketplace_flag&#34;: True
+                })
+            else:
+                connection.update({&#34;marketplace_flag&#34;: False})
+
+            # Apply category filter on connections.
+            categorise_filter = {
+                &#34;org_flag&#34;: org_flag,
+                &#34;marketplace_flag&#34;: marketplace_flag
+            }
+
+            categorise_filter = drop_none_dict(categorise_filter)
+
+            if match_post_filter(connection, categorise_filter, True):
+                res.append(connection)
+
+        pagination_result = paginate(res, page if page else 1, page_size if page_size else 10)
+
+        return pagination_result
+
     async def add_task(self,
                        context: InjectionContext,
                        coro: typing.Coroutine,
@@ -3142,42 +3849,39 @@ class V2ADAManager:
         pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
         return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
 
-    async def sample_queue_snippet(self):
-        &#34;&#34;&#34;Sample queue snippet&#34;&#34;&#34;
-        pending_task = await self.add_task(self.context,
-                                           self.long_running_task(),
-                                           self.queue_callback)
-        print(pending_task)
+    async def process_da_negotiation_receipt_message(
+        self,
+        message: DataAgreementNegotiationReceiptMessage,
+        message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process DA negotiation receipt message.
 
-    async def long_running_task(self):
-        &#34;&#34;&#34;Sample long running task&#34;&#34;&#34;
-        print(&#34;Long running task commenced...&#34;)
-        await asyncio.sleep(10)
-        return &#34;msg: Hi from long running task!&#34;
+        Args:
+            message (DataAgreementNegotiationReceiptMessage): DA negotiation receipt message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
 
-    async def queue_callback(self, *args, **kwargs):
-        &#34;&#34;&#34;Sample queue callback function&#34;&#34;&#34;
-        print(&#34;Recieved call back...&#34;)
-        completed_task: CompletedTask = args[0]
-        result: str = completed_task.task.result()
+        instance_id = message.body.instance_id
+        blockchain_receipt = message.body.blockchain_receipt
+        blink = message.body.blink
+        mydata_did = message.body.mydata_did
 
-        print(result)
-        print(self.context)
+        # Fetch the DDA instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: instance_id
+        }
+        instance_record: DataAgreementInstanceRecord = \
+            await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context,
+                tag_filter
+            )
 
-        # Send a basic message to available active connection
-        tag_filter = {}
-        post_filter = {&#34;state&#34;: &#34;active&#34;}
-        records: typing.List[ConnectionRecord] = await ConnectionRecord.query(
-            self.context,
-            tag_filter,
-            post_filter
-        )
+        # Update instance record.
+        instance_record.blockchain_receipt = blockchain_receipt
+        instance_record.blink = blink
+        instance_record.mydata_did = mydata_did
 
-        responder: BaseResponder = await self.context.inject(BaseResponder, required=False)
-        basic_message = BasicMessage(content=&#34;Triggered by task queue callback...&#34;)
-        if responder:
-            for record in records:
-                await responder.send(basic_message, connection_id=record.connection_id)</code></pre>
+        await instance_record.save(self.context)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -3373,7 +4077,29 @@ def context(self) -&gt; InjectionContext:
     da_instance_record.mydata_did = mydata_did
     da_instance_record.blockchain_receipt = transaction_receipt
 
-    await da_instance_record.save(self.context)</code></pre>
+    await da_instance_record.save(self.context)
+
+    # Send receipt.
+    message = DataAgreementNegotiationReceiptMessage(
+        body=DataAgreementNegotiationReceiptBody(
+            instance_id=da_instance_record.instance_id,
+            blockchain_receipt=transaction_receipt,
+            blink=f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;,
+            mydata_did=mydata_did
+        )
+    )
+
+    # Find the connection record.
+    data_subject_did = da_instance_record.data_subject_did.replace(&#34;did:sov:&#34;, &#34;&#34;)
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_did(
+        self.context,
+        their_did=data_subject_did,
+    )
+
+    self.send_reply_message(
+        message,
+        connection_record.connection_id
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.build_data_agreement_accept_for_data_ex_record"><code class="name flex">
@@ -3862,6 +4588,58 @@ Data exchange record.</p>
     return template_record</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.create_connection_qr_code"><code class="name flex">
+<span>async def <span class="ident">create_connection_qr_code</span></span>(<span>self, connection_id: str) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create connection QR code.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>Dict with dynamic link.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_connection_qr_code(
+    self,
+    connection_id: str
+) -&gt; dict:
+    &#34;&#34;&#34;Create connection QR code.
+
+    Args:
+        connection_id (str): Connection identifier.
+
+    Returns:
+        dict: Dict with dynamic link.
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+        self.context,
+        connection_id
+    )
+
+    # Connection invitation
+    connection_invitation: ConnectionInvitation = await connection_record.retrieve_invitation(
+        self.context
+    )
+
+    # Generate firebase dynamic link.
+    payload = connection_invitation.to_url()
+    firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+
+    res = {&#34;dynamic_link&#34;: firebase_dynamic_link}
+
+    return res</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code"><code class="name flex">
 <span>async def <span class="ident">create_data_agreement_qr_code</span></span>(<span>self, template_id: str, multi_use_flag: bool) ‑> dict</span>
 </code></dt>
@@ -4209,20 +4987,105 @@ proceed to delete the template record.</p>
         )</code></pre>
 </details>
 </dd>
-<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task"><code class="name flex">
-<span>async def <span class="ident">long_running_task</span></span>(<span>self)</span>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.get_existing_connection_record_for_new_connection_id"><code class="name flex">
+<span>async def <span class="ident">get_existing_connection_record_for_new_connection_id</span></span>(<span>self, connection_id: str) ‑> <a title="dexa_sdk.connections.records.existing_connections_record.ExistingConnectionRecord" href="../connections/records/existing_connections_record.html#dexa_sdk.connections.records.existing_connections_record.ExistingConnectionRecord">ExistingConnectionRecord</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sample long running task</p></div>
+<div class="desc"><p>Get existing connection record for new connection id.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection id.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ExistingConnectionRecord</code></dt>
+<dd>Existing connection record.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def long_running_task(self):
-    &#34;&#34;&#34;Sample long running task&#34;&#34;&#34;
-    print(&#34;Long running task commenced...&#34;)
-    await asyncio.sleep(10)
-    return &#34;msg: Hi from long running task!&#34;</code></pre>
+<pre><code class="python">async def get_existing_connection_record_for_new_connection_id(
+    self,
+    connection_id: str
+) -&gt; ExistingConnectionRecord:
+    &#34;&#34;&#34;Get existing connection record for new connection id.
+
+    Args:
+        connection_id (str): Connection id.
+
+    Returns:
+        ExistingConnectionRecord: Existing connection record.
+    &#34;&#34;&#34;
+
+    # Tag filter.
+    tag_filter = {
+        &#34;connection_id&#34;: connection_id
+    }
+
+    # Fetch existing connection records.
+    existing_connection_records = await ExistingConnectionRecord.query(
+        self.context,
+        tag_filter
+    )
+
+    res = None
+    if existing_connection_records:
+        res = existing_connection_records[0]
+
+    return res</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_da_negotiation_receipt_message"><code class="name flex">
+<span>async def <span class="ident">process_da_negotiation_receipt_message</span></span>(<span>self, message: mydata_did.v1_0.messages.da_negotiation_receipt.DataAgreementNegotiationReceiptMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process DA negotiation receipt message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DataAgreementNegotiationReceiptMessage</code></dt>
+<dd>DA negotiation receipt message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_da_negotiation_receipt_message(
+    self,
+    message: DataAgreementNegotiationReceiptMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process DA negotiation receipt message.
+
+    Args:
+        message (DataAgreementNegotiationReceiptMessage): DA negotiation receipt message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    instance_id = message.body.instance_id
+    blockchain_receipt = message.body.blockchain_receipt
+    blink = message.body.blink
+    mydata_did = message.body.mydata_did
+
+    # Fetch the DDA instance record.
+    tag_filter = {
+        &#34;instance_id&#34;: instance_id
+    }
+    instance_record: DataAgreementInstanceRecord = \
+        await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+            self.context,
+            tag_filter
+        )
+
+    # Update instance record.
+    instance_record.blockchain_receipt = blockchain_receipt
+    instance_record.blink = blink
+    instance_record.mydata_did = mydata_did
+
+    await instance_record.save(self.context)</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message"><code class="name flex">
@@ -4583,6 +5446,81 @@ proceed to delete the template record.</p>
         )</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_existing_connections_message"><code class="name flex">
+<span>async def <span class="ident">process_existing_connections_message</span></span>(<span>self, message: mydata_did.v1_0.messages.existing_connections.ExistingConnectionsMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process existing connections message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>ExistingConnectionsMessage</code></dt>
+<dd>Existing connections message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_existing_connections_message(
+    self,
+    message: ExistingConnectionsMessage,
+    message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process existing connections message.
+
+    Args:
+        message (ExistingConnectionsMessage): Existing connections message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    # Invitation key.
+    invitation_key = message_receipt.recipient_verkey
+
+    # Fetch current connection record using invitation key
+    connection_record = await ConnectionRecord.retrieve_by_invitation_key(
+        self.context,
+        invitation_key
+    )
+
+    # Fetch existing connections record for the current connection.
+    tag_filter = {
+        &#34;connection_id&#34;: connection_record.connection_id
+    }
+    existing_connection_records = await ExistingConnectionRecord.query(
+        self.context,
+        tag_filter
+    )
+
+    if existing_connection_records:
+        # Existing connection record.
+        existing_connection_record: ExistingConnectionRecord = existing_connection_records[0]
+
+        # Delete the record.
+        await existing_connection_record.delete_record(self.context)
+
+    # Fetch associated connection record.
+    old_connection_record = await ConnectionRecord.retrieve_by_did(
+        self.context,
+        their_did=None,
+        my_did=message.body.theirdid
+    )
+
+    # Create a new existing connection record.
+    existing_connection_record = ExistingConnectionRecord(
+        existing_connection_id=old_connection_record.connection_id,
+        my_did=old_connection_record.my_did,
+        connection_status=&#34;available&#34;,
+        connection_id=connection_record.connection_id
+    )
+
+    await existing_connection_record.save(self.context)
+
+    # updating the current connection invitation status to inactive
+    connection_record.state = ConnectionRecord.STATE_INACTIVE
+    await connection_record.save(context=self.context)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet"><code class="name flex">
 <span>async def <span class="ident">publish_da_template_in_wallet</span></span>(<span>self, template_id: str) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord" href="../agreements/da/v1_0/records/da_template_record.html#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord">DataAgreementTemplateRecord</a></span>
 </code></dt>
@@ -4641,6 +5579,94 @@ proceed to delete the template record.</p>
     )
 
     return record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.query_connections_and_categorise_results"><code class="name flex">
+<span>async def <span class="ident">query_connections_and_categorise_results</span></span>(<span>self, tag_filter: dict = None, post_filter_positive: dict = None, page: int = 1, page_size: int = 10, org_flag: bool = False, marketplace_flag: bool = False) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_connections_and_categorise_results(
+    self,
+    tag_filter: dict = None,
+    post_filter_positive: dict = None,
+    page: int = 1,
+    page_size: int = 10,
+    org_flag: bool = False,
+    marketplace_flag: bool = False,
+) -&gt; PaginationResult:
+
+    # Query the connection records.
+    records = await ConnectionRecord.query(
+        self.context,
+        tag_filter,
+        post_filter_positive
+    )
+
+    # Sort the connection records.
+    records = sorted(
+        records,
+        key=lambda k: k.created_at,
+        reverse=True
+    )
+
+    res = []
+    for record in records:
+        tag_filter = {&#34;connection_id&#34;: record.connection_id}
+
+        # Fetch controller details attached to the connection.
+        controller_details: typing.List[ConnectionControllerDetailsRecord] = \
+            await ConnectionControllerDetailsRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        # Fetch marketplace connection record.
+        marketplace_connections: typing.List[MarketplaceConnectionRecord] = \
+            await MarketplaceConnectionRecord.query(
+            self.context,
+            tag_filter
+        )
+
+        connection = record.serialize()
+
+        # Update controller details to the connection dict.
+        if controller_details:
+            connection.update({
+                &#34;org_flag&#34;: True,
+                &#34;controller_details&#34;: controller_details[0].controller_details
+            })
+        else:
+            connection.update({
+                &#34;controller_details&#34;: {},
+                &#34;org_flag&#34;: False
+            })
+
+        if marketplace_connections:
+            connection.update({
+                &#34;marketplace_flag&#34;: True
+            })
+        else:
+            connection.update({&#34;marketplace_flag&#34;: False})
+
+        # Apply category filter on connections.
+        categorise_filter = {
+            &#34;org_flag&#34;: org_flag,
+            &#34;marketplace_flag&#34;: marketplace_flag
+        }
+
+        categorise_filter = drop_none_dict(categorise_filter)
+
+        if match_post_filter(connection, categorise_filter, True):
+            res.append(connection)
+
+    pagination_result = paginate(res, page if page else 1, page_size if page_size else 10)
+
+    return pagination_result</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet"><code class="name flex">
@@ -4706,9 +5732,6 @@ Defaults to false.</dd>
     Returns:
         PaginationResult: Pagination results.
     &#34;&#34;&#34;
-
-    # Sample queue snippet
-    await self.sample_queue_snippet()
 
     # Query by version is only possible if the template id is provided
     if template_version:
@@ -4929,57 +5952,6 @@ Defaults to false.</dd>
     return paginate_result</code></pre>
 </details>
 </dd>
-<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.queue_callback"><code class="name flex">
-<span>async def <span class="ident">queue_callback</span></span>(<span>self, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Sample queue callback function</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def queue_callback(self, *args, **kwargs):
-    &#34;&#34;&#34;Sample queue callback function&#34;&#34;&#34;
-    print(&#34;Recieved call back...&#34;)
-    completed_task: CompletedTask = args[0]
-    result: str = completed_task.task.result()
-
-    print(result)
-    print(self.context)
-
-    # Send a basic message to available active connection
-    tag_filter = {}
-    post_filter = {&#34;state&#34;: &#34;active&#34;}
-    records: typing.List[ConnectionRecord] = await ConnectionRecord.query(
-        self.context,
-        tag_filter,
-        post_filter
-    )
-
-    responder: BaseResponder = await self.context.inject(BaseResponder, required=False)
-    basic_message = BasicMessage(content=&#34;Triggered by task queue callback...&#34;)
-    if responder:
-        for record in records:
-            await responder.send(basic_message, connection_id=record.connection_id)</code></pre>
-</details>
-</dd>
-<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.sample_queue_snippet"><code class="name flex">
-<span>async def <span class="ident">sample_queue_snippet</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Sample queue snippet</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def sample_queue_snippet(self):
-    &#34;&#34;&#34;Sample queue snippet&#34;&#34;&#34;
-    pending_task = await self.add_task(self.context,
-                                       self.long_running_task(),
-                                       self.queue_callback)
-    print(pending_task)</code></pre>
-</details>
-</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message"><code class="name flex">
 <span>async def <span class="ident">send_data_controller_details_message</span></span>(<span>self, connection_id: str)</span>
 </code></dt>
@@ -5006,6 +5978,190 @@ Defaults to false.</dd>
 
     message = DataControllerDetailsMessage()
     await self.send_reply_message(message, connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_existing_connections_message"><code class="name flex">
+<span>async def <span class="ident">send_existing_connections_message</span></span>(<span>self, theirdid: str, connection_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send existing connections notification message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>theirdid</code></strong> :&ensp;<code>str</code></dt>
+<dd>Their DID of remote agent in old connection.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection identifier.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_existing_connections_message(
+    self,
+    theirdid: str,
+    connection_id: str
+):
+    &#34;&#34;&#34;Send existing connections notification message.
+
+    Args:
+        theirdid (str): Their DID of remote agent in old connection.
+        connection_id (str): Connection identifier.
+    &#34;&#34;&#34;
+
+    # Construct existing connection message.
+    message = ExistingConnectionsMessage(
+        body=ExistingConnectionsBody(
+            theirdid=theirdid
+        )
+    )
+
+    # Send the message to remote agent.
+    await self.send_message_with_connection_invitation(
+        message,
+        connection_id
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation"><code class="name flex">
+<span>async def <span class="ident">send_message_with_connection_invitation</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send message with connection invitation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>AgentMessage</code></dt>
+<dd>Agent message.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection id.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_message_with_connection_invitation(
+    self,
+    message: AgentMessage,
+    connection_id: str,
+) -&gt; None:
+    &#34;&#34;&#34;Send message with connection invitation.
+
+    Args:
+        message (AgentMessage): Agent message.
+        connection_id (str): Connection id.
+    &#34;&#34;&#34;
+    # Fetch connection record.
+    connection_record: ConnectionRecord = \
+        await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+    # Get invitation key.
+    invitation_key = connection_record.invitation_key
+    # Service enpoint
+    invitation = await connection_record.retrieve_invitation(self.context)
+    service_endpoint = invitation.endpoint
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+    # Create a local did
+    did: DIDInfo = await wallet.create_local_did()
+
+    sender_key = did.verkey
+    packed_message = await wallet.pack_message(
+        message.to_json(),
+        [invitation_key],
+        sender_key
+    )
+
+    headers = {
+        &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+    }
+
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.post(service_endpoint, data=packed_message) as response:
+            if response.status == 200:
+                self._logger.info(&#34;Posted existing connection message...&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation_and_return_route_all"><code class="name flex">
+<span>async def <span class="ident">send_message_with_connection_invitation_and_return_route_all</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_id: str) ‑> Tuple[str, str, dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send message with connection invitation and return route all.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>AgentMessage</code></dt>
+<dd>Agent message.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection id.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Tuple[str, str, dict]</code></dt>
+<dd>sender_verkey, recipient_verkey, message_dict</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_message_with_connection_invitation_and_return_route_all(
+    self,
+    message: AgentMessage,
+    connection_id: str,
+) -&gt; typing.Tuple[str, str, dict]:
+    &#34;&#34;&#34;Send message with connection invitation and return route all.
+
+    Args:
+        message (AgentMessage): Agent message.
+        connection_id (str): Connection id.
+
+    Returns:
+        typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+    &#34;&#34;&#34;
+    # Fetch connection record.
+    connection_record: ConnectionRecord = \
+        await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+    # Get invitation key.
+    invitation_key = connection_record.invitation_key
+    # Service enpoint
+    invitation = await connection_record.retrieve_invitation(self.context)
+    service_endpoint = invitation.endpoint
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+    # Set transport return route all
+    message._decorators[&#34;transport&#34;] = TransportDecorator(
+        return_route=&#34;all&#34;
+    )
+
+    # Create a local did
+    did: DIDInfo = await wallet.create_local_did()
+
+    sender_key = did.verkey
+    packed_message = await wallet.pack_message(
+        message.to_json(),
+        [invitation_key],
+        sender_key
+    )
+
+    headers = {
+        &#34;Content-Type&#34;: &#34;application/ssi-agent-wire&#34;
+    }
+
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.post(service_endpoint, data=packed_message) as response:
+            if response.status == 200:
+                message_body = await response.read()
+
+                # Unpack message
+                unpacked = await wallet.unpack_message(message_body)
+                (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                # Convert message to dict.
+                message_dict = json.loads(message_json)
+
+                return (sender_verkey, recipient_verkey, message_dict)</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message"><code class="name flex">
@@ -5079,7 +6235,7 @@ Defaults to false.</dd>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message"><code class="name flex">
-<span>async def <span class="ident">send_reply_message</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_id: str) ‑> None</span>
+<span>async def <span class="ident">send_reply_message</span></span>(<span>self, message: aries_cloudagent.messaging.agent_message.AgentMessage, connection_id: str = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send reply message to remote agent.</p>
@@ -5094,7 +6250,7 @@ Defaults to false.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_reply_message(self, message: AgentMessage, connection_id: str) -&gt; None:
+<pre><code class="python">async def send_reply_message(self, message: AgentMessage, connection_id: str = None) -&gt; None:
     &#34;&#34;&#34;Send reply message to remote agent.
 
     Args:
@@ -5451,25 +6607,30 @@ Defaults to false.</dd>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.context" href="#dexa_sdk.managers.ada_manager.V2ADAManager.context">context</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_da_template_in_wallet">create_and_store_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_ledger_payloads_for_da_template" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_and_store_ledger_payloads_for_da_template">create_and_store_ledger_payloads_for_da_template</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_connection_qr_code" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_connection_qr_code">create_connection_qr_code</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_data_agreement_qr_code">create_data_agreement_qr_code</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.create_invitation" href="#dexa_sdk.managers.ada_manager.V2ADAManager.create_invitation">create_invitation</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_instance_by_data_ex_id" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_instance_by_data_ex_id">delete_da_instance_by_data_ex_id</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_da_template_in_wallet">delete_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_data_agreement_qr_code" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_data_agreement_qr_code">delete_data_agreement_qr_code</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.delete_personal_data" href="#dexa_sdk.managers.ada_manager.V2ADAManager.delete_personal_data">delete_personal_data</a></code></li>
-<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task" href="#dexa_sdk.managers.ada_manager.V2ADAManager.long_running_task">long_running_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.get_existing_connection_record_for_new_connection_id" href="#dexa_sdk.managers.ada_manager.V2ADAManager.get_existing_connection_record_for_new_connection_id">get_existing_connection_record_for_new_connection_id</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_da_negotiation_receipt_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_da_negotiation_receipt_message">process_da_negotiation_receipt_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_data_agreement_qr_code_initiate_message">process_data_agreement_qr_code_initiate_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_data_controller_details_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_data_controller_details_message">process_data_controller_details_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_accept_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_accept_message">process_decorator_with_da_accept_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_offer_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_decorator_with_da_offer_message">process_decorator_with_da_offer_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_existing_connections_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_existing_connections_message">process_existing_connections_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet">publish_da_template_in_wallet</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_connections_and_categorise_results" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_connections_and_categorise_results">query_connections_and_categorise_results</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet">query_da_templates_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_instances" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_instances">query_data_agreement_instances</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_qr_codes" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_data_agreement_qr_codes">query_data_agreement_qr_codes</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_pd_of_da_template_from_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_pd_of_da_template_from_wallet">query_pd_of_da_template_from_wallet</a></code></li>
-<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.queue_callback" href="#dexa_sdk.managers.ada_manager.V2ADAManager.queue_callback">queue_callback</a></code></li>
-<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.sample_queue_snippet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.sample_queue_snippet">sample_queue_snippet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_data_controller_details_message">send_data_controller_details_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_existing_connections_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_existing_connections_message">send_existing_connections_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation">send_message_with_connection_invitation</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation_and_return_route_all" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_message_with_connection_invitation_and_return_route_all">send_message_with_connection_invitation_and_return_route_all</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message">send_problem_report_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message">send_qr_code_initiate_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message">send_reply_message</a></code></li>

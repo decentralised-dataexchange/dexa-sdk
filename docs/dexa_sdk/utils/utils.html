@@ -32,6 +32,7 @@ import typing
 import semver
 import math
 import aiohttp
+from urllib.parse import urlparse, parse_qs
 from collections import namedtuple
 from aries_cloudagent.messaging.models.base_record import BaseRecord
 from aries_cloudagent.config.injection_context import InjectionContext
@@ -112,7 +113,7 @@ def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
     assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
 
     return sorted(records,
-                  key=lambda k: k[&#39;created_at&#39;],
+                  key=lambda k: k[&#39;updated_at&#39;],
                   reverse=True if sort_order == &#34;desc&#34; else False)
 
 
@@ -356,7 +357,27 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -&gt; d
                 jresp = await resp.json()
                 return jresp[&#34;Organization&#34;]
 
-    return jresp</code></pre>
+    return jresp
+
+
+async def parse_query_params(url: str, query_param: str) -&gt; str:
+    &#34;&#34;&#34;Parse query params in a URL
+
+    Args:
+        url (str): URL
+        query_param (str): Query param key.
+
+    Returns:
+        str: _description_
+    &#34;&#34;&#34;
+
+    # Parse the URL
+    parsed_url = urlparse(url)
+
+    # Parse query string params.
+    parsed_qs = parse_qs(parsed_url.query)
+
+    return parsed_qs.get(query_param)[0]</code></pre>
 </details>
 </section>
 <section>
@@ -776,6 +797,47 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -&gt; d
     return res</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.utils.utils.parse_query_params"><code class="name flex">
+<span>async def <span class="ident">parse_query_params</span></span>(<span>url: str, query_param: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse query params in a URL</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>URL</dd>
+<dt><strong><code>query_param</code></strong> :&ensp;<code>str</code></dt>
+<dd>Query param key.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd><em>description</em></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def parse_query_params(url: str, query_param: str) -&gt; str:
+    &#34;&#34;&#34;Parse query params in a URL
+
+    Args:
+        url (str): URL
+        query_param (str): Query param key.
+
+    Returns:
+        str: _description_
+    &#34;&#34;&#34;
+
+    # Parse the URL
+    parsed_url = urlparse(url)
+
+    # Parse query string params.
+    parsed_qs = parse_qs(parsed_url.query)
+
+    return parsed_qs.get(query_param)[0]</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.utils.utils.replace_jws"><code class="name flex">
 <span>def <span class="ident">replace_jws</span></span>(<span>doc: dict) ‑> dict</span>
 </code></dt>
@@ -919,7 +981,7 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -&gt; d
     assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
 
     return sorted(records,
-                  key=lambda k: k[&#39;created_at&#39;],
+                  key=lambda k: k[&#39;updated_at&#39;],
                   reverse=True if sort_order == &#34;desc&#34; else False)</code></pre>
 </details>
 </dd>
@@ -1006,6 +1068,7 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -&gt; d
 <li><code><a title="dexa_sdk.utils.utils.jcs_rfc8785" href="#dexa_sdk.utils.utils.jcs_rfc8785">jcs_rfc8785</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.paginate" href="#dexa_sdk.utils.utils.paginate">paginate</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.paginate_records" href="#dexa_sdk.utils.utils.paginate_records">paginate_records</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.parse_query_params" href="#dexa_sdk.utils.utils.parse_query_params">parse_query_params</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.replace_jws" href="#dexa_sdk.utils.utils.replace_jws">replace_jws</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.replace_proof_chain" href="#dexa_sdk.utils.utils.replace_proof_chain">replace_proof_chain</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.replace_proof_value" href="#dexa_sdk.utils.utils.replace_proof_value">replace_proof_value</a></code></li>

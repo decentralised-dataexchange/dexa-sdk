@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dexa_sdk.agreements.dda.v1_0.records.dda_instance_record API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dexa_sdk.agreements.dda.v1_0.records.dda_instance_record</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import uuid
+import typing
+from loguru import logger
+from marshmallow import fields, validate, EXCLUDE
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from aries_cloudagent.messaging.valid import UUIDFour
+from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.wallet.base import BaseWallet
+from aries_cloudagent.wallet.indy import IndyWallet
+from mydata_did.v1_0.utils.util import (
+    bool_to_str,
+    str_to_bool,
+    current_datetime_in_iso8601
+)
+from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
+from dexa_protocol.v1_0.messages.negotiation.accept_dda import AcceptDDAMessage
+from dexa_protocol.v1_0.models.offer_dda_model import (
+    CustomerIdentificationModel
+)
+from .dda_template_record import DataDisclosureAgreementTemplateRecord
+from .....data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord
+)
+from ..models.dda_instance_models import (
+    DataUsingServiceModel,
+    DataDisclosureAgreementInstanceModel
+)
+from .....jsonld.core import sign_agreement, verify_agreement
+
+
+class DataDisclosureAgreementInstanceRecord(BaseRecord):
+    &#34;&#34;&#34;Data disclosure agreement instance record to be persisted in the storage&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataDisclosureAgreementInstanceRecordSchema&#34;
+
+    # Record type
+    RECORD_TYPE = &#34;data_disclosure_agreement_instance&#34;
+
+    # Record identifier
+    RECORD_ID_NAME = &#34;id&#34;
+
+    # Webhook topic name for this record type
+    WEBHOOK_TOPIC = None
+
+    # Record tags
+    TAG_NAMES = {
+        &#34;~instance_id&#34;,
+        &#34;~template_id&#34;,
+        &#34;~template_version&#34;,
+        &#34;~industry_sector&#34;,
+        &#34;~delete_flag&#34;,
+        &#34;~mydata_did&#34;,
+        &#34;~blink&#34;,
+        &#34;~connection_id&#34;
+    }
+
+    # States of the data disclosure agreement instance.
+    STATE_DEFINITION = &#34;DEFINITION&#34;
+    STATE_PREPARATION = &#34;PREPARATION&#34;
+    STATE_CAPTURE = &#34;CAPTURE&#34;
+    STATE_PROOF = &#34;PROOF&#34;
+
+    def __init__(
+        self,
+        *,
+        id: str = None,
+        instance_id: str = None,
+        template_id: str = None,
+        template_version: str = None,
+        state: str = None,
+        data_disclosure_agreement: dict = None,
+        industry_sector: str = None,
+        delete_flag: str = &#34;false&#34;,
+        connection_id: str = None,
+        mydata_did: str = None,
+        blink: str = None,
+        blockchain_receipt: dict = None,
+        customer_identification: dict = None,
+        **kwargs
+    ):
+        &#34;&#34;&#34;Initialise data disclosure agreement instance record.
+
+        Args:
+            id (str, optional): Record ID. Defaults to None.
+            instance_id (str, optional): Instance ID. Defaults to None.
+            template_id (str, optional): Template ID. Defaults to None.
+            template_version (str, optional): Template version. Defaults to None.
+            state (str, optional): State of the record. Defaults to None.
+            data_disclosure_agreement (dict, optional): DDA. Defaults to None.
+            industry_sector (str, optional): Industry sector. Defaults to None.
+            delete_flag (str, optional): Delete flag. Defaults to &#34;false&#34;.
+            connection_id (str, optional): Connection ID. Defaults to None.
+            mydata_did (str, optional): MyData DID. Defaults to None.
+            blink (str, optional): Blockchain Link. Defaults to None.
+            blockchain_receipt (dict, optional): Blockchain Receipt. Defaults to None.
+            customer_identification (dict, optional): Customer identification. Defauls to None.
+        &#34;&#34;&#34;
+
+        # Pass identifier and state to parent class
+        super().__init__(id, state, **kwargs)
+
+        if not instance_id:
+            raise TypeError(
+                &#34;Instance identifier is not specified.&#34;
+            )
+
+        if not template_id:
+            raise TypeError(
+                &#34;Template identifier is not specified.&#34;
+            )
+
+        if not template_version:
+            raise TypeError(
+                &#34;Template version is not specified.&#34;
+            )
+
+        # Set the record attributes
+        self.instance_id = instance_id
+        self.template_id = template_id
+        self.template_version = template_version
+        self.state = state
+        self.data_disclosure_agreement = data_disclosure_agreement
+        self.industry_sector = industry_sector
+        self.delete_flag = delete_flag
+        self.connection_id = connection_id
+        self.mydata_did = mydata_did
+        self.blink = blink
+        self.blockchain_receipt = blockchain_receipt
+        self.customer_identification = customer_identification
+
+    @property
+    def record_value(self) -&gt; dict:
+        &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+        return {
+            prop: getattr(self, prop)
+            for prop in (
+                &#34;instance_id&#34;,
+                &#34;template_id&#34;,
+                &#34;template_version&#34;,
+                &#34;state&#34;,
+                &#34;data_disclosure_agreement&#34;,
+                &#34;industry_sector&#34;,
+                &#34;delete_flag&#34;,
+                &#34;connection_id&#34;,
+                &#34;mydata_did&#34;,
+                &#34;blink&#34;,
+                &#34;blockchain_receipt&#34;,
+                &#34;customer_identification&#34;
+            )
+        }
+
+    @property
+    def _delete_flag(self) -&gt; bool:
+        &#34;&#34;&#34;Accessor for delete_flag.&#34;&#34;&#34;
+        return str_to_bool(self.delete_flag)
+
+    @_delete_flag.setter
+    def _delete_flag(self, value: bool) -&gt; None:
+        &#34;&#34;&#34;Setter for delete_flag.&#34;&#34;&#34;
+        self.delete_flag = bool_to_str(value)
+
+    @property
+    def is_deleted(self) -&gt; bool:
+        &#34;&#34;&#34;Check if data agreemnent is deleted.&#34;&#34;&#34;
+        return self._delete_flag
+
+    @property
+    def customer_identification_model(
+        self
+    ) -&gt; CustomerIdentificationModel:
+        return CustomerIdentificationModel.deserialize(
+            self.customer_identification
+        )
+
+    @staticmethod
+    async def build_instance_from_template(
+        context: InjectionContext,
+        template_id: str,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[
+        &#34;DataDisclosureAgreementInstanceRecord&#34;,
+        DataDisclosureAgreementInstanceModel
+    ]:
+        &#34;&#34;&#34;Build instance from DDA template.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            template_id (str): Template ID
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+
+        # Fetch latest template record.
+        template_record = \
+            await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
+                context,
+                template_id
+            )
+
+        assert template_record, &#34;DDA template not found.&#34;
+
+        # Sign the template.
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
+
+        # Signature options
+        signature_options = {
+            &#34;id&#34;: f&#34;did:sov:{controller_did.did}#1&#34;,
+            &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+            &#34;created&#34;: current_datetime_in_iso8601(),
+            &#34;verificationMethod&#34;: f&#34;{controller_did.verkey}&#34;,
+            &#34;proofPurpose&#34;: &#34;authentication&#34;,
+        }
+
+        # DDA
+        dda_template_dict = template_record.data_disclosure_agreement
+        dda_template_model = template_record.dda_model
+
+        # Add versions and ids
+        instance_id = str(uuid.uuid4())
+        instance_version = &#34;1.0.0&#34;
+        template_id = dda_template_model.id
+        template_version = dda_template_model.version
+        dda_template_dict.update({&#34;@id&#34;: instance_id})
+        dda_template_dict.update({&#34;version&#34;: instance_version})
+        dda_template_dict.update({&#34;templateId&#34;: template_id})
+        dda_template_dict.update({&#34;templateVersion&#34;: template_version})
+
+        # Add DUS info.
+        # Fetch controller details for the DUS connection
+        tag_filter = {
+            &#34;connection_id&#34;: connection_record.connection_id
+        }
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+            await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+                context,
+                tag_filter
+            )
+        data_controller_model = dus_connection_controller_details_record.controller_details_model
+        dus_model = DataUsingServiceModel(
+            did=data_controller_model.organisation_did,
+            name=data_controller_model.organisation_name,
+            url=data_controller_model.policy_url,
+            legal_id=data_controller_model.organisation_did,
+            industry_sector=data_controller_model.organisation_type,
+            usage_purposes=dda_template_model.purpose,
+            jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
+            withdrawal=data_controller_model.policy_url,
+            privacy_rights=data_controller_model.policy_url,
+            signature_contact=data_controller_model.organisation_did
+        )
+        dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
+
+        # Sign the DDA
+        signed_dda = await sign_agreement(
+            agreement=dda_template_dict,
+            verkey=controller_did.verkey,
+            wallet=wallet,
+            signature_options=signature_options
+        )
+
+        dda_instance_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                signed_dda
+            )
+
+        # Create and save DDA instance record.
+        dda_instance_record = DataDisclosureAgreementInstanceRecord(
+            instance_id=instance_id,
+            template_id=template_id,
+            template_version=template_version,
+            state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
+            data_disclosure_agreement=dda_instance_model.serialize(),
+            industry_sector=template_record.industry_sector,
+            connection_id=connection_record.connection_id
+        )
+
+        await dda_instance_record.save(context)
+
+        return (dda_instance_record, dda_instance_model)
+
+    @classmethod
+    async def build_instance_from_dda_offer(
+        cls,
+        context: InjectionContext,
+        dda_offer_message: OfferDDAMessage,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[
+        &#34;DataDisclosureAgreementInstanceRecord&#34;,
+        DataDisclosureAgreementInstanceModel
+    ]:
+        &#34;&#34;&#34;Build instance from DDA offer.
+
+        Args:
+            dda_offer_message (OfferDDAMessage): DDA offer message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+
+        # Fetch wallet from context.
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        # DUS public did
+        dus_did = await wallet.get_public_did()
+
+        customer_identification_details = dda_offer_message.body.customer_identification
+        dda_offer = dda_offer_message.body.dda
+        dda_offer_dict = dda_offer.serialize()
+
+        # Verify the dda offer.
+        valid = await verify_agreement(
+            agreement=dda_offer_dict.copy(),
+            wallet=wallet
+        )
+
+        assert valid, &#34;DDA instance verification failed.&#34;
+
+        # Signature options
+        signature_options = {
+            &#34;id&#34;: f&#34;did:sov:{dus_did.did}#1&#34;,
+            &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+            &#34;created&#34;: current_datetime_in_iso8601(),
+            &#34;verificationMethod&#34;: f&#34;{dus_did.verkey}&#34;,
+            &#34;proofPurpose&#34;: &#34;authentication&#34;,
+        }
+
+        # Sign the DDA
+        signed_dda = await sign_agreement(
+            agreement=dda_offer_dict,
+            verkey=dus_did.verkey,
+            wallet=wallet,
+            signature_options=signature_options
+        )
+
+        dda_instance_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                signed_dda
+            )
+
+        # Create and save DDA instance record.
+        dda_instance_record = DataDisclosureAgreementInstanceRecord(
+            instance_id=dda_instance_model.id,
+            template_id=dda_instance_model.template_id,
+            template_version=dda_instance_model.template_version,
+            state=DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+            data_disclosure_agreement=dda_instance_model.serialize(),
+            industry_sector=dda_instance_model.data_using_service.industry_sector,
+            connection_id=connection_record.connection_id,
+            customer_identification=customer_identification_details.serialize()
+        )
+
+        await dda_instance_record.save(context)
+
+        return (dda_instance_record, dda_instance_model)
+
+    @classmethod
+    async def update_instance_from_dda_accept(
+        cls,
+        context: InjectionContext,
+        dda_accept_message: AcceptDDAMessage
+    ) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
+        &#34;&#34;&#34;Update instance from DDA accept.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_accept_message (AcceptDDAMessage): DDA accept message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+        # Fetch wallet from context.
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        dda_instance_model = dda_accept_message.body.dda
+        dda_accept_dict = dda_instance_model.serialize()
+
+        # Fetch instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: dda_instance_model.id
+        }
+        instance_record: DataDisclosureAgreementInstanceRecord = \
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                context,
+                tag_filter
+            )
+
+        # Verify the dda accept.
+        valid = await verify_agreement(
+            agreement=dda_accept_dict.copy(),
+            wallet=wallet
+        )
+
+        assert valid, &#34;DDA instance verification failed.&#34;
+
+        instance_record.data_disclosure_agreement = dda_accept_dict
+        instance_record.state = DataDisclosureAgreementInstanceRecord.STATE_CAPTURE
+        await instance_record.save(context)
+
+        return instance_record
+
+
+class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
+    &#34;&#34;&#34;Data agreement instance record schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataDisclosureAgreementInstanceRecord
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # DDA instance identifier
+    instance_id = fields.Str(
+        required=True
+    )
+
+    # Data disclosure agreement template identifier
+    template_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data disclosure agreement template version
+    template_version = fields.Str(
+        required=False
+    )
+
+    # State of the data agreement.
+    state = fields.Str(
+        required=True,
+        example=DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
+        validate=validate.OneOf(
+            [
+                DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
+                DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
+            ]
+        )
+    )
+
+    # Data disclosure agreement
+    data_disclosure_agreement = fields.Dict(required=True)
+
+    # Industry sector
+    industry_sector = fields.Str(required=False)
+
+    # Is deleted or not
+    delete_flag = fields.Str(
+        required=True,
+        example=&#34;false&#34;,
+        validate=validate.OneOf(
+            [
+                &#34;true&#34;,
+                &#34;false&#34;,
+            ]
+        )
+    )
+
+    # Connection identifier
+    connection_id = fields.Str(required=False)
+
+    # did:mydata identifier
+    mydata_did = fields.Str(required=False)
+
+    # Blockchain link
+    blink = fields.Str(required=False)
+
+    # Blockchain receipt
+    blockchain_receipt = fields.Dict(required=False)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord"><code class="flex name class">
+<span>class <span class="ident">DataDisclosureAgreementInstanceRecord</span></span>
+<span>(</span><span>*, id: str = None, instance_id: str = None, template_id: str = None, template_version: str = None, state: str = None, data_disclosure_agreement: dict = None, industry_sector: str = None, delete_flag: str = 'false', connection_id: str = None, mydata_did: str = None, blink: str = None, blockchain_receipt: dict = None, customer_identification: dict = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data disclosure agreement instance record to be persisted in the storage</p>
+<p>Initialise data disclosure agreement instance record.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Record ID. Defaults to None.</dd>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Instance ID. Defaults to None.</dd>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Template ID. Defaults to None.</dd>
+<dt><strong><code>template_version</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Template version. Defaults to None.</dd>
+<dt><strong><code>state</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>State of the record. Defaults to None.</dd>
+<dt><strong><code>data_disclosure_agreement</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>DDA. Defaults to None.</dd>
+<dt><strong><code>industry_sector</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Industry sector. Defaults to None.</dd>
+<dt><strong><code>delete_flag</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Delete flag. Defaults to "false".</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Connection ID. Defaults to None.</dd>
+<dt><strong><code>mydata_did</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>MyData DID. Defaults to None.</dd>
+<dt><strong><code>blink</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Blockchain Link. Defaults to None.</dd>
+<dt><strong><code>blockchain_receipt</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Blockchain Receipt. Defaults to None.</dd>
+<dt><strong><code>customer_identification</code></strong> :&ensp;<code>dict</code>, optional</dt>
+<dd>Customer identification. Defauls to None.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataDisclosureAgreementInstanceRecord(BaseRecord):
+    &#34;&#34;&#34;Data disclosure agreement instance record to be persisted in the storage&#34;&#34;&#34;
+
+    class Meta:
+        # Schema class
+        schema_class = &#34;DataDisclosureAgreementInstanceRecordSchema&#34;
+
+    # Record type
+    RECORD_TYPE = &#34;data_disclosure_agreement_instance&#34;
+
+    # Record identifier
+    RECORD_ID_NAME = &#34;id&#34;
+
+    # Webhook topic name for this record type
+    WEBHOOK_TOPIC = None
+
+    # Record tags
+    TAG_NAMES = {
+        &#34;~instance_id&#34;,
+        &#34;~template_id&#34;,
+        &#34;~template_version&#34;,
+        &#34;~industry_sector&#34;,
+        &#34;~delete_flag&#34;,
+        &#34;~mydata_did&#34;,
+        &#34;~blink&#34;,
+        &#34;~connection_id&#34;
+    }
+
+    # States of the data disclosure agreement instance.
+    STATE_DEFINITION = &#34;DEFINITION&#34;
+    STATE_PREPARATION = &#34;PREPARATION&#34;
+    STATE_CAPTURE = &#34;CAPTURE&#34;
+    STATE_PROOF = &#34;PROOF&#34;
+
+    def __init__(
+        self,
+        *,
+        id: str = None,
+        instance_id: str = None,
+        template_id: str = None,
+        template_version: str = None,
+        state: str = None,
+        data_disclosure_agreement: dict = None,
+        industry_sector: str = None,
+        delete_flag: str = &#34;false&#34;,
+        connection_id: str = None,
+        mydata_did: str = None,
+        blink: str = None,
+        blockchain_receipt: dict = None,
+        customer_identification: dict = None,
+        **kwargs
+    ):
+        &#34;&#34;&#34;Initialise data disclosure agreement instance record.
+
+        Args:
+            id (str, optional): Record ID. Defaults to None.
+            instance_id (str, optional): Instance ID. Defaults to None.
+            template_id (str, optional): Template ID. Defaults to None.
+            template_version (str, optional): Template version. Defaults to None.
+            state (str, optional): State of the record. Defaults to None.
+            data_disclosure_agreement (dict, optional): DDA. Defaults to None.
+            industry_sector (str, optional): Industry sector. Defaults to None.
+            delete_flag (str, optional): Delete flag. Defaults to &#34;false&#34;.
+            connection_id (str, optional): Connection ID. Defaults to None.
+            mydata_did (str, optional): MyData DID. Defaults to None.
+            blink (str, optional): Blockchain Link. Defaults to None.
+            blockchain_receipt (dict, optional): Blockchain Receipt. Defaults to None.
+            customer_identification (dict, optional): Customer identification. Defauls to None.
+        &#34;&#34;&#34;
+
+        # Pass identifier and state to parent class
+        super().__init__(id, state, **kwargs)
+
+        if not instance_id:
+            raise TypeError(
+                &#34;Instance identifier is not specified.&#34;
+            )
+
+        if not template_id:
+            raise TypeError(
+                &#34;Template identifier is not specified.&#34;
+            )
+
+        if not template_version:
+            raise TypeError(
+                &#34;Template version is not specified.&#34;
+            )
+
+        # Set the record attributes
+        self.instance_id = instance_id
+        self.template_id = template_id
+        self.template_version = template_version
+        self.state = state
+        self.data_disclosure_agreement = data_disclosure_agreement
+        self.industry_sector = industry_sector
+        self.delete_flag = delete_flag
+        self.connection_id = connection_id
+        self.mydata_did = mydata_did
+        self.blink = blink
+        self.blockchain_receipt = blockchain_receipt
+        self.customer_identification = customer_identification
+
+    @property
+    def record_value(self) -&gt; dict:
+        &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+        return {
+            prop: getattr(self, prop)
+            for prop in (
+                &#34;instance_id&#34;,
+                &#34;template_id&#34;,
+                &#34;template_version&#34;,
+                &#34;state&#34;,
+                &#34;data_disclosure_agreement&#34;,
+                &#34;industry_sector&#34;,
+                &#34;delete_flag&#34;,
+                &#34;connection_id&#34;,
+                &#34;mydata_did&#34;,
+                &#34;blink&#34;,
+                &#34;blockchain_receipt&#34;,
+                &#34;customer_identification&#34;
+            )
+        }
+
+    @property
+    def _delete_flag(self) -&gt; bool:
+        &#34;&#34;&#34;Accessor for delete_flag.&#34;&#34;&#34;
+        return str_to_bool(self.delete_flag)
+
+    @_delete_flag.setter
+    def _delete_flag(self, value: bool) -&gt; None:
+        &#34;&#34;&#34;Setter for delete_flag.&#34;&#34;&#34;
+        self.delete_flag = bool_to_str(value)
+
+    @property
+    def is_deleted(self) -&gt; bool:
+        &#34;&#34;&#34;Check if data agreemnent is deleted.&#34;&#34;&#34;
+        return self._delete_flag
+
+    @property
+    def customer_identification_model(
+        self
+    ) -&gt; CustomerIdentificationModel:
+        return CustomerIdentificationModel.deserialize(
+            self.customer_identification
+        )
+
+    @staticmethod
+    async def build_instance_from_template(
+        context: InjectionContext,
+        template_id: str,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[
+        &#34;DataDisclosureAgreementInstanceRecord&#34;,
+        DataDisclosureAgreementInstanceModel
+    ]:
+        &#34;&#34;&#34;Build instance from DDA template.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            template_id (str): Template ID
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+
+        # Fetch latest template record.
+        template_record = \
+            await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
+                context,
+                template_id
+            )
+
+        assert template_record, &#34;DDA template not found.&#34;
+
+        # Sign the template.
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
+
+        # Signature options
+        signature_options = {
+            &#34;id&#34;: f&#34;did:sov:{controller_did.did}#1&#34;,
+            &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+            &#34;created&#34;: current_datetime_in_iso8601(),
+            &#34;verificationMethod&#34;: f&#34;{controller_did.verkey}&#34;,
+            &#34;proofPurpose&#34;: &#34;authentication&#34;,
+        }
+
+        # DDA
+        dda_template_dict = template_record.data_disclosure_agreement
+        dda_template_model = template_record.dda_model
+
+        # Add versions and ids
+        instance_id = str(uuid.uuid4())
+        instance_version = &#34;1.0.0&#34;
+        template_id = dda_template_model.id
+        template_version = dda_template_model.version
+        dda_template_dict.update({&#34;@id&#34;: instance_id})
+        dda_template_dict.update({&#34;version&#34;: instance_version})
+        dda_template_dict.update({&#34;templateId&#34;: template_id})
+        dda_template_dict.update({&#34;templateVersion&#34;: template_version})
+
+        # Add DUS info.
+        # Fetch controller details for the DUS connection
+        tag_filter = {
+            &#34;connection_id&#34;: connection_record.connection_id
+        }
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+            await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+                context,
+                tag_filter
+            )
+        data_controller_model = dus_connection_controller_details_record.controller_details_model
+        dus_model = DataUsingServiceModel(
+            did=data_controller_model.organisation_did,
+            name=data_controller_model.organisation_name,
+            url=data_controller_model.policy_url,
+            legal_id=data_controller_model.organisation_did,
+            industry_sector=data_controller_model.organisation_type,
+            usage_purposes=dda_template_model.purpose,
+            jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
+            withdrawal=data_controller_model.policy_url,
+            privacy_rights=data_controller_model.policy_url,
+            signature_contact=data_controller_model.organisation_did
+        )
+        dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
+
+        # Sign the DDA
+        signed_dda = await sign_agreement(
+            agreement=dda_template_dict,
+            verkey=controller_did.verkey,
+            wallet=wallet,
+            signature_options=signature_options
+        )
+
+        dda_instance_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                signed_dda
+            )
+
+        # Create and save DDA instance record.
+        dda_instance_record = DataDisclosureAgreementInstanceRecord(
+            instance_id=instance_id,
+            template_id=template_id,
+            template_version=template_version,
+            state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
+            data_disclosure_agreement=dda_instance_model.serialize(),
+            industry_sector=template_record.industry_sector,
+            connection_id=connection_record.connection_id
+        )
+
+        await dda_instance_record.save(context)
+
+        return (dda_instance_record, dda_instance_model)
+
+    @classmethod
+    async def build_instance_from_dda_offer(
+        cls,
+        context: InjectionContext,
+        dda_offer_message: OfferDDAMessage,
+        connection_record: ConnectionRecord
+    ) -&gt; typing.Tuple[
+        &#34;DataDisclosureAgreementInstanceRecord&#34;,
+        DataDisclosureAgreementInstanceModel
+    ]:
+        &#34;&#34;&#34;Build instance from DDA offer.
+
+        Args:
+            dda_offer_message (OfferDDAMessage): DDA offer message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+
+        # Fetch wallet from context.
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        # DUS public did
+        dus_did = await wallet.get_public_did()
+
+        customer_identification_details = dda_offer_message.body.customer_identification
+        dda_offer = dda_offer_message.body.dda
+        dda_offer_dict = dda_offer.serialize()
+
+        # Verify the dda offer.
+        valid = await verify_agreement(
+            agreement=dda_offer_dict.copy(),
+            wallet=wallet
+        )
+
+        assert valid, &#34;DDA instance verification failed.&#34;
+
+        # Signature options
+        signature_options = {
+            &#34;id&#34;: f&#34;did:sov:{dus_did.did}#1&#34;,
+            &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+            &#34;created&#34;: current_datetime_in_iso8601(),
+            &#34;verificationMethod&#34;: f&#34;{dus_did.verkey}&#34;,
+            &#34;proofPurpose&#34;: &#34;authentication&#34;,
+        }
+
+        # Sign the DDA
+        signed_dda = await sign_agreement(
+            agreement=dda_offer_dict,
+            verkey=dus_did.verkey,
+            wallet=wallet,
+            signature_options=signature_options
+        )
+
+        dda_instance_model: DataDisclosureAgreementInstanceModel = \
+            DataDisclosureAgreementInstanceModel.deserialize(
+                signed_dda
+            )
+
+        # Create and save DDA instance record.
+        dda_instance_record = DataDisclosureAgreementInstanceRecord(
+            instance_id=dda_instance_model.id,
+            template_id=dda_instance_model.template_id,
+            template_version=dda_instance_model.template_version,
+            state=DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+            data_disclosure_agreement=dda_instance_model.serialize(),
+            industry_sector=dda_instance_model.data_using_service.industry_sector,
+            connection_id=connection_record.connection_id,
+            customer_identification=customer_identification_details.serialize()
+        )
+
+        await dda_instance_record.save(context)
+
+        return (dda_instance_record, dda_instance_model)
+
+    @classmethod
+    async def update_instance_from_dda_accept(
+        cls,
+        context: InjectionContext,
+        dda_accept_message: AcceptDDAMessage
+    ) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
+        &#34;&#34;&#34;Update instance from DDA accept.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_accept_message (AcceptDDAMessage): DDA accept message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            DataDisclosureAgreementInstanceRecord: DDA instance record.
+        &#34;&#34;&#34;
+        # Fetch wallet from context.
+        wallet: IndyWallet = await context.inject(BaseWallet)
+
+        dda_instance_model = dda_accept_message.body.dda
+        dda_accept_dict = dda_instance_model.serialize()
+
+        # Fetch instance record.
+        tag_filter = {
+            &#34;instance_id&#34;: dda_instance_model.id
+        }
+        instance_record: DataDisclosureAgreementInstanceRecord = \
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                context,
+                tag_filter
+            )
+
+        # Verify the dda accept.
+        valid = await verify_agreement(
+            agreement=dda_accept_dict.copy(),
+            wallet=wallet
+        )
+
+        assert valid, &#34;DDA instance verification failed.&#34;
+
+        instance_record.data_disclosure_agreement = dda_accept_dict
+        instance_record.state = DataDisclosureAgreementInstanceRecord.STATE_CAPTURE
+        await instance_record.save(context)
+
+        return instance_record</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base_record.BaseRecord</li>
+<li>aries_cloudagent.messaging.models.base.BaseModel</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_ID_NAME"><code class="name">var <span class="ident">RECORD_ID_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_TYPE"><code class="name">var <span class="ident">RECORD_TYPE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_CAPTURE"><code class="name">var <span class="ident">STATE_CAPTURE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_DEFINITION"><code class="name">var <span class="ident">STATE_DEFINITION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PREPARATION"><code class="name">var <span class="ident">STATE_PREPARATION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PROOF"><code class="name">var <span class="ident">STATE_PROOF</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.TAG_NAMES"><code class="name">var <span class="ident">TAG_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.WEBHOOK_TOPIC"><code class="name">var <span class="ident">WEBHOOK_TOPIC</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer"><code class="name flex">
+<span>async def <span class="ident">build_instance_from_dda_offer</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, dda_offer_message: dexa_protocol.v1_0.messages.negotiation.offer_dda.OfferDDAMessage, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord) ‑> Tuple[<a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a>, <a title="dexa_sdk.agreements.dda.v1_0.models.dda_instance_models.DataDisclosureAgreementInstanceModel" href="../models/dda_instance_models.html#dexa_sdk.agreements.dda.v1_0.models.dda_instance_models.DataDisclosureAgreementInstanceModel">DataDisclosureAgreementInstanceModel</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build instance from DDA offer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dda_offer_message</code></strong> :&ensp;<code>OfferDDAMessage</code></dt>
+<dd>DDA offer message.</dd>
+<dt><strong><code>connection_record</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a></code></dt>
+<dd>DDA instance record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def build_instance_from_dda_offer(
+    cls,
+    context: InjectionContext,
+    dda_offer_message: OfferDDAMessage,
+    connection_record: ConnectionRecord
+) -&gt; typing.Tuple[
+    &#34;DataDisclosureAgreementInstanceRecord&#34;,
+    DataDisclosureAgreementInstanceModel
+]:
+    &#34;&#34;&#34;Build instance from DDA offer.
+
+    Args:
+        dda_offer_message (OfferDDAMessage): DDA offer message.
+        connection_record (ConnectionRecord): Connection record.
+
+    Returns:
+        DataDisclosureAgreementInstanceRecord: DDA instance record.
+    &#34;&#34;&#34;
+
+    # Fetch wallet from context.
+    wallet: IndyWallet = await context.inject(BaseWallet)
+
+    # DUS public did
+    dus_did = await wallet.get_public_did()
+
+    customer_identification_details = dda_offer_message.body.customer_identification
+    dda_offer = dda_offer_message.body.dda
+    dda_offer_dict = dda_offer.serialize()
+
+    # Verify the dda offer.
+    valid = await verify_agreement(
+        agreement=dda_offer_dict.copy(),
+        wallet=wallet
+    )
+
+    assert valid, &#34;DDA instance verification failed.&#34;
+
+    # Signature options
+    signature_options = {
+        &#34;id&#34;: f&#34;did:sov:{dus_did.did}#1&#34;,
+        &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+        &#34;created&#34;: current_datetime_in_iso8601(),
+        &#34;verificationMethod&#34;: f&#34;{dus_did.verkey}&#34;,
+        &#34;proofPurpose&#34;: &#34;authentication&#34;,
+    }
+
+    # Sign the DDA
+    signed_dda = await sign_agreement(
+        agreement=dda_offer_dict,
+        verkey=dus_did.verkey,
+        wallet=wallet,
+        signature_options=signature_options
+    )
+
+    dda_instance_model: DataDisclosureAgreementInstanceModel = \
+        DataDisclosureAgreementInstanceModel.deserialize(
+            signed_dda
+        )
+
+    # Create and save DDA instance record.
+    dda_instance_record = DataDisclosureAgreementInstanceRecord(
+        instance_id=dda_instance_model.id,
+        template_id=dda_instance_model.template_id,
+        template_version=dda_instance_model.template_version,
+        state=DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+        data_disclosure_agreement=dda_instance_model.serialize(),
+        industry_sector=dda_instance_model.data_using_service.industry_sector,
+        connection_id=connection_record.connection_id,
+        customer_identification=customer_identification_details.serialize()
+    )
+
+    await dda_instance_record.save(context)
+
+    return (dda_instance_record, dda_instance_model)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_template"><code class="name flex">
+<span>async def <span class="ident">build_instance_from_template</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, template_id: str, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord) ‑> Tuple[<a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a>, <a title="dexa_sdk.agreements.dda.v1_0.models.dda_instance_models.DataDisclosureAgreementInstanceModel" href="../models/dda_instance_models.html#dexa_sdk.agreements.dda.v1_0.models.dda_instance_models.DataDisclosureAgreementInstanceModel">DataDisclosureAgreementInstanceModel</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build instance from DDA template.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+<dt><strong><code>template_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Template ID</dd>
+<dt><strong><code>connection_record</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a></code></dt>
+<dd>DDA instance record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def build_instance_from_template(
+    context: InjectionContext,
+    template_id: str,
+    connection_record: ConnectionRecord
+) -&gt; typing.Tuple[
+    &#34;DataDisclosureAgreementInstanceRecord&#34;,
+    DataDisclosureAgreementInstanceModel
+]:
+    &#34;&#34;&#34;Build instance from DDA template.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+        template_id (str): Template ID
+        connection_record (ConnectionRecord): Connection record.
+
+    Returns:
+        DataDisclosureAgreementInstanceRecord: DDA instance record.
+    &#34;&#34;&#34;
+
+    # Fetch latest template record.
+    template_record = \
+        await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
+            context,
+            template_id
+        )
+
+    assert template_record, &#34;DDA template not found.&#34;
+
+    # Sign the template.
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await context.inject(BaseWallet)
+
+    # Controller did (Public did)
+    controller_did = await wallet.get_public_did()
+
+    # Signature options
+    signature_options = {
+        &#34;id&#34;: f&#34;did:sov:{controller_did.did}#1&#34;,
+        &#34;type&#34;: &#34;Ed25519Signature2018&#34;,
+        &#34;created&#34;: current_datetime_in_iso8601(),
+        &#34;verificationMethod&#34;: f&#34;{controller_did.verkey}&#34;,
+        &#34;proofPurpose&#34;: &#34;authentication&#34;,
+    }
+
+    # DDA
+    dda_template_dict = template_record.data_disclosure_agreement
+    dda_template_model = template_record.dda_model
+
+    # Add versions and ids
+    instance_id = str(uuid.uuid4())
+    instance_version = &#34;1.0.0&#34;
+    template_id = dda_template_model.id
+    template_version = dda_template_model.version
+    dda_template_dict.update({&#34;@id&#34;: instance_id})
+    dda_template_dict.update({&#34;version&#34;: instance_version})
+    dda_template_dict.update({&#34;templateId&#34;: template_id})
+    dda_template_dict.update({&#34;templateVersion&#34;: template_version})
+
+    # Add DUS info.
+    # Fetch controller details for the DUS connection
+    tag_filter = {
+        &#34;connection_id&#34;: connection_record.connection_id
+    }
+    dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+        await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+            context,
+            tag_filter
+        )
+    data_controller_model = dus_connection_controller_details_record.controller_details_model
+    dus_model = DataUsingServiceModel(
+        did=data_controller_model.organisation_did,
+        name=data_controller_model.organisation_name,
+        url=data_controller_model.policy_url,
+        legal_id=data_controller_model.organisation_did,
+        industry_sector=data_controller_model.organisation_type,
+        usage_purposes=dda_template_model.purpose,
+        jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
+        withdrawal=data_controller_model.policy_url,
+        privacy_rights=data_controller_model.policy_url,
+        signature_contact=data_controller_model.organisation_did
+    )
+    dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
+
+    # Sign the DDA
+    signed_dda = await sign_agreement(
+        agreement=dda_template_dict,
+        verkey=controller_did.verkey,
+        wallet=wallet,
+        signature_options=signature_options
+    )
+
+    dda_instance_model: DataDisclosureAgreementInstanceModel = \
+        DataDisclosureAgreementInstanceModel.deserialize(
+            signed_dda
+        )
+
+    # Create and save DDA instance record.
+    dda_instance_record = DataDisclosureAgreementInstanceRecord(
+        instance_id=instance_id,
+        template_id=template_id,
+        template_version=template_version,
+        state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
+        data_disclosure_agreement=dda_instance_model.serialize(),
+        industry_sector=template_record.industry_sector,
+        connection_id=connection_record.connection_id
+    )
+
+    await dda_instance_record.save(context)
+
+    return (dda_instance_record, dda_instance_model)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept"><code class="name flex">
+<span>async def <span class="ident">update_instance_from_dda_accept</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, dda_accept_message: dexa_protocol.v1_0.messages.negotiation.accept_dda.AcceptDDAMessage) ‑> <a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update instance from DDA accept.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+<dt><strong><code>dda_accept_message</code></strong> :&ensp;<code>AcceptDDAMessage</code></dt>
+<dd>DDA accept message.</dd>
+<dt><strong><code>connection_record</code></strong> :&ensp;<code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a></code></dt>
+<dd>DDA instance record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def update_instance_from_dda_accept(
+    cls,
+    context: InjectionContext,
+    dda_accept_message: AcceptDDAMessage
+) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
+    &#34;&#34;&#34;Update instance from DDA accept.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+        dda_accept_message (AcceptDDAMessage): DDA accept message.
+        connection_record (ConnectionRecord): Connection record.
+
+    Returns:
+        DataDisclosureAgreementInstanceRecord: DDA instance record.
+    &#34;&#34;&#34;
+    # Fetch wallet from context.
+    wallet: IndyWallet = await context.inject(BaseWallet)
+
+    dda_instance_model = dda_accept_message.body.dda
+    dda_accept_dict = dda_instance_model.serialize()
+
+    # Fetch instance record.
+    tag_filter = {
+        &#34;instance_id&#34;: dda_instance_model.id
+    }
+    instance_record: DataDisclosureAgreementInstanceRecord = \
+        await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+            context,
+            tag_filter
+        )
+
+    # Verify the dda accept.
+    valid = await verify_agreement(
+        agreement=dda_accept_dict.copy(),
+        wallet=wallet
+    )
+
+    assert valid, &#34;DDA instance verification failed.&#34;
+
+    instance_record.data_disclosure_agreement = dda_accept_dict
+    instance_record.state = DataDisclosureAgreementInstanceRecord.STATE_CAPTURE
+    await instance_record.save(context)
+
+    return instance_record</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.customer_identification_model"><code class="name">var <span class="ident">customer_identification_model</span> : dexa_protocol.v1_0.models.offer_dda_model.CustomerIdentificationModel</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def customer_identification_model(
+    self
+) -&gt; CustomerIdentificationModel:
+    return CustomerIdentificationModel.deserialize(
+        self.customer_identification
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted"><code class="name">var <span class="ident">is_deleted</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Check if data agreemnent is deleted.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_deleted(self) -&gt; bool:
+    &#34;&#34;&#34;Check if data agreemnent is deleted.&#34;&#34;&#34;
+    return self._delete_flag</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.record_value"><code class="name">var <span class="ident">record_value</span> : dict</code></dt>
+<dd>
+<div class="desc"><p>Accessor for JSON record value generated for this transaction record.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def record_value(self) -&gt; dict:
+    &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
+    return {
+        prop: getattr(self, prop)
+        for prop in (
+            &#34;instance_id&#34;,
+            &#34;template_id&#34;,
+            &#34;template_version&#34;,
+            &#34;state&#34;,
+            &#34;data_disclosure_agreement&#34;,
+            &#34;industry_sector&#34;,
+            &#34;delete_flag&#34;,
+            &#34;connection_id&#34;,
+            &#34;mydata_did&#34;,
+            &#34;blink&#34;,
+            &#34;blockchain_receipt&#34;,
+            &#34;customer_identification&#34;
+        )
+    }</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema"><code class="flex name class">
+<span>class <span class="ident">DataDisclosureAgreementInstanceRecordSchema</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data agreement instance record schema</p>
+<p>Initialize BaseModelSchema.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>If model_class is not set on Meta</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
+    &#34;&#34;&#34;Data agreement instance record schema&#34;&#34;&#34;
+
+    class Meta:
+        # Model class
+        model_class = DataDisclosureAgreementInstanceRecord
+
+        # Unknown fields are excluded
+        unknown = EXCLUDE
+
+    # DDA instance identifier
+    instance_id = fields.Str(
+        required=True
+    )
+
+    # Data disclosure agreement template identifier
+    template_id = fields.Str(
+        required=True,
+        example=UUIDFour.EXAMPLE
+    )
+
+    # Data disclosure agreement template version
+    template_version = fields.Str(
+        required=False
+    )
+
+    # State of the data agreement.
+    state = fields.Str(
+        required=True,
+        example=DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
+        validate=validate.OneOf(
+            [
+                DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
+                DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
+            ]
+        )
+    )
+
+    # Data disclosure agreement
+    data_disclosure_agreement = fields.Dict(required=True)
+
+    # Industry sector
+    industry_sector = fields.Str(required=False)
+
+    # Is deleted or not
+    delete_flag = fields.Str(
+        required=True,
+        example=&#34;false&#34;,
+        validate=validate.OneOf(
+            [
+                &#34;true&#34;,
+                &#34;false&#34;,
+            ]
+        )
+    )
+
+    # Connection identifier
+    connection_id = fields.Str(required=False)
+
+    # did:mydata identifier
+    mydata_did = fields.Str(required=False)
+
+    # Blockchain link
+    blink = fields.Str(required=False)
+
+    # Blockchain receipt
+    blockchain_receipt = fields.Dict(required=False)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>aries_cloudagent.messaging.models.base_record.BaseRecordSchema</li>
+<li>aries_cloudagent.messaging.models.base.BaseModelSchema</li>
+<li>marshmallow.schema.Schema</li>
+<li>marshmallow.base.SchemaABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.Meta"><code class="name">var <span class="ident">Meta</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.opts"><code class="name">var <span class="ident">opts</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records" href="index.html">dexa_sdk.agreements.dda.v1_0.records</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord">DataDisclosureAgreementInstanceRecord</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.Meta" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_ID_NAME" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_ID_NAME">RECORD_ID_NAME</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_TYPE" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.RECORD_TYPE">RECORD_TYPE</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_CAPTURE" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_CAPTURE">STATE_CAPTURE</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_DEFINITION" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_DEFINITION">STATE_DEFINITION</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PREPARATION" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PREPARATION">STATE_PREPARATION</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PROOF" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.STATE_PROOF">STATE_PROOF</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.TAG_NAMES" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.TAG_NAMES">TAG_NAMES</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.WEBHOOK_TOPIC" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer">build_instance_from_dda_offer</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_template" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_template">build_instance_from_template</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.customer_identification_model" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.customer_identification_model">customer_identification_model</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted">is_deleted</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.record_value" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.record_value">record_value</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept">update_instance_from_dda_accept</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema">DataDisclosureAgreementInstanceRecordSchema</a></code></h4>
+<ul class="">
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.Meta" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.Meta">Meta</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.opts" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecordSchema.opts">opts</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
