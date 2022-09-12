@@ -7,6 +7,7 @@ from aries_cloudagent.config.injection_context import InjectionContext
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 from .....utils import bump_major_for_semver_string
 from .personal_data_record import PersonalDataRecord
+from ..models.da_models import DataAgreementModel
 
 
 class DataAgreementTemplateRecord(BaseRecord):
@@ -440,6 +441,12 @@ class DataAgreementTemplateRecord(BaseRecord):
             self.template_id,
             self.template_version
         )
+
+    @property
+    def data_agreement_model(self) -> DataAgreementModel:
+        """Accessor for data agreement as model.
+        """
+        return DataAgreementModel.deserialize(self.data_agreement)
 
 
 class DataAgreementTemplateRecordSchema(BaseRecordSchema):

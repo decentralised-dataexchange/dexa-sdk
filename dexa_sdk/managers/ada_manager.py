@@ -12,13 +12,9 @@ from aries_cloudagent.wallet.indy import IndyWallet
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.core.error import BaseError
 from aries_cloudagent.core.dispatcher import DispatcherResponder
-from aries_cloudagent.protocols.connections.v1_0.manager import (
-    ConnectionManager,
-)
 from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
 from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
 from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
-from aries_cloudagent.connections.models.connection_target import ConnectionTarget
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.decorators.default import DecoratorSet
 from aries_cloudagent.messaging.responder import BaseResponder
@@ -83,7 +79,10 @@ from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMes
 from mydata_did.v1_0.models.existing_connections_model import (
     ExistingConnectionsBody
 )
-
+from mydata_did.v1_0.messages.da_negotiation_receipt import (
+    DataAgreementNegotiationReceiptMessage,
+    DataAgreementNegotiationReceiptBody
+)
 from dexa_sdk.marketplace.records.marketplace_connection_record import MarketplaceConnectionRecord
 from ..connections.records.existing_connections_record import (
     ExistingConnectionRecord
@@ -480,9 +479,6 @@ class V2ADAManager:
         Returns:
             PaginationResult: Pagination results.
         """
-
-        # Sample queue snippet
-        await self.sample_queue_snippet()
 
         # Query by version is only possible if the template id is provided
         if template_version:
@@ -1164,6 +1160,28 @@ class V2ADAManager:
 
         await da_instance_record.save(self.context)
 
+        # Send receipt.
+        message = DataAgreementNegotiationReceiptMessage(
+            body=DataAgreementNegotiationReceiptBody(
+                instance_id=da_instance_record.instance_id,
+                blockchain_receipt=transaction_receipt,
+                blink=f"blink:ethereum:rinkeby:{transaction_hash}",
+                mydata_did=mydata_did
+            )
+        )
+
+        # Find the connection record.
+        data_subject_did = da_instance_record.data_subject_did.replace("did:sov:", "")
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_did(
+            self.context,
+            their_did=data_subject_did,
+        )
+
+        self.send_reply_message(
+            message,
+            connection_record.connection_id
+        )
+
     async def anchor_da_instance_to_blockchain_async_task(
         self,
         instance_id: str
@@ -1698,6 +1716,66 @@ class V2ADAManager:
 
         return res
 
+    async def send_message_with_connection_invitation_and_return_route_all(
+        self,
+        message: AgentMessage,
+        connection_id: str,
+    ) -> typing.Tuple[str, str, dict]:
+        """Send message with connection invitation and return route all.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_id (str): Connection id.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        """
+        # Fetch connection record.
+        connection_record: ConnectionRecord = \
+            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+
+        # Get invitation key.
+        invitation_key = connection_record.invitation_key
+        # Service enpoint
+        invitation = await connection_record.retrieve_invitation(self.context)
+        service_endpoint = invitation.endpoint
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Set transport return route all
+        message._decorators["transport"] = TransportDecorator(
+            return_route="all"
+        )
+
+        # Create a local did
+        did: DIDInfo = await wallet.create_local_did()
+
+        sender_key = did.verkey
+        packed_message = await wallet.pack_message(
+            message.to_json(),
+            [invitation_key],
+            sender_key
+        )
+
+        headers = {
+            "Content-Type": "application/ssi-agent-wire"
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(service_endpoint, data=packed_message) as response:
+                if response.status == 200:
+                    message_body = await response.read()
+
+                    # Unpack message
+                    unpacked = await wallet.unpack_message(message_body)
+                    (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                    # Convert message to dict.
+                    message_dict = json.loads(message_json)
+
+                    return (sender_verkey, recipient_verkey, message_dict)
+
     async def send_message_with_connection_invitation(
         self,
         message: AgentMessage,
@@ -1836,7 +1914,6 @@ class V2ADAManager:
             }
 
             categorise_filter = drop_none_dict(categorise_filter)
-            self._logger.info(f"Categorise filter: {categorise_filter}")
 
             if match_post_filter(connection, categorise_filter, True):
                 res.append(connection)
@@ -1865,39 +1942,36 @@ class V2ADAManager:
         pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
         return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
 
-    async def sample_queue_snippet(self):
-        """Sample queue snippet"""
-        pending_task = await self.add_task(self.context,
-                                           self.long_running_task(),
-                                           self.queue_callback)
-        print(pending_task)
+    async def process_da_negotiation_receipt_message(
+        self,
+        message: DataAgreementNegotiationReceiptMessage,
+        message_receipt: MessageReceipt
+    ):
+        """Process DA negotiation receipt message.
 
-    async def long_running_task(self):
-        """Sample long running task"""
-        print("Long running task commenced...")
-        await asyncio.sleep(10)
-        return "msg: Hi from long running task!"
+        Args:
+            message (DataAgreementNegotiationReceiptMessage): DA negotiation receipt message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
 
-    async def queue_callback(self, *args, **kwargs):
-        """Sample queue callback function"""
-        print("Recieved call back...")
-        completed_task: CompletedTask = args[0]
-        result: str = completed_task.task.result()
+        instance_id = message.body.instance_id
+        blockchain_receipt = message.body.blockchain_receipt
+        blink = message.body.blink
+        mydata_did = message.body.mydata_did
 
-        print(result)
-        print(self.context)
+        # Fetch the DDA instance record.
+        tag_filter = {
+            "instance_id": instance_id
+        }
+        instance_record: DataAgreementInstanceRecord = \
+            await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context,
+                tag_filter
+            )
 
-        # Send a basic message to available active connection
-        tag_filter = {}
-        post_filter = {"state": "active"}
-        records: typing.List[ConnectionRecord] = await ConnectionRecord.query(
-            self.context,
-            tag_filter,
-            post_filter
-        )
+        # Update instance record.
+        instance_record.blockchain_receipt = blockchain_receipt
+        instance_record.blink = blink
+        instance_record.mydata_did = mydata_did
 
-        responder: BaseResponder = await self.context.inject(BaseResponder, required=False)
-        basic_message = BasicMessage(content="Triggered by task queue callback...")
-        if responder:
-            for record in records:
-                await responder.send(basic_message, connection_id=record.connection_id)
+        await instance_record.save(self.context)

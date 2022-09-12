@@ -184,6 +184,48 @@ class EthereumClient:
         except ContractLogicError as err:
             self.logger.info(f"Status (emitDADID): {err}")
 
+    async def emit_dda_did(self, did: str) -> typing.Tuple[typing.Any, typing.Any]:
+        """Emit did:mydata identifier in the blockchain logs"""
+        org_account = self.org_account
+        org_balance = self.client.eth.get_balance(org_account.address)
+
+        self.logger.info(f"Organisation account address: {org_account.address}")
+        self.logger.info(f"Organisation account balance: {org_balance}")
+
+        try:
+            contract = self.contract
+            contract_function = contract.functions.emitDDADID(did)
+            contract_function_txn = contract_function.buildTransaction(
+                {
+                    'from': org_account.address,
+                    'nonce': self.client.eth.get_transaction_count(org_account.address),
+                    'maxFeePerGas': 2000000000,
+                    'maxPriorityFeePerGas': 1000000000
+                }
+            )
+
+            tx_create = self.client.eth.account.sign_transaction(
+                contract_function_txn,
+                org_account.privateKey
+            )
+
+            tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
+
+            # Suspend execution and let other task run.
+            await asyncio.sleep(5)
+
+            tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
+
+            if tx_receipt.get("status") == 1:
+                self.logger.info(f"Status (emitDDADID): Succesfully emitted {did}")
+            else:
+                self.logger.info(
+                    "Status (emitDDADID): Failed to emit {did}")
+
+            return (tx_hash, tx_receipt)
+        except ContractLogicError as err:
+            self.logger.info(f"Status (emitDDADID): {err}")
+
     async def add_organisation(self) -> None:
         """Add organisation to the whitelist"""
         org_account = self.org_account

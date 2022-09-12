@@ -4,6 +4,7 @@ import typing
 import semver
 import math
 import aiohttp
+from urllib.parse import urlparse, parse_qs
 from collections import namedtuple
 from aries_cloudagent.messaging.models.base_record import BaseRecord
 from aries_cloudagent.config.injection_context import InjectionContext
@@ -84,7 +85,7 @@ def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
     assert sort_order in ("desc", "asc")
 
     return sorted(records,
-                  key=lambda k: k['created_at'],
+                  key=lambda k: k['updated_at'],
                   reverse=True if sort_order == "desc" else False)
 
 
@@ -329,3 +330,23 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -> dict
                 return jresp["Organization"]
 
     return jresp
+
+
+async def parse_query_params(url: str, query_param: str) -> str:
+    """Parse query params in a URL
+
+    Args:
+        url (str): URL
+        query_param (str): Query param key.
+
+    Returns:
+        str: _description_
+    """
+
+    # Parse the URL
+    parsed_url = urlparse(url)
+
+    # Parse query string params.
+    parsed_qs = parse_qs(parsed_url.query)
+
+    return parsed_qs.get(query_param)[0]
