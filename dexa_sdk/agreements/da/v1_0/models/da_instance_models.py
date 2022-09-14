@@ -1,24 +1,26 @@
-import uuid
 import typing
-from marshmallow import fields, EXCLUDE, validate
+import uuid
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from .da_models import (
+from dexa_sdk.agreements.da.v1_0.models.da_models import (
     DA_DEFAULT_CONTEXT,
     DA_TYPE,
     DataAgreementDataPolicyModel,
-    DataAgreementPersonalDataModel,
-    DataAgreementDPIAModel,
     DataAgreementDataPolicySchema,
+    DataAgreementDPIAModel,
+    DataAgreementDPIASchema,
+    DataAgreementPersonalDataModel,
     DataAgreementPersonalDataSchema,
-    DataAgreementDPIASchema
 )
-from ....dda.v1_0.models.fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields, validate
 
 
 class DataAgreementProofModel(BaseModel):
     """
     Data agreement proof model class
     """
+
     class Meta:
         # Schema class
         schema_class = "DataAgreementProofSchema"
@@ -35,7 +37,7 @@ class DataAgreementProofModel(BaseModel):
         verification_method: str = None,
         proof_purpose: str = None,
         proof_value: str = None,
-        **kwargs
+        **kwargs,
     ):
         # Call parent constructor
         super().__init__(**kwargs)
@@ -53,6 +55,7 @@ class DataAgreementProofSchema(BaseModelSchema):
     """
     Data agreement proof schema class
     """
+
     class Meta:
         # Model class
         model_class = DataAgreementProofModel
@@ -61,44 +64,27 @@ class DataAgreementProofSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # Proof identifier
-    proof_id = fields.Str(
-        data_key="id",
-        required=True
-    )
+    proof_id = fields.Str(data_key="id", required=True)
 
     # Proof type
-    proof_type = fields.Str(
-        data_key="type",
-        required=True
-    )
+    proof_type = fields.Str(data_key="type", required=True)
 
     # Created
-    created = fields.Str(
-        data_key="created",
-        required=True
-    )
+    created = fields.Str(data_key="created", required=True)
 
     # Verification method
-    verification_method = fields.Str(
-        data_key="verificationMethod",
-        required=True
-    )
+    verification_method = fields.Str(data_key="verificationMethod", required=True)
 
     # Proof purpose
-    proof_purpose = fields.Str(
-        data_key="proofPurpose",
-        required=True
-    )
+    proof_purpose = fields.Str(data_key="proofPurpose", required=True)
 
     # Proof value
-    proof_value = fields.Str(
-        data_key="proofValue",
-        required=True
-    )
+    proof_value = fields.Str(data_key="proofValue", required=True)
 
 
 class DataAgreementInstanceModel(BaseModel):
     """Data agreement instance model"""
+
     class Meta:
         # Schema class
         schema_class = "DataAgreementInstanceSchema"
@@ -158,6 +144,7 @@ class DataAgreementInstanceModel(BaseModel):
 
 class DataAgreementInstanceSchema(BaseModelSchema):
     """Data agreement instance schema"""
+
     class Meta:
         # Model class
         model_class = DataAgreementInstanceModel
@@ -170,15 +157,16 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         data_key="@context",
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement instance identifier
     id = fields.Str(data_key="@id", required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key="@type", required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key="@type", required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement instance version
     version = fields.Str(data_key="version", required=True)
@@ -207,7 +195,9 @@ class DataAgreementInstanceSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key="dataPolicy")
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key="dataPolicy"
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -261,7 +251,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key="personalData"
+        data_key="personalData",
     )
 
     # Data agreement DPIA metadata
@@ -272,9 +262,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 
     # Proof chain
     proof_chain = fields.List(
-        fields.Nested(DataAgreementProofSchema),
-        data_key="proofChain",
-        required=False
+        fields.Nested(DataAgreementProofSchema), data_key="proofChain", required=False
     )
 
     # Data agreement proof

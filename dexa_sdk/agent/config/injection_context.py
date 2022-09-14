@@ -1,13 +1,13 @@
 """Injection context implementation."""
 
-from collections import namedtuple
 import copy
 import logging
+from collections import namedtuple
 from typing import Mapping
 
-from ..config.injector import Injector
 from aries_cloudagent.config.base import BaseInjector, InjectorError
 from aries_cloudagent.config.settings import Settings
+from dexa_sdk.agent.config.injector import Injector
 
 Scope = namedtuple("Scope", "name injector")
 LOGGER = logging.getLogger(__name__)
@@ -81,16 +81,14 @@ class InjectionContext(BaseInjector):
         if not scope_name:
             raise InjectionContextError("Scope name must be non-empty")
         if self.scope_name == scope_name:
-            raise InjectionContextError(
-                "Cannot re-enter scope: {}".format(scope_name))
+            raise InjectionContextError("Cannot re-enter scope: {}".format(scope_name))
         for scope in self._scopes:
             if scope.name == scope_name:
                 raise InjectionContextError(
                     "Cannot re-enter scope: {}".format(scope_name)
                 )
         result = self.copy()
-        result._scopes.append(
-            Scope(name=self.scope_name, injector=self.injector))
+        result._scopes.append(Scope(name=self.scope_name, injector=self.injector))
         result.scope_name = scope_name
         if settings:
             result.update_settings(settings)

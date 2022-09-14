@@ -1,17 +1,18 @@
 import typing
-from marshmallow import fields, EXCLUDE
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from .fields.context_field import ContextField
-from .dda_models import (
+from dexa_sdk.agreements.dda.v1_0.models.dda_models import (
     DDA_DEFAULT_CONTEXT,
     DDA_TYPE,
     DataControllerModel,
-    DataSharingRestrictionsModel,
-    PersonalDataModel,
     DataControllerSchema,
+    DataSharingRestrictionsModel,
     DataSharingRestrictionsSchema,
+    PersonalDataModel,
     PersonalDataSchema,
 )
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields
 
 
 class DataUsingServiceModel(BaseModel):

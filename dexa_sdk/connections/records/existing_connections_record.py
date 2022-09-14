@@ -1,12 +1,10 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class ExistingConnectionRecord(BaseRecord):
     """Existing connection record."""
+
     class Meta:
         schema_class = "ExistingConnectionRecordSchema"
 
@@ -21,7 +19,7 @@ class ExistingConnectionRecord(BaseRecord):
         "~existing_connection_id",
         "~my_did",
         "~connection_status",
-        "~connection_id"
+        "~connection_id",
     }
 
     def __init__(
@@ -52,7 +50,7 @@ class ExistingConnectionRecord(BaseRecord):
                 "state",
                 "my_did",
                 "connection_status",
-                "connection_id"
+                "connection_id",
             )
         }
 

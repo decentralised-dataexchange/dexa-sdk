@@ -2,33 +2,27 @@
 
 import asyncio
 import logging
-from typing import Callable, Coroutine, Sequence, Set
 import uuid
+from typing import Callable, Coroutine, Sequence, Set
 
-from aiohttp import web
-from aiohttp_apispec import (
-    docs,
-    response_schema,
-    validation_middleware,
-)
 import aiohttp_cors
-
-from marshmallow import fields, Schema
-
-from ..config.injection_context import InjectionContext
-from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
+from aiohttp import web
+from aries_cloudagent.admin.base_server import BaseAdminServer
+from aries_cloudagent.admin.error import AdminSetupError
 from aries_cloudagent.core.plugin_registry import PluginRegistry
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
 from aries_cloudagent.messaging.responder import BaseResponder
-from aries_cloudagent.transport.queue.basic import BasicMessageQueue
 from aries_cloudagent.transport.outbound.message import OutboundMessage
+from aries_cloudagent.transport.queue.basic import BasicMessageQueue
 from aries_cloudagent.utils.stats import Collector
 from aries_cloudagent.utils.task_queue import TaskQueue
 from aries_cloudagent.version import __version__
-from aries_cloudagent.admin.base_server import BaseAdminServer
-from aries_cloudagent.admin.error import AdminSetupError
-from ...managers.dexa_manager import DexaManager
+from dexa_sdk.agent.admin.aiohttp_apispec.custom import custom_setup_aiohttp_apispec
+from dexa_sdk.agent.config.injection_context import InjectionContext
+from dexa_sdk.managers.dexa_manager import DexaManager
+from marshmallow import Schema, fields
 
+from aiohttp_apispec import docs, response_schema, validation_middleware
 
 LOGGER = logging.getLogger(__name__)
 
@@ -132,14 +126,10 @@ class WebhookTarget:
 async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     """Only continue if application is ready to take work."""
 
-    if (
-        str(request.rel_url).rstrip("/")
-        in (
-            "/status/live",
-            "/status/ready",
-        )
-        or request.app._state.get("ready")
-    ):
+    if str(request.rel_url).rstrip("/") in (
+        "/status/live",
+        "/status/ready",
+    ) or request.app._state.get("ready"):
         try:
             return await handler(request)
         except (LedgerConfigError, LedgerTransactionError) as e:
@@ -230,8 +220,7 @@ class AdminServer(BaseAdminServer):
     async def make_application(self) -> web.Application:
         """Get the aiohttp application instance."""
 
-        middlewares = [ready_middleware,
-                       debug_middleware, validation_middleware]
+        middlewares = [ready_middleware, debug_middleware, validation_middleware]
 
         # admin-token and admin-token are mutually exclusive and required.
         # This should be enforced during parameter parsing but to be sure,
@@ -239,16 +228,12 @@ class AdminServer(BaseAdminServer):
         assert self.admin_insecure_mode ^ bool(self.admin_api_key)
 
         def is_unprotected_path(path: str):
-            return (
-                path
-                in [
-                    "/api/doc",
-                    "/api/docs/swagger.json",
-                    "/favicon.ico",
-                    "/ws",  # ws handler checks authentication
-                ]
-                or path.startswith("/static/swagger/")
-            )
+            return path in [
+                "/api/doc",
+                "/api/docs/swagger.json",
+                "/favicon.ico",
+                "/ws",  # ws handler checks authentication
+            ] or path.startswith("/static/swagger/")
 
         # If admin_api_key is None, then admin_insecure_mode must be set so
         # we can safely enable the admin server with no security
@@ -296,13 +281,13 @@ class AdminServer(BaseAdminServer):
                 web.get("/plugins", self.plugins_handler, allow_head=False),
                 web.get("/status", self.status_handler, allow_head=False),
                 web.post("/status/reset", self.status_reset_handler),
-                web.get("/status/live", self.liveliness_handler,
-                        allow_head=False),
-                web.get("/status/ready", self.readiness_handler,
-                        allow_head=False),
+                web.get("/status/live", self.liveliness_handler, allow_head=False),
+                web.get("/status/ready", self.readiness_handler, allow_head=False),
                 web.get("/shutdown", self.shutdown_handler, allow_head=False),
                 web.get("/ws", self.websocket_handler, allow_head=False),
-                web.post("/webhooks/topic/connections/", self.connections_webhook_handler),
+                web.post(
+                    "/webhooks/topic/connections/", self.connections_webhook_handler
+                ),
             ]
         )
 
@@ -330,10 +315,7 @@ class AdminServer(BaseAdminServer):
         version_string = f"v{__version__}"
 
         custom_setup_aiohttp_apispec(
-            app=app,
-            title=agent_label,
-            version=version_string,
-            swagger_path="/api/doc"
+            app=app, title=agent_label, version=version_string, swagger_path="/api/doc"
         )
         app.on_startup.append(self.on_startup)
 

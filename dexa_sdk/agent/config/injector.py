@@ -2,8 +2,8 @@
 
 from typing import Mapping
 
-from aries_cloudagent.config.base import BaseProvider, BaseInjector, InjectorError
-from aries_cloudagent.config.provider import InstanceProvider, CachedProvider
+from aries_cloudagent.config.base import BaseInjector, BaseProvider, InjectorError
+from aries_cloudagent.config.provider import CachedProvider, InstanceProvider
 from aries_cloudagent.config.settings import Settings
 
 
@@ -72,8 +72,7 @@ class Injector(BaseInjector):
         if not base_cls:
             raise InjectorError("No base class provided for lookup")
         provider = self._providers.get(base_cls)
-        ext_settings = self.settings.extend(
-            settings) if settings else self.settings
+        ext_settings = self.settings.extend(settings) if settings else self.settings
         if provider:
             result = await provider.provide(ext_settings, self)
         else:
@@ -81,8 +80,7 @@ class Injector(BaseInjector):
         if result is None:
             if required:
                 raise InjectorError(
-                    "No instance provided for class: {}".format(
-                        base_cls.__name__)
+                    "No instance provided for class: {}".format(base_cls.__name__)
                 )
         elif not isinstance(result, base_cls) and self.enforce_typing:
             raise InjectorError(

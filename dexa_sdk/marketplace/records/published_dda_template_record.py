@@ -1,16 +1,12 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from dexa_sdk.agreements.dda.v1_0.models.dda_models import DataDisclosureAgreementModel
 from marshmallow import fields
-from ...agreements.dda.v1_0.models.dda_models import (
-    DataDisclosureAgreementModel
-)
 
 
 class PublishedDDATemplateRecord(BaseRecord):
     """Published DDA template record."""
+
     class Meta:
         schema_class = "PublishedDDATemplateRecordSchema"
 
@@ -21,12 +17,7 @@ class PublishedDDATemplateRecord(BaseRecord):
     RECORD_ID_NAME = "id"
 
     # Record tags
-    TAG_NAMES = {
-        "~connection_id",
-        "~template_id",
-        "~industry_sector",
-        "~state"
-    }
+    TAG_NAMES = {"~connection_id", "~template_id", "~industry_sector", "~state"}
 
     def __init__(
         self,
@@ -63,7 +54,7 @@ class PublishedDDATemplateRecord(BaseRecord):
                 "dda",
                 "template_id",
                 "industry_sector",
-                "connection_url"
+                "connection_url",
             )
         }
 
@@ -73,7 +64,7 @@ class PublishedDDATemplateRecord(BaseRecord):
         context: InjectionContext,
         connection_id: str,
         dda: DataDisclosureAgreementModel,
-        connection_url: str
+        connection_url: str,
     ) -> "PublishedDDATemplateRecord":
         """Store a dda and create/update publish dda record.
 
@@ -88,10 +79,7 @@ class PublishedDDATemplateRecord(BaseRecord):
         """
 
         # Query for existing record for connection and template id.
-        tag_filter = {
-            "connection_id": connection_id,
-            "template_id": dda.id
-        }
+        tag_filter = {"connection_id": connection_id, "template_id": dda.id}
         records = await cls.query(context, tag_filter)
 
         if not records:
@@ -102,7 +90,7 @@ class PublishedDDATemplateRecord(BaseRecord):
                 template_id=dda.id,
                 industry_sector=dda.data_sharing_restrictions.industry_sector,
                 dda=dda.serialize(),
-                connection_url=connection_url
+                connection_url=connection_url,
             )
         else:
             # Existing entry.
@@ -122,10 +110,7 @@ class PublishedDDATemplateRecord(BaseRecord):
 
     @classmethod
     async def delete_publish_dda_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str,
-        template_id: str
+        cls, context: InjectionContext, connection_id: str, template_id: str
     ):
         """Delete publish DDA record.
 
@@ -135,10 +120,7 @@ class PublishedDDATemplateRecord(BaseRecord):
             template_id (str): Template identifier.
         """
 
-        tag_filter = {
-            "connection_id": connection_id,
-            "template_id": template_id
-        }
+        tag_filter = {"connection_id": connection_id, "template_id": template_id}
 
         records = await cls.query(context, tag_filter)
         assert records, "Publish DDA record not found."

@@ -8,14 +8,13 @@ instantiating concrete implementations of required modules and storing data in t
 
 import hashlib
 import logging
-from ..config.injection_context import InjectionContext
-from ..admin.server import AdminServer
-from ..config.dexa import smartcontract_config
+
 from aries_cloudagent.admin.base_server import BaseAdminServer
 from aries_cloudagent.config.default_context import ContextBuilder
 from aries_cloudagent.config.ledger import ledger_config
 from aries_cloudagent.config.logging import LoggingConfigurator
-from aries_cloudagent.config.wallet import wallet_config, BaseWallet
+from aries_cloudagent.config.wallet import BaseWallet, wallet_config
+from aries_cloudagent.core.dispatcher import Dispatcher
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
 from aries_cloudagent.messaging.responder import BaseResponder
 from aries_cloudagent.protocols.connections.v1_0.manager import (
@@ -31,9 +30,11 @@ from aries_cloudagent.transport.outbound.manager import (
 )
 from aries_cloudagent.transport.outbound.message import OutboundMessage
 from aries_cloudagent.transport.wire_format import BaseWireFormat
-from aries_cloudagent.utils.task_queue import CompletedTask, TaskQueue
 from aries_cloudagent.utils.stats import Collector
-from aries_cloudagent.core.dispatcher import Dispatcher
+from aries_cloudagent.utils.task_queue import CompletedTask, TaskQueue
+from dexa_sdk.agent.admin.server import AdminServer
+from dexa_sdk.agent.config.dexa import smartcontract_config
+from dexa_sdk.agent.config.injection_context import InjectionContext
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,15 +1,16 @@
 import typing
-from marshmallow import fields, validate, EXCLUDE
+
+from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from aries_cloudagent.config.injection_context import InjectionContext
-from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
-from ..models.dda_models import (
-    DataDisclosureAgreementModel,
+from dexa_sdk.agreements.dda.v1_0.models.dda_models import (
     DDA_DEFAULT_CONTEXT,
-    DDA_TYPE
+    DDA_TYPE,
+    DataDisclosureAgreementModel,
 )
-from .....utils import bump_major_for_semver_string
+from dexa_sdk.utils import bump_major_for_semver_string
+from marshmallow import EXCLUDE, fields, validate
+from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 
 
 class DataDisclosureAgreementTemplateRecord(BaseRecord):
@@ -35,7 +36,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         "~industry_sector",
         "~delete_flag",
         "~publish_flag",
-        "~latest_version_flag"
+        "~latest_version_flag",
     }
 
     # States of the data agreement.
@@ -76,14 +77,10 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         super().__init__(id, state, **kwargs)
 
         if not template_id:
-            raise TypeError(
-                "Template identifier is not specified."
-            )
+            raise TypeError("Template identifier is not specified.")
 
         if not template_version:
-            raise TypeError(
-                "Template version is not specified."
-            )
+            raise TypeError("Template version is not specified.")
 
         # Set the record attributes
         self.template_id = template_id
@@ -108,7 +105,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
                 "industry_sector",
                 "publish_flag",
                 "latest_version_flag",
-                "delete_flag"
+                "delete_flag",
             )
         }
 
@@ -170,9 +167,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             DataDisclosureAgreementModel: Data disclosure agreement model.
         """
 
-        return DataDisclosureAgreementModel.deserialize(
-            self.data_disclosure_agreement
-        )
+        return DataDisclosureAgreementModel.deserialize(self.data_disclosure_agreement)
 
     @staticmethod
     def to_dda_model(dda: dict) -> DataDisclosureAgreementModel:
@@ -204,13 +199,10 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             "delete_flag": bool_to_str(False),
             "template_id": template_id,
             "latest_version_flag": bool_to_str(True),
-            "publish_flag": bool_to_str(True)
+            "publish_flag": bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -233,13 +225,10 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         tag_filter: dict = {
             "delete_flag": bool_to_str(False),
             "template_id": template_id,
-            "latest_version_flag": bool_to_str(True)
+            "latest_version_flag": bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -261,21 +250,16 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
 
         tag_filter: dict = {
             "delete_flag": bool_to_str(False),
-            "template_id": template_id
+            "template_id": template_id,
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return fetched
 
     @classmethod
     async def non_deleted_template_by_id(
-        cls,
-        context: InjectionContext,
-        template_id: str
+        cls, context: InjectionContext, template_id: str
     ) -> typing.List["DataDisclosureAgreementTemplateRecord"]:
         """Fetch non deleted template by id.
 
@@ -286,7 +270,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         tag_filter: dict = {
             "latest_version_flag": bool_to_str(True),
             "delete_flag": bool_to_str(False),
-            "template_id": template_id
+            "template_id": template_id,
         }
 
         return await cls.query(
@@ -296,8 +280,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
 
     @classmethod
     async def non_deleted_templates(
-        cls,
-        context: InjectionContext
+        cls, context: InjectionContext
     ) -> typing.List["DataDisclosureAgreementTemplateRecord"]:
         """Fetch all non-deleted agreements.
 
@@ -305,9 +288,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             DataDisclosureAgreementTemplateRecord: List of template records
         """
 
-        tag_filter: dict = {
-            "delete_flag": bool_to_str(False)
-        }
+        tag_filter: dict = {"delete_flag": bool_to_str(False)}
 
         return await cls.query(
             context,
@@ -315,10 +296,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         )
 
     async def upgrade(
-        self,
-        context: InjectionContext,
-        dda: dict,
-        publish_flag: str
+        self, context: InjectionContext, dda: dict, publish_flag: str
     ) -> "DataDisclosureAgreementTemplateRecord":
         """Upgrade DDA to next version.
 
@@ -350,9 +328,10 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         dda_model = DataDisclosureAgreementTemplateRecord.to_dda_model(dda)
 
         # Checking restrictions
-        assert dda_model.data_sharing_restrictions.industry_sector == \
-            existing_dda_model.data_sharing_restrictions.industry_sector, \
-            "Industry cannot be updated."
+        assert (
+            dda_model.data_sharing_restrictions.industry_sector
+            == existing_dda_model.data_sharing_restrictions.industry_sector
+        ), "Industry cannot be updated."
 
         # Updating old version template
         self._latest_version_flag = False
@@ -367,7 +346,7 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             industry_sector=dda_model.data_sharing_restrictions.industry_sector.lower(),
             publish_flag=publish_flag,
             delete_flag=bool_to_str(False),
-            latest_version_flag=bool_to_str(True)
+            latest_version_flag=bool_to_str(True),
         )
 
         await dda_template.save(context)
@@ -396,15 +375,10 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
         unknown = EXCLUDE
 
     # Data disclosure agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data disclosure agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -415,7 +389,7 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
                 DataDisclosureAgreementTemplateRecord.STATE_DEFINITION,
                 DataDisclosureAgreementTemplateRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Data disclosure agreement
@@ -433,7 +407,7 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
                 "true",
                 "false",
             ]
-        )
+        ),
     )
 
     # Is deleted or not
@@ -445,7 +419,7 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
                 "true",
                 "false",
             ]
-        )
+        ),
     )
 
     # Latest version of the record or not.
@@ -457,5 +431,5 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
                 "true",
                 "false",
             ]
-        )
+        ),
     )

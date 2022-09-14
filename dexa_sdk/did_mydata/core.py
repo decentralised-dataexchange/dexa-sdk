@@ -1,12 +1,13 @@
+import base64
 import binascii
 import typing
-from pyld import jsonld
-import base64
-from multibase import encode
-from merklelib import MerkleTree
+
 from aries_cloudagent.messaging.models.base import BaseModel
-from ..utils import jcs_rfc8785
-from ..jsonld.core import jsonld_context_fingerprint
+from dexa_sdk.jsonld.core import jsonld_context_fingerprint
+from dexa_sdk.utils import jcs_rfc8785
+from merklelib import MerkleTree
+from multibase import encode
+from pyld import jsonld
 
 
 class DIDMyDataBuilder:
@@ -166,10 +167,7 @@ class DIDMyDataBuilder:
 
 
 class DidMyData:
-    def __init__(self,
-                 *,
-                 agreement_type: str,
-                 agreement_merkle_root: str) -> None:
+    def __init__(self, *, agreement_type: str, agreement_merkle_root: str) -> None:
         """
         Initialise the DidMydata class
 
@@ -194,14 +192,13 @@ class DidMyData:
         agreement_type_bytes = binascii.unhexlify(self._agreement_type)
 
         # Agreement merkle root sha256 fingerprint to bytes
-        agreement_merkle_root_bytes = binascii.unhexlify(
-            self._agreement_merkle_root)
+        agreement_merkle_root_bytes = binascii.unhexlify(self._agreement_merkle_root)
 
         # 16 + 38 bytes = 48 byte method specific identifier
         identifier = agreement_type_bytes[:16] + agreement_merkle_root_bytes
 
         # Multibase encode
-        identifier = encode('base58btc', identifier).decode()
+        identifier = encode("base58btc", identifier).decode()
         return f"did:mydata:{identifier}"
 
     @property

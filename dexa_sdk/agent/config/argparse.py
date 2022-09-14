@@ -1,9 +1,9 @@
 import requests
 from aries_cloudagent.config.argparse import (
-    ArgumentGroup,
     CAT_START,
+    ArgumentGroup,
     ArgumentParser,
-    Namespace
+    Namespace,
 )
 
 
@@ -85,16 +85,21 @@ class DexaGroup(ArgumentGroup):
         """Extract dexa settings."""
         settings = {}
 
-        default_contract_abi_url = ("https://raw.githubusercontent.com"
-                                    "/decentralised-dataexchange/dexa-smartcontracts"
-                                    "/main/abi/abi.json")
+        default_contract_abi_url = (
+            "https://raw.githubusercontent.com"
+            "/decentralised-dataexchange/dexa-smartcontracts"
+            "/main/abi/abi.json"
+        )
 
         settings["dexa.eth_node_rpc"] = args.eth_node_rpc
         settings["dexa.org_eth_private_key"] = args.org_eth_private_key
-        settings["dexa.intermediary_eth_private_key"] = args.intermediary_eth_private_key
+        settings[
+            "dexa.intermediary_eth_private_key"
+        ] = args.intermediary_eth_private_key
         settings["dexa.contract_address"] = args.contract_address
-        settings["dexa.contract_abi_url"] = \
+        settings["dexa.contract_abi_url"] = (
             args.contract_abi_url if args.contract_abi_url else default_contract_abi_url
+        )
 
         # Fetch ABI from URL and store it in settings
         req = requests.get(settings["dexa.contract_abi_url"])
@@ -185,18 +190,38 @@ class IntemediaryGroup(ArgumentGroup):
             help="iGrant.io org endpoint URL",
         )
 
+        parser.add_argument(
+            "--igrantio-authentication",
+            action="store_true",
+            env_var="IGRANTIO_AUTHENTICATION",
+            help="iGrant.io authentication",
+        )
+
     def get_settings(self, args: Namespace):
         """Extract dexa settings."""
         settings = {}
 
         settings["intermediary.firebase_web_api_key"] = args.firebase_web_api_key
-        settings["intermediary.firebase_domain_uri_prefix"] = args.firebase_domain_uri_prefix
-        settings["intermediary.firebase_android_package_name"] = args.firebase_android_package_name
+        settings[
+            "intermediary.firebase_domain_uri_prefix"
+        ] = args.firebase_domain_uri_prefix
+        settings[
+            "intermediary.firebase_android_package_name"
+        ] = args.firebase_android_package_name
         settings["intermediary.firebase_ios_bundle_id"] = args.firebase_ios_bundle_id
-        settings["intermediary.firebase_ios_appstore_id"] = args.firebase_ios_appstore_id
+        settings[
+            "intermediary.firebase_ios_appstore_id"
+        ] = args.firebase_ios_appstore_id
         settings["intermediary.igrantio_org_id"] = args.igrantio_org_id
         settings["intermediary.igrantio_org_api_key"] = args.igrantio_org_api_key
-        settings["intermediary.igrantio_org_api_key_secret"] = args.igrantio_org_api_key_secret
+        settings[
+            "intermediary.igrantio_org_api_key_secret"
+        ] = args.igrantio_org_api_key_secret
         settings["intermediary.igrantio_endpoint_url"] = args.igrantio_endpoint_url
+
+        if args.igrantio_authentication:
+            settings["intermediary.igrantio_authentication"] = True
+        else:
+            settings["intermediary.igrantio_authentication"] = False
 
         return settings

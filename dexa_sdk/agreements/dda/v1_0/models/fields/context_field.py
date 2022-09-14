@@ -1,4 +1,4 @@
-from marshmallow import fields, ValidationError
+from marshmallow import ValidationError, fields
 
 
 class ContextField(fields.Field):
@@ -7,12 +7,10 @@ class ContextField(fields.Field):
 
     def _serialize(self, value, attr, obj, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                "Context must be an instance of List[str] or str")
+            raise ValidationError("Context must be an instance of List[str] or str")
         return value
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                "Context must be an instance of List[str] or str")
+            raise ValidationError("Context must be an instance of List[str] or str")
         return value

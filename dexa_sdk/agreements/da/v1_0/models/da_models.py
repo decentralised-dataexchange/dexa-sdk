@@ -1,10 +1,11 @@
 import typing
 import uuid
+from typing import List
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from marshmallow import fields, EXCLUDE, validate
-from typing import List
-from ....dda.v1_0.models.fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields, validate
 
 DA_DEFAULT_CONTEXT = [
     (
@@ -259,41 +260,31 @@ class DataAgreementPersonalDataSchema(BaseModelSchema):
 
     # Attribute identifier
     attribute_id = fields.Str(
-        data_key="attributeId",
-        example=UUIDFour.EXAMPLE,
-        required=False
+        data_key="attributeId", example=UUIDFour.EXAMPLE, required=False
     )
 
     # Attribute name
-    attribute_name = fields.Str(
-        example="Name", data_key="attributeName", required=True
-    )
+    attribute_name = fields.Str(example="Name", data_key="attributeName", required=True)
 
     # Attribute sensitive
     attribute_sensitive = fields.Bool(
-        example=True,
-        data_key="attributeSensitive",
-        required=False
+        example=True, data_key="attributeSensitive", required=False
     )
 
     # Attribute category
     attribute_category = fields.Str(
-        example="Personal",
-        required=False,
-        data_key="attributeCategory"
+        example="Personal", required=False, data_key="attributeCategory"
     )
 
     # Attribute description
     attribute_description = fields.Str(
-        required=True,
-        example="Name of the customer",
-        data_key="attributeDescription"
+        required=True, example="Name of the customer", data_key="attributeDescription"
     )
 
     restrictions = fields.List(
         fields.Nested(DataAgreementPersonalDataRestrictionSchema),
         required=False,
-        data_key="restrictions"
+        data_key="restrictions",
     )
 
 
@@ -366,7 +357,7 @@ class DataAgreementSchema(BaseModelSchema):
         data_key="@context",
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement template identifier
@@ -374,8 +365,9 @@ class DataAgreementSchema(BaseModelSchema):
     id = fields.Str(data_key="@id", required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key="@type", required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key="@type", required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement template version
     # i.e. version of the "prepared" data agreement template
@@ -399,7 +391,9 @@ class DataAgreementSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key="dataPolicy")
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key="dataPolicy"
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -453,7 +447,7 @@ class DataAgreementSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key="personalData"
+        data_key="personalData",
     )
 
     # Data agreement DPIA metadata

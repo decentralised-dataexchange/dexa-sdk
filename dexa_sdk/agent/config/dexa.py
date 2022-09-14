@@ -1,7 +1,8 @@
 """DEXA config."""
 import logging
+
 from aries_cloudagent.config.injection_context import InjectionContext
-from ...ledgers.ethereum.core import EthereumClient
+from dexa_sdk.ledgers.ethereum.core import EthereumClient
 
 LOGGER = logging.getLogger(__name__)
 

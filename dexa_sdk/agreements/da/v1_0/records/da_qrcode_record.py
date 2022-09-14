@@ -1,17 +1,13 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
-from aries_cloudagent.connections.models.connection_record import (
-    ConnectionRecord
-)
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 from mydata_did.v1_0.utils.util import bool_to_str
 
 
 class DataAgreementQRCodeRecord(BaseRecord):
     """Data agreement QR code record"""
+
     class Meta:
         schema_class = "DataAgreementQRCodeRecordSchema"
 
@@ -30,7 +26,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
         "~multi_use_flag",
         "~scanned_flag",
         "~connection_id",
-        "~data_ex_id"
+        "~data_ex_id",
     }
 
     def __init__(
@@ -70,7 +66,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
                 "multi_use_flag",
                 "scanned_flag",
                 "dynamic_link",
-                "data_ex_id"
+                "data_ex_id",
             )
         }
 
@@ -96,10 +92,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
         Returns:
             ConnectionRecord: Connection record.
         """
-        return await ConnectionRecord.retrieve_by_id(
-            context,
-            self.connection_id
-        )
+        return await ConnectionRecord.retrieve_by_id(context, self.connection_id)
 
 
 class DataAgreementQRCodeRecordSchema(BaseRecordSchema):

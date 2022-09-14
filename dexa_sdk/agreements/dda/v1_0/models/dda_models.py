@@ -1,7 +1,8 @@
 import typing
-from marshmallow import fields, EXCLUDE
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from .fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields
 
 DDA_DEFAULT_CONTEXT = [
     (

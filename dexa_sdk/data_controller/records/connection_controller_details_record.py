@@ -1,17 +1,13 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
-from mydata_did.v1_0.models.data_controller_model import (
-    DataController
-)
+from mydata_did.v1_0.models.data_controller_model import DataController
 
 
 class ConnectionControllerDetailsRecord(BaseRecord):
     """Connection controller details record model"""
+
     class Meta:
         schema_class = "ConnectionControllerDetailsRecordSchema"
 
@@ -25,10 +21,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        "~connection_id",
-        "~organisation_did"
-    }
+    TAG_NAMES = {"~connection_id", "~organisation_did"}
 
     def __init__(
         self,
@@ -55,7 +48,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
                 "connection_id",
                 "state",
                 "controller_details",
-                "organisation_did"
+                "organisation_did",
             )
         }
 
@@ -69,8 +62,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
         return DataController.deserialize(self.controller_details)
 
     async def fetch_connection_record(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -> ConnectionRecord:
         """Retreive connection record.
 
@@ -81,10 +73,10 @@ class ConnectionControllerDetailsRecord(BaseRecord):
 
     @classmethod
     async def set_controller_details_for_connection(
-            cls,
-            context: InjectionContext,
-            connection_record: ConnectionRecord,
-            controller_details: DataController
+        cls,
+        context: InjectionContext,
+        connection_record: ConnectionRecord,
+        controller_details: DataController,
     ) -> "ConnectionControllerDetailsRecord":
         """Set controller details for connection.
 
@@ -97,9 +89,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
             ConnectionControllerDetailsRecord: Connection controller details record.
         """
 
-        tag_filter = {
-            "organisation_did": controller_details.organisation_did
-        }
+        tag_filter = {"organisation_did": controller_details.organisation_did}
         records = await cls.query(context, tag_filter)
 
         if records:
@@ -112,7 +102,7 @@ class ConnectionControllerDetailsRecord(BaseRecord):
             record = cls(
                 connection_id=connection_record.connection_id,
                 controller_details=controller_details.serialize(),
-                organisation_did=controller_details.organisation_did
+                organisation_did=controller_details.organisation_did,
             )
 
         await record.save(context)

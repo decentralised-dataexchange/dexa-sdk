@@ -1,7 +1,9 @@
-from aiohttp_apispec import AiohttpApiSpec
-from aiohttp import web
 from pathlib import Path
+
+from aiohttp import web
 from jinja2 import Template
+
+from aiohttp_apispec import AiohttpApiSpec
 
 
 class CustomAiohttpApiSpec(AiohttpApiSpec):
@@ -12,14 +14,12 @@ class CustomAiohttpApiSpec(AiohttpApiSpec):
         app.router.add_static(static_path, static_files)
 
         with open(str(static_files / "index.html")) as swg_tmp:
-            tmp = Template(swg_tmp.read()).render(
-                path=self.url, static=static_path)
+            tmp = Template(swg_tmp.read()).render(path=self.url, static=static_path)
 
         async def swagger_view(_):
             return web.Response(text=tmp, content_type="text/html")
 
-        app.router.add_route(
-            "GET", view_path, swagger_view, name="swagger.docs")
+        app.router.add_route("GET", view_path, swagger_view, name="swagger.docs")
 
 
 def custom_setup_aiohttp_apispec(
@@ -30,10 +30,10 @@ def custom_setup_aiohttp_apispec(
     url: str = "/api/docs/swagger.json",
     request_data_name: str = "data",
     swagger_path: str = None,
-    static_path: str = '/static/swagger',
+    static_path: str = "/static/swagger",
     error_callback=None,
     in_place: bool = False,
-    prefix: str = '',
+    prefix: str = "",
     **kwargs
 ) -> None:
     CustomAiohttpApiSpec(

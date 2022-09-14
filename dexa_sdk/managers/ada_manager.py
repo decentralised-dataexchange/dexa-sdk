@@ -1,122 +1,144 @@
-import base64
 import asyncio
-import uuid
-import typing
+import base64
 import json
+import typing
+import uuid
+
 import aiohttp
-from loguru import logger
-from web3._utils.encoding import to_json
-from marshmallow.exceptions import ValidationError
-from aries_cloudagent.wallet.base import BaseWallet, DIDInfo
-from aries_cloudagent.wallet.indy import IndyWallet
-from aries_cloudagent.config.injection_context import InjectionContext
-from aries_cloudagent.core.error import BaseError
-from aries_cloudagent.core.dispatcher import DispatcherResponder
-from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
-from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
-from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
-from aries_cloudagent.connections.models.connection_record import ConnectionRecord
-from aries_cloudagent.messaging.decorators.default import DecoratorSet
-from aries_cloudagent.messaging.responder import BaseResponder
-from aries_cloudagent.messaging.models.base_record import match_post_filter
-from aries_cloudagent.messaging.agent_message import AgentMessage
 from aries_cloudagent.cache.basic import BaseCache
-from aries_cloudagent.protocols.basicmessage.v1_0.messages.basicmessage import BasicMessage
+from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.core.dispatcher import DispatcherResponder
+from aries_cloudagent.core.error import BaseError
+from aries_cloudagent.indy.util import generate_pr_nonce
+from aries_cloudagent.messaging.agent_message import AgentMessage
+from aries_cloudagent.messaging.decorators.attach_decorator import AttachDecorator
+from aries_cloudagent.messaging.decorators.default import DecoratorSet
+from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
+from aries_cloudagent.messaging.jsonld.create_verify_data import create_verify_data
+from aries_cloudagent.messaging.models.base_record import match_post_filter
+from aries_cloudagent.messaging.responder import BaseResponder
+from aries_cloudagent.protocols.connections.v1_0.manager import ConnectionManagerError
 from aries_cloudagent.protocols.connections.v1_0.messages.connection_invitation import (
-    ConnectionInvitation
-)
-from aries_cloudagent.protocols.connections.v1_0.manager import (
-    ConnectionManagerError
+    ConnectionInvitation,
 )
 from aries_cloudagent.protocols.issue_credential.v1_0.models.credential_exchange import (
-    V10CredentialExchange
-)
-from aries_cloudagent.protocols.present_proof.v1_0.models.presentation_exchange import (
-    V10PresentationExchange
-)
-from aries_cloudagent.transport.inbound.receipt import MessageReceipt
-from aries_cloudagent.protocols.problem_report.v1_0.message import ProblemReport
-from aries_cloudagent.protocols.present_proof.v1_0.messages.presentation_request import (
-    PresentationRequest
+    V10CredentialExchange,
 )
 from aries_cloudagent.protocols.present_proof.v1_0.message_types import (
     ATTACH_DECO_IDS,
-    PRESENTATION_REQUEST
+    PRESENTATION_REQUEST,
 )
-from aries_cloudagent.messaging.decorators.attach_decorator import AttachDecorator
-from aries_cloudagent.indy.util import generate_pr_nonce
-from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
+from aries_cloudagent.protocols.present_proof.v1_0.messages.presentation_request import (
+    PresentationRequest,
+)
+from aries_cloudagent.protocols.present_proof.v1_0.models.presentation_exchange import (
+    V10PresentationExchange,
+)
+from aries_cloudagent.protocols.problem_report.v1_0.message import ProblemReport
+from aries_cloudagent.transport.inbound.receipt import MessageReceipt
+from aries_cloudagent.transport.pack_format import BaseWireFormat, PackWireFormat
+from aries_cloudagent.utils.task_queue import CompletedTask, PendingTask
+from aries_cloudagent.wallet.base import BaseWallet, DIDInfo
+from aries_cloudagent.wallet.indy import IndyWallet
+from dexa_sdk.agreements.da.v1_0.models.da_instance_models import (
+    DataAgreementInstanceModel,
+)
+from dexa_sdk.agreements.da.v1_0.models.da_models import (
+    DA_DEFAULT_CONTEXT,
+    DA_TYPE,
+    DataAgreementModel,
+    DataAgreementPersonalDataModel,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_instance_permission_record import (
+    DAInstancePermissionRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_instance_record import (
+    DataAgreementInstanceRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_qrcode_record import (
+    DataAgreementQRCodeRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
+    DataAgreementTemplateRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
+from dexa_sdk.connections.records.existing_connections_record import (
+    ExistingConnectionRecord,
+)
+from dexa_sdk.data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord,
+)
+from dexa_sdk.data_controller.records.controller_details_record import (
+    ControllerDetailsRecord,
+)
+from dexa_sdk.did_mydata.core import DIDMyDataBuilder
+from dexa_sdk.ledgers.ethereum.core import EthereumClient
+from dexa_sdk.ledgers.indy.core import (
+    create_cred_def_and_anchor_to_ledger,
+    create_schema_def_and_anchor_to_ledger,
+)
+from dexa_sdk.marketplace.records.marketplace_connection_record import (
+    MarketplaceConnectionRecord,
+)
+from dexa_sdk.utils import (
+    PaginationResult,
+    bump_major_for_semver_string,
+    drop_none_dict,
+    fetch_org_details_from_intermediary,
+    generate_firebase_dynamic_link,
+    paginate,
+    paginate_records,
+)
+from loguru import logger
+from marshmallow.exceptions import ValidationError
 from mydata_did.patched_protocols.present_proof.v1_0.manager import PresentationManager
-from mydata_did.v1_0.messages.data_agreement_offer import (
-    DataAgreementNegotiationOfferMessage
-)
-from mydata_did.v1_0.messages.data_agreement_accept import (
-    DataAgreementNegotiationAcceptMessage
-)
-from mydata_did.v1_0.message_types import (
-    DATA_AGREEMENT_NEGOTIATION_OFFER,
-    DATA_AGREEMENT_NEGOTIATION_ACCEPT,
-)
 from mydata_did.v1_0.decorators.data_agreement_context_decorator import (
     DataAgreementContextDecorator,
 )
-from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
-    DataAgreementQrCodeInitiateBody
-)
-from mydata_did.v1_0.messages.data_agreement_qr_code_initiate import (
-    DataAgreementQrCodeInitiateMessage
-)
-from mydata_did.v1_0.messages.data_controller_details import (
-    DataControllerDetailsMessage
-)
-from mydata_did.v1_0.messages.data_controller_details_response import (
-    DataControllerDetailsResponseMessage
-)
-from mydata_did.v1_0.models.data_controller_model import (
-    DataController
-)
-from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMessage
-from mydata_did.v1_0.models.existing_connections_model import (
-    ExistingConnectionsBody
+from mydata_did.v1_0.message_types import (
+    DATA_AGREEMENT_NEGOTIATION_ACCEPT,
+    DATA_AGREEMENT_NEGOTIATION_OFFER,
 )
 from mydata_did.v1_0.messages.da_negotiation_receipt import (
+    DataAgreementNegotiationReceiptBody,
     DataAgreementNegotiationReceiptMessage,
-    DataAgreementNegotiationReceiptBody
 )
-from dexa_sdk.marketplace.records.marketplace_connection_record import MarketplaceConnectionRecord
-from ..connections.records.existing_connections_record import (
-    ExistingConnectionRecord
+from mydata_did.v1_0.messages.da_permissions import (
+    DAPermissionsBodyModel,
+    DAPermissionsMessage,
 )
-from ..agreements.da.v1_0.models.da_models import (
-    DataAgreementModel,
-    DA_DEFAULT_CONTEXT,
-    DA_TYPE
+from mydata_did.v1_0.messages.data_agreement_accept import (
+    DataAgreementNegotiationAcceptMessage,
 )
-from ..data_controller.records.controller_details_record import ControllerDetailsRecord
-from ..agreements.da.v1_0.records.da_qrcode_record import DataAgreementQRCodeRecord
-from ..agreements.da.v1_0.records.da_instance_record import DataAgreementInstanceRecord
-from ..agreements.da.v1_0.records.da_template_record import DataAgreementTemplateRecord
-from ..agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
-from ..agreements.da.v1_0.models.da_models import DataAgreementPersonalDataModel
-from ..agreements.da.v1_0.models.da_instance_models import DataAgreementInstanceModel
-from ..ledgers.indy.core import (
-    create_cred_def_and_anchor_to_ledger,
-    create_schema_def_and_anchor_to_ledger
+from mydata_did.v1_0.messages.data_agreement_offer import (
+    DataAgreementNegotiationOfferMessage,
 )
-from ..utils import (
-    paginate,
-    paginate_records,
-    PaginationResult,
-    drop_none_dict,
-    bump_major_for_semver_string,
-    fetch_org_details_from_intermediary,
-    generate_firebase_dynamic_link
+from mydata_did.v1_0.messages.data_agreement_qr_code_initiate import (
+    DataAgreementQrCodeInitiateMessage,
 )
-from ..did_mydata.core import DIDMyDataBuilder
-from ..ledgers.ethereum.core import EthereumClient
-from ..data_controller.records.connection_controller_details_record import (
-    ConnectionControllerDetailsRecord
+from mydata_did.v1_0.messages.data_controller_details import (
+    DataControllerDetailsMessage,
 )
+from mydata_did.v1_0.messages.data_controller_details_response import (
+    DataControllerDetailsResponseMessage,
+)
+from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMessage
+from mydata_did.v1_0.messages.json_ld_processed import (
+    JSONLDProcessedBody,
+    JSONLDProcessedMessage,
+)
+from mydata_did.v1_0.messages.json_ld_processed_response import (
+    JSONLDProcessedResponseBody,
+    JSONLDProcessedResponseMessage,
+)
+from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
+    DataAgreementQrCodeInitiateBody,
+)
+from mydata_did.v1_0.models.data_controller_model import DataController
+from mydata_did.v1_0.models.existing_connections_model import ExistingConnectionsBody
+from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
+from web3._utils.encoding import to_json
 
 
 class V2ADAManagerError(BaseError):
@@ -124,8 +146,7 @@ class V2ADAManagerError(BaseError):
 
 
 class V2ADAManager:
-    """Manages ADA related functions (v2)
-    """
+    """Manages ADA related functions (v2)"""
 
     def __init__(self, context: InjectionContext) -> None:
         """Initialise ADA manager
@@ -140,7 +161,7 @@ class V2ADAManager:
         # Logger
         self._logger = logger
 
-    @ property
+    @property
     def context(self) -> InjectionContext:
         """Accessor for injection context
 
@@ -167,9 +188,7 @@ class V2ADAManager:
         image_url = None
 
         # Fetch organisation details from intermediary.
-        org_details = await fetch_org_details_from_intermediary(
-            self.context
-        )
+        org_details = await fetch_org_details_from_intermediary(self.context)
 
         my_label = org_details["Name"]
         image_url = org_details["LogoImageURL"] + "/web"
@@ -178,8 +197,7 @@ class V2ADAManager:
 
         if public:
             if not self.context.settings.get("public_invites"):
-                raise ConnectionManagerError(
-                    "Public invitations are not enabled")
+                raise ConnectionManagerError("Public invitations are not enabled")
 
             public_did = await wallet.get_public_did()
             if not public_did:
@@ -236,19 +254,21 @@ class V2ADAManager:
         # Note: Need to split this into two stages to support inbound routing of invites
         # Would want to reuse create_did_document and convert the result
         invitation = ConnectionInvitation(
-            label=my_label, recipient_keys=[
-                connection_key.verkey], endpoint=my_endpoint, image_url=image_url
+            label=my_label,
+            recipient_keys=[connection_key.verkey],
+            endpoint=my_endpoint,
+            image_url=image_url,
         )
         await connection.attach_invitation(self.context, invitation)
 
         return connection, invitation
 
     async def create_and_store_ledger_payloads_for_da_template(
-            self,
-            *,
-            template_record: DataAgreementTemplateRecord,
-            pd_records: typing.List[PersonalDataRecord] = None,
-            schema_id: str = None
+        self,
+        *,
+        template_record: DataAgreementTemplateRecord,
+        pd_records: typing.List[PersonalDataRecord] = None,
+        schema_id: str = None,
     ) -> DataAgreementTemplateRecord:
         """Create and store ledger payloads for a da template
 
@@ -260,7 +280,10 @@ class V2ADAManager:
         Returns:
             DataAgreementTemplateRecord: Record with ledger payloads
         """
-        if template_record.method_of_use == DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE:
+        if (
+            template_record.method_of_use
+            == DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE
+        ):
 
             # Create schema if not existing
             if not schema_id:
@@ -271,22 +294,20 @@ class V2ADAManager:
                 schema_version = data_agreement.get("version")
                 # Schema attributes
                 attributes = [
-                    personal_data.attribute_name
-                    for personal_data in pd_records
+                    personal_data.attribute_name for personal_data in pd_records
                 ]
                 # Creata schema and anchor to ledger
                 (schema_id, schema_def) = await create_schema_def_and_anchor_to_ledger(
                     context=self.context,
                     schema_name=schema_name,
                     schema_version=schema_version,
-                    attributes=attributes
+                    attributes=attributes,
                 )
 
             # Create credential definition and anchor to ledger
 
             (cred_def_id, cred_def, novel) = await create_cred_def_and_anchor_to_ledger(
-                context=self.context,
-                schema_id=schema_id
+                context=self.context, schema_id=schema_id
             )
 
             template_record.cred_def_id = cred_def_id
@@ -310,7 +331,7 @@ class V2ADAManager:
                 usage_purpose=usage_purpose,
                 usage_purpose_description=usage_purpose_description,
                 da_template_version=da_template_version,
-                personal_data=pd_records
+                personal_data=pd_records,
             )
 
             template_record.presentation_request = presentation_request
@@ -319,12 +340,12 @@ class V2ADAManager:
         return template_record
 
     def construct_presentation_request(
-            self,
-            *,
-            usage_purpose: str,
-            usage_purpose_description: str,
-            da_template_version: str,
-            personal_data: typing.List[PersonalDataRecord]
+        self,
+        *,
+        usage_purpose: str,
+        usage_purpose_description: str,
+        da_template_version: str,
+        personal_data: typing.List[PersonalDataRecord],
     ) -> dict:
         """
         Construct presentation request
@@ -345,7 +366,7 @@ class V2ADAManager:
             "comment": usage_purpose_description,
             "version": da_template_version,
             "requested_attributes": {},
-            "requested_predicates": {}
+            "requested_predicates": {},
         }
 
         index = 1
@@ -355,18 +376,19 @@ class V2ADAManager:
 
             requested_attributes["additionalProp" + str(index)] = {
                 "name": pd.attribute_name,
-                "restrictions": pd.restrictions if pd.restrictions else []
+                "restrictions": pd.restrictions if pd.restrictions else [],
             }
             if pd.restrictions:
                 restrictions = [
                     {
                         "schema_id": restriction.get("schemaId"),
-                        "cred_def_id": restriction.get("credDefId")
+                        "cred_def_id": restriction.get("credDefId"),
                     }
                     for restriction in pd.restrictions
                 ]
-                requested_attributes["additionalProp" +
-                                     str(index)].update({"restrictions": restrictions})
+                requested_attributes["additionalProp" + str(index)].update(
+                    {"restrictions": restrictions}
+                )
             else:
                 requested_attributes["additionalProp" + str(index)].update({})
             index += 1
@@ -376,11 +398,7 @@ class V2ADAManager:
         return presentation_request_dict
 
     async def create_and_store_da_template_in_wallet(
-            self,
-            data_agreement: dict,
-            *,
-            publish_flag: bool = True,
-            schema_id: str = None
+        self, data_agreement: dict, *, publish_flag: bool = True, schema_id: str = None
     ) -> DataAgreementTemplateRecord:
         """Create and store data agreement template in wallet
 
@@ -400,24 +418,22 @@ class V2ADAManager:
 
         try:
             # Validate the data agreement.
-            data_agreement: DataAgreementModel = DataAgreementModel.deserialize(data_agreement)
-        except ValidationError as err:
-            raise V2ADAManagerError(
-                f"Failed to create data agreement; Reason: {err}"
+            data_agreement: DataAgreementModel = DataAgreementModel.deserialize(
+                data_agreement
             )
+        except ValidationError as err:
+            raise V2ADAManagerError(f"Failed to create data agreement; Reason: {err}")
 
         # Create personal data records
         pds = data_agreement.personal_data
         pd_records = []
         pd_models_with_id = []
         for pd in pds:
-            pd_record: PersonalDataRecord = \
+            pd_record: PersonalDataRecord = (
                 await PersonalDataRecord.build_and_save_record_from_pd_model(
-                    self.context,
-                    template_id,
-                    template_version,
-                    pd
+                    self.context, template_id, template_version, pd
                 )
+            )
             pd_records.append(pd_record)
             pd_models_with_id.append(pd_record.convert_record_to_pd_model())
 
@@ -435,7 +451,8 @@ class V2ADAManager:
             schema_id=schema_id,
             existing_schema_flag=bool_to_str(True) if schema_id else bool_to_str(False),
             third_party_data_sharing=bool_to_str(
-                data_agreement.data_policy.third_party_data_sharing)
+                data_agreement.data_policy.third_party_data_sharing
+            ),
         )
 
         await record.save(self.context)
@@ -443,25 +460,23 @@ class V2ADAManager:
         if publish_flag:
             # Create ledger payloads
             record = await self.create_and_store_ledger_payloads_for_da_template(
-                template_record=record,
-                pd_records=pd_records,
-                schema_id=schema_id
+                template_record=record, pd_records=pd_records, schema_id=schema_id
             )
 
         return record
 
     async def query_da_templates_in_wallet(
-            self,
-            *,
-            template_id: str = None,
-            delete_flag: str = "false",
-            method_of_use: str = None,
-            publish_flag: str = "true",
-            template_version: str = None,
-            latest_version_flag: str = "true",
-            third_party_data_sharing: str = "false",
-            page: int = 1,
-            page_size: int = 10,
+        self,
+        *,
+        template_id: str = None,
+        delete_flag: str = "false",
+        method_of_use: str = None,
+        publish_flag: str = "true",
+        template_version: str = None,
+        latest_version_flag: str = "true",
+        third_party_data_sharing: str = "false",
+        page: int = 1,
+        page_size: int = 10,
     ) -> PaginationResult:
         """Query DA templates in wallet
 
@@ -492,14 +507,13 @@ class V2ADAManager:
             "template_id": template_id,
             "template_version": template_version,
             "latest_version_flag": latest_version_flag,
-            "third_party_data_sharing": third_party_data_sharing
+            "third_party_data_sharing": third_party_data_sharing,
         }
 
         tag_filter = drop_none_dict(tag_filter)
 
         records = await DataAgreementTemplateRecord.query(
-            context=self.context,
-            tag_filter=tag_filter
+            context=self.context, tag_filter=tag_filter
         )
 
         records = sorted(records, key=lambda k: k.created_at, reverse=True)
@@ -508,8 +522,9 @@ class V2ADAManager:
 
         return paginate_result
 
-    async def publish_da_template_in_wallet(self,
-                                            template_id: str) -> DataAgreementTemplateRecord:
+    async def publish_da_template_in_wallet(
+        self, template_id: str
+    ) -> DataAgreementTemplateRecord:
         """Publish data agreement template.
 
         Args:
@@ -523,12 +538,11 @@ class V2ADAManager:
             "delete_flag": bool_to_str(False),
             "publish_flag": bool_to_str(False),
             "latest_version_flag": bool_to_str(True),
-            "template_id": template_id
+            "template_id": template_id,
         }
 
         records = await DataAgreementTemplateRecord.query(
-            context=self.context,
-            tag_filter=tag_filter
+            context=self.context, tag_filter=tag_filter
         )
 
         assert records, "Data agreement template not found."
@@ -541,20 +555,18 @@ class V2ADAManager:
 
         # Create ledger payloads
         record = await self.create_and_store_ledger_payloads_for_da_template(
-            template_record=record,
-            pd_records=pd_records,
-            schema_id=record.schema_id
+            template_record=record, pd_records=pd_records, schema_id=record.schema_id
         )
 
         return record
 
     async def update_and_store_da_template_in_wallet(
-            self,
-            template_id: str,
-            data_agreement: dict,
-            *,
-            publish_flag: bool = True,
-            schema_id: str = None
+        self,
+        template_id: str,
+        data_agreement: dict,
+        *,
+        publish_flag: bool = True,
+        schema_id: str = None,
     ) -> DataAgreementTemplateRecord:
         """Update and store data agreement template in wallet.
 
@@ -572,22 +584,28 @@ class V2ADAManager:
         tag_filter = {
             "delete_flag": bool_to_str(False),
             "template_id": template_id,
-            "latest_version_flag": bool_to_str(True)
+            "latest_version_flag": bool_to_str(True),
         }
 
         # Fetch data agreement record
-        record: DataAgreementTemplateRecord = \
-            await DataAgreementTemplateRecord.retrieve_by_tag_filter(self.context, tag_filter)
+        record: DataAgreementTemplateRecord = (
+            await DataAgreementTemplateRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
 
         # Validate the data agreement.
-        previous_da: DataAgreementModel = DataAgreementModel.deserialize(record.data_agreement)
+        previous_da: DataAgreementModel = DataAgreementModel.deserialize(
+            record.data_agreement
+        )
 
         assert previous_da.method_of_use == data_agreement.get(
-            "methodOfUse"), "Method of use cannot be updated."
+            "methodOfUse"
+        ), "Method of use cannot be updated."
 
-        assert previous_da.data_policy.third_party_data_sharing \
-            == data_agreement.get("dataPolicy").get("thirdPartyDataSharing"), \
-            "Third party data sharing cannot be updated."
+        assert previous_da.data_policy.third_party_data_sharing == data_agreement.get(
+            "dataPolicy"
+        ).get("thirdPartyDataSharing"), "Third party data sharing cannot be updated."
 
         # Copy the id, version from previous da to new da
         template_version = bump_major_for_semver_string(previous_da.version)
@@ -604,13 +622,11 @@ class V2ADAManager:
         pd_records = []
         pd_models_with_id = []
         for pd in pds:
-            pd_record: PersonalDataRecord = \
+            pd_record: PersonalDataRecord = (
                 await PersonalDataRecord.build_and_save_record_from_pd_model(
-                    self.context,
-                    template_id,
-                    template_version,
-                    pd
+                    self.context, template_id, template_version, pd
                 )
+            )
             pd_records.append(pd_record)
             pd_models_with_id.append(pd_record.convert_record_to_pd_model())
 
@@ -620,7 +636,9 @@ class V2ADAManager:
         record.data_agreement = updated_da.serialize()
         record.publish_flag = bool_to_str(publish_flag)
         record.schema_id = schema_id
-        record.existing_schema_flag = bool_to_str(True) if schema_id else bool_to_str(False)
+        record.existing_schema_flag = (
+            bool_to_str(True) if schema_id else bool_to_str(False)
+        )
         record.template_version = template_version
 
         await record.upgrade(self.context)
@@ -628,9 +646,7 @@ class V2ADAManager:
         if publish_flag:
             # Create ledger payloads
             record = await self.create_and_store_ledger_payloads_for_da_template(
-                template_record=record,
-                pd_records=pd_records,
-                schema_id=schema_id
+                template_record=record, pd_records=pd_records, schema_id=schema_id
             )
 
         return record
@@ -650,11 +666,11 @@ class V2ADAManager:
             record_id: Record identifier for the deleted template.
         """
         # Query for the data agreement by id
-        data_agreement_records: DataAgreementTemplateRecord = \
+        data_agreement_records: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.non_deleted_template_by_id(
-                self.context,
-                template_id
+                self.context, template_id
             )
+        )
 
         assert data_agreement_records, "Data agreement template not found."
         data_agreement_record = data_agreement_records[0]
@@ -662,13 +678,14 @@ class V2ADAManager:
         # Mark the data agreement as deleted and save.
         return await data_agreement_record.delete_template(self.context)
 
-    async def query_pd_of_da_template_from_wallet(self,
-                                                  template_id: str = None,
-                                                  method_of_use: str = None,
-                                                  third_party_data_sharing: str = None,
-                                                  page: int = 1,
-                                                  page_size: int = 10,
-                                                  ) -> PaginationResult:
+    async def query_pd_of_da_template_from_wallet(
+        self,
+        template_id: str = None,
+        method_of_use: str = None,
+        third_party_data_sharing: str = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> PaginationResult:
         """Query personal data for DA template.
 
         Args:
@@ -686,14 +703,13 @@ class V2ADAManager:
             "method_of_use": method_of_use,
             "template_id": template_id,
             "latest_version_flag": bool_to_str(True),
-            "third_party_data_sharing": third_party_data_sharing
+            "third_party_data_sharing": third_party_data_sharing,
         }
 
         tag_filter = drop_none_dict(tag_filter)
 
         records = await DataAgreementTemplateRecord.query(
-            context=self.context,
-            tag_filter=tag_filter
+            context=self.context, tag_filter=tag_filter
         )
 
         records = sorted(records, key=lambda k: k.created_at, reverse=True)
@@ -707,9 +723,9 @@ class V2ADAManager:
 
         return paginate_result
 
-    async def update_personal_data_description(self,
-                                               attribute_id: str,
-                                               desc: str) -> PersonalDataRecord:
+    async def update_personal_data_description(
+        self, attribute_id: str, desc: str
+    ) -> PersonalDataRecord:
         """Update personal data description
 
         Args:
@@ -722,30 +738,34 @@ class V2ADAManager:
 
         # Fetch personal data record by id
         pd_record: PersonalDataRecord = await PersonalDataRecord.retrieve_by_id(
-            self.context,
-            attribute_id
+            self.context, attribute_id
         )
 
         # Fetch the associated data agreement record
-        da_template_record: DataAgreementTemplateRecord = \
+        da_template_record: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
-                self.context,
-                pd_record.data_agreement_template_id
+                self.context, pd_record.data_agreement_template_id
             )
+        )
 
         assert da_template_record, "Matching data agreement template not found."
-        assert da_template_record.template_version == \
-            pd_record.data_agreement_template_version, \
-            "Matching data agreement template with same version not found."
+        assert (
+            da_template_record.template_version
+            == pd_record.data_agreement_template_version
+        ), "Matching data agreement template with same version not found."
 
         # Update the personal data record.
         pd_record.attribute_description = desc
         await pd_record.save(self.context)
 
-        pd_model: DataAgreementPersonalDataModel = pd_record.convert_record_to_pd_model()
+        pd_model: DataAgreementPersonalDataModel = (
+            pd_record.convert_record_to_pd_model()
+        )
 
         # Update the data agreement record with new personal data.
-        da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
+        da: DataAgreementModel = DataAgreementModel.deserialize(
+            da_template_record.data_agreement
+        )
         # Iterate through the existing personal data in data agreements
         # And update the personal data matching the attribute id
         da_pds = []
@@ -773,23 +793,25 @@ class V2ADAManager:
 
         # Fetch personal data record by id
         pd_record: PersonalDataRecord = await PersonalDataRecord.retrieve_by_id(
-            self.context,
-            attribute_id
+            self.context, attribute_id
         )
 
         # Fetch the associated data agreement record
-        da_template_record: DataAgreementTemplateRecord = \
+        da_template_record: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
-                self.context,
-                pd_record.data_agreement_template_id
+                self.context, pd_record.data_agreement_template_id
             )
+        )
 
         assert da_template_record, "Matching data agreement template not found."
-        assert da_template_record.template_version == \
-            pd_record.data_agreement_template_version, \
-            "Matching data agreement template with same version not found."
+        assert (
+            da_template_record.template_version
+            == pd_record.data_agreement_template_version
+        ), "Matching data agreement template with same version not found."
 
-        da: DataAgreementModel = DataAgreementModel.deserialize(da_template_record.data_agreement)
+        da: DataAgreementModel = DataAgreementModel.deserialize(
+            da_template_record.data_agreement
+        )
 
         # Iterate through the existing personal data in data agreements
         # And remove the deleted personal data.
@@ -808,7 +830,7 @@ class V2ADAManager:
             await self.update_and_store_da_template_in_wallet(
                 pd_record.data_agreement_template_id,
                 da.serialize(),
-                publish_flag=str_to_bool(da_template_record.publish_flag)
+                publish_flag=str_to_bool(da_template_record.publish_flag),
             )
 
     async def build_data_agreement_offer_for_credential_exchange(
@@ -830,12 +852,14 @@ class V2ADAManager:
         """
 
         # Build instance record
-        (da_instance_record, da_instance_model) = \
-            await DataAgreementInstanceRecord.build_instance_from_template(
+        (
+            da_instance_record,
+            da_instance_model,
+        ) = await DataAgreementInstanceRecord.build_instance_from_template(
             self.context,
             template_id,
             connection_record,
-            cred_ex_record.credential_exchange_id
+            cred_ex_record.credential_exchange_id,
         )
 
         # Build negotiation offer agent message
@@ -862,12 +886,14 @@ class V2ADAManager:
         """
 
         # Build instance record
-        (da_instance_record, da_instance_model) = \
-            await DataAgreementInstanceRecord.build_instance_from_template(
+        (
+            da_instance_record,
+            da_instance_model,
+        ) = await DataAgreementInstanceRecord.build_instance_from_template(
             self.context,
             template_id,
             connection_record,
-            pres_ex_record.presentation_exchange_id
+            pres_ex_record.presentation_exchange_id,
         )
 
         # Build negotiation offer agent message
@@ -879,7 +905,7 @@ class V2ADAManager:
         self,
         decorator_set: DecoratorSet,
         data_ex_record: typing.Union[V10CredentialExchange, V10PresentationExchange],
-        connection_record: ConnectionRecord
+        connection_record: ConnectionRecord,
     ) -> DataAgreementInstanceRecord:
         """Process data agreement context decorator with DA offer message
 
@@ -895,23 +921,28 @@ class V2ADAManager:
         # Check if data agreement context decorator is present
         if "data-agreement-context" not in decorator_set.keys():
             self._logger.info(
-                "Data agreement context decorator is not present in the incoming message.")
+                "Data agreement context decorator is not present in the incoming message."
+            )
             return None
 
         # Deserialize data agreement context decorator
         da_decorator_dict = decorator_set["data-agreement-context"]
-        da_decorator_model: DataAgreementContextDecorator = \
+        da_decorator_model: DataAgreementContextDecorator = (
             DataAgreementContextDecorator.deserialize(da_decorator_dict)
+        )
 
-        assert da_decorator_model.message_type == "protocol", \
-            "DA context message type must be 'protocol'."
+        assert (
+            da_decorator_model.message_type == "protocol"
+        ), "DA context message type must be 'protocol'."
 
         message_type = da_decorator_model.message.get("@type")
-        assert DATA_AGREEMENT_NEGOTIATION_OFFER in message_type, \
-            f"DA context protocol message type must be '{DATA_AGREEMENT_NEGOTIATION_OFFER}'"
+        assert (
+            DATA_AGREEMENT_NEGOTIATION_OFFER in message_type
+        ), f"DA context protocol message type must be '{DATA_AGREEMENT_NEGOTIATION_OFFER}'"
 
-        da_offer_message: DataAgreementNegotiationOfferMessage = \
+        da_offer_message: DataAgreementNegotiationOfferMessage = (
             DataAgreementNegotiationOfferMessage.deserialize(da_decorator_model.message)
+        )
 
         # Build and save data agreement instance record.
         if data_ex_record.__class__.__name__ == V10CredentialExchange.__name__:
@@ -919,21 +950,21 @@ class V2ADAManager:
                 self.context,
                 da_offer_message,
                 connection_record,
-                data_ex_record.credential_exchange_id
+                data_ex_record.credential_exchange_id,
             )
         else:
             return await DataAgreementInstanceRecord.build_instance_from_da_offer(
                 self.context,
                 da_offer_message,
                 connection_record,
-                data_ex_record.presentation_exchange_id
+                data_ex_record.presentation_exchange_id,
             )
 
     async def process_decorator_with_da_accept_message(
         self,
         decorator_set: DecoratorSet,
         data_ex_record: typing.Union[V10CredentialExchange, V10PresentationExchange],
-        connection_record: ConnectionRecord
+        connection_record: ConnectionRecord,
     ) -> DataAgreementInstanceRecord:
         """Process data agreement context decorator with DA accept message
 
@@ -950,56 +981,69 @@ class V2ADAManager:
         # Check if data agreement context decorator is present
         if "data-agreement-context" not in decorator_set.keys():
             self._logger.info(
-                "Data agreement context decorator is not present in the incoming message.")
+                "Data agreement context decorator is not present in the incoming message."
+            )
             return None
 
         # Deserialize data agreement context decorator
         da_decorator_dict = decorator_set["data-agreement-context"]
-        da_decorator_model: DataAgreementContextDecorator = \
+        da_decorator_model: DataAgreementContextDecorator = (
             DataAgreementContextDecorator.deserialize(da_decorator_dict)
+        )
 
-        assert da_decorator_model.message_type == "protocol", \
-            "DA context message type must be 'protocol'."
+        assert (
+            da_decorator_model.message_type == "protocol"
+        ), "DA context message type must be 'protocol'."
 
         message_type = da_decorator_model.message.get("@type")
-        assert DATA_AGREEMENT_NEGOTIATION_ACCEPT in message_type, \
-            f"DA context protocol message type must be '{DATA_AGREEMENT_NEGOTIATION_ACCEPT}'"
+        assert (
+            DATA_AGREEMENT_NEGOTIATION_ACCEPT in message_type
+        ), f"DA context protocol message type must be '{DATA_AGREEMENT_NEGOTIATION_ACCEPT}'"
 
-        da_accept_message: DataAgreementNegotiationAcceptMessage = \
-            DataAgreementNegotiationAcceptMessage.deserialize(da_decorator_model.message)
+        da_accept_message: DataAgreementNegotiationAcceptMessage = (
+            DataAgreementNegotiationAcceptMessage.deserialize(
+                da_decorator_model.message
+            )
+        )
 
         # Build and save data agreement instance record.
         if data_ex_record.__class__.__name__ == V10CredentialExchange.__name__:
             # Build and save data agreement instance record.
-            instance_record = await DataAgreementInstanceRecord.update_instance_from_da_accept(
-                self.context,
-                da_accept_message,
-                data_ex_record.credential_exchange_id
+            instance_record = (
+                await DataAgreementInstanceRecord.update_instance_from_da_accept(
+                    self.context,
+                    da_accept_message,
+                    data_ex_record.credential_exchange_id,
+                )
             )
         else:
             # Build and save data agreement instance record.
-            instance_record = await DataAgreementInstanceRecord.update_instance_from_da_accept(
-                self.context,
-                da_accept_message,
-                data_ex_record.presentation_exchange_id
+            instance_record = (
+                await DataAgreementInstanceRecord.update_instance_from_da_accept(
+                    self.context,
+                    da_accept_message,
+                    data_ex_record.presentation_exchange_id,
+                )
             )
 
         # Anchor da to blockchain.
-        await self.anchor_da_instance_to_blockchain_async_task(instance_record.instance_id)
+        await self.anchor_da_instance_to_blockchain_async_task(
+            instance_record.instance_id
+        )
 
         return instance_record
 
     async def build_data_agreement_negotiation_accept_by_instance_id(
-        self,
-        instance_id: str,
-        connection_record: ConnectionRecord
+        self, instance_id: str, connection_record: ConnectionRecord
     ) -> DataAgreementNegotiationAcceptMessage:
         # Counter sign da
-        (da_instance_record, da_instance_model) = \
-            await DataAgreementInstanceRecord.counter_sign_instance(
-                self.context,
-                instance_id,
-                connection_record,
+        (
+            da_instance_record,
+            da_instance_model,
+        ) = await DataAgreementInstanceRecord.counter_sign_instance(
+            self.context,
+            instance_id,
+            connection_record,
         )
 
         # Build negotiation accept agent message
@@ -1027,22 +1071,20 @@ class V2ADAManager:
         if data_ex_record.__class__.__name__ == V10CredentialExchange.__name__:
             # Fetch data agreement instance matching credential exchange record.
             instance_record = await DataAgreementInstanceRecord.fetch_by_data_ex_id(
-                self.context,
-                data_ex_record.credential_exchange_id
+                self.context, data_ex_record.credential_exchange_id
             )
         else:
             # Fetch data agreement instance matching credential exchange record.
             instance_record = await DataAgreementInstanceRecord.fetch_by_data_ex_id(
-                self.context,
-                data_ex_record.presentation_exchange_id
+                self.context, data_ex_record.presentation_exchange_id
             )
 
         # Build instance record
-        (da_instance_record, da_instance_model) = \
-            await DataAgreementInstanceRecord.counter_sign_instance(
-            self.context,
-            instance_record.instance_id,
-            connection_record
+        (
+            da_instance_record,
+            da_instance_model,
+        ) = await DataAgreementInstanceRecord.counter_sign_instance(
+            self.context, instance_record.instance_id, connection_record
         )
 
         # Build negotiation accept agent message
@@ -1060,7 +1102,7 @@ class V2ADAManager:
         data_ex_id: str,
         data_subject_did: str,
         page: int = 1,
-        page_size: int = 10
+        page_size: int = 10,
     ) -> PaginationResult:
         """Query data agreement instances
 
@@ -1090,26 +1132,44 @@ class V2ADAManager:
             "method_of_use": method_of_use,
             "third_party_data_sharing": third_party_data_sharing,
             "data_ex_id": data_ex_id,
-            "data_subject_did": data_subject_did
+            "data_subject_did": data_subject_did,
         }
 
         tag_filter = drop_none_dict(tag_filter)
 
         records = await DataAgreementInstanceRecord.query(
-            context=self.context,
-            tag_filter=tag_filter
+            context=self.context, tag_filter=tag_filter
         )
 
-        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+        records: typing.List[DataAgreementInstanceRecord] = sorted(
+            records, key=lambda k: k.updated_at, reverse=True
+        )
 
-        paginate_result = paginate_records(records, page, page_size)
+        da_instances_with_permissions = []
+        for record in records:
+            record_dict = record.serialize()
+            record_dict.update({"permissions": []})
+
+            # Fetch permissions for the DA instance.
+            permissions: typing.List[
+                DAInstancePermissionRecord
+            ] = await DAInstancePermissionRecord.query(
+                self.context, {"instance_id": record.instance_id}
+            )
+
+            permissions = sorted(permissions, key=lambda k: k.updated_at, reverse=True)
+
+            for permission in permissions:
+                # Update permissions list for DDA instance.
+                record_dict["permissions"].append(permission.serialize())
+
+            da_instances_with_permissions.append(record_dict)
+
+        paginate_result = paginate(da_instances_with_permissions, page, page_size)
 
         return paginate_result
 
-    async def delete_da_instance_by_data_ex_id(
-        self,
-        cred_ex_id: str
-    ) -> None:
+    async def delete_da_instance_by_data_ex_id(self, cred_ex_id: str) -> None:
         """Delete da instance by cred ex id.
 
         Args:
@@ -1118,8 +1178,7 @@ class V2ADAManager:
 
         # Data agreement instance
         instance = await DataAgreementInstanceRecord.fetch_by_data_ex_id(
-            self.context,
-            cred_ex_id
+            self.context, cred_ex_id
         )
 
         await instance.delete_record(self.context)
@@ -1127,8 +1186,7 @@ class V2ADAManager:
     async def anchor_da_instance_to_blockchain_async_task_callback(
         self, *args, **kwargs
     ):
-        """Anchor DA instance to blockchain async task callback function
-        """
+        """Anchor DA instance to blockchain async task callback function"""
 
         # Obtain the completed task.
         completed_task: CompletedTask = args[0]
@@ -1136,9 +1194,7 @@ class V2ADAManager:
         # Obtain the results from the task.
         (instance_id, mydata_did, tx_hash, tx_receipt) = completed_task.task.result()
 
-        tag_filter = {
-            "instance_id": instance_id
-        }
+        tag_filter = {"instance_id": instance_id}
 
         # Fetch data agreement instance record.
         da_instance_records = await DataAgreementInstanceRecord.query(
@@ -1166,7 +1222,7 @@ class V2ADAManager:
                 instance_id=da_instance_record.instance_id,
                 blockchain_receipt=transaction_receipt,
                 blink=f"blink:ethereum:rinkeby:{transaction_hash}",
-                mydata_did=mydata_did
+                mydata_did=mydata_did,
             )
         )
 
@@ -1177,15 +1233,9 @@ class V2ADAManager:
             their_did=data_subject_did,
         )
 
-        self.send_reply_message(
-            message,
-            connection_record.connection_id
-        )
+        await self.send_reply_message(message, connection_record.connection_id)
 
-    async def anchor_da_instance_to_blockchain_async_task(
-        self,
-        instance_id: str
-    ):
+    async def anchor_da_instance_to_blockchain_async_task(self, instance_id: str):
         """Async task to anchor da instance to blockchain.
 
         Args:
@@ -1194,14 +1244,11 @@ class V2ADAManager:
         pending_task = await self.add_task(
             self.context,
             self.anchor_da_instance_to_blockchain(instance_id),
-            self.anchor_da_instance_to_blockchain_async_task_callback
+            self.anchor_da_instance_to_blockchain_async_task_callback,
         )
         self._logger.info(pending_task)
 
-    async def anchor_da_instance_to_blockchain(
-        self,
-        instance_id: str
-    ) -> None:
+    async def anchor_da_instance_to_blockchain(self, instance_id: str) -> None:
         """Anchor da instance to blockchain.
 
         Args:
@@ -1210,9 +1257,7 @@ class V2ADAManager:
 
         eth_client: EthereumClient = await self.context.inject(EthereumClient)
 
-        tag_filter = {
-            "instance_id": instance_id
-        }
+        tag_filter = {"instance_id": instance_id}
 
         # Fetch data agreement instance record.
         da_instance_records = await DataAgreementInstanceRecord.query(
@@ -1223,21 +1268,25 @@ class V2ADAManager:
         assert da_instance_records, "Data agreement instance not found."
 
         da_instance_record: DataAgreementInstanceRecord = da_instance_records[0]
-        da_model: DataAgreementInstanceModel = \
-            DataAgreementInstanceModel.deserialize(da_instance_record.data_agreement)
-
-        did_mydata_builder = DIDMyDataBuilder(
-            artefact=da_model
+        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+            da_instance_record.data_agreement
         )
 
-        (tx_hash, tx_receipt) = await eth_client.emit_da_did(did_mydata_builder.mydata_did)
+        did_mydata_builder = DIDMyDataBuilder(artefact=da_model)
 
-        return (da_instance_record.instance_id, did_mydata_builder.mydata_did, tx_hash, tx_receipt)
+        (tx_hash, tx_receipt) = await eth_client.emit_da_did(
+            did_mydata_builder.mydata_did
+        )
+
+        return (
+            da_instance_record.instance_id,
+            did_mydata_builder.mydata_did,
+            tx_hash,
+            tx_receipt,
+        )
 
     async def create_data_agreement_qr_code(
-        self,
-        template_id: str,
-        multi_use_flag: bool
+        self, template_id: str, multi_use_flag: bool
     ) -> dict:
         """Create data agreement qr code
 
@@ -1250,8 +1299,7 @@ class V2ADAManager:
         """
 
         qr_record = DataAgreementQRCodeRecord(
-            template_id=template_id,
-            multi_use_flag=bool_to_str(multi_use_flag)
+            template_id=template_id, multi_use_flag=bool_to_str(multi_use_flag)
         )
         await qr_record.save(self.context)
 
@@ -1259,21 +1307,22 @@ class V2ADAManager:
             auto_accept=True,
             public=False,
             multi_use=multi_use_flag,
-            alias=f"DA_{template_id}_QR_{qr_record._id}"
+            alias=f"DA_{template_id}_QR_{qr_record._id}",
         )
 
         qr_record.connection_id = connection.connection_id
         await qr_record.save(self.context)
 
-        res = {
-            "qr_id": qr_record._id,
-            "invitation": invitation.serialize()
-        }
+        res = {"qr_id": qr_record._id, "invitation": invitation.serialize()}
 
         res_base64 = base64.b64encode(json.dumps(res).encode()).decode()
-        payload = self.context.settings.get("default_endpoint") + "?qt=2&qp=" + res_base64
+        payload = (
+            self.context.settings.get("default_endpoint") + "?qt=2&qp=" + res_base64
+        )
 
-        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+        firebase_dynamic_link = await generate_firebase_dynamic_link(
+            self.context, payload
+        )
         qr_record.dynamic_link = firebase_dynamic_link
         await qr_record.save(self.context)
 
@@ -1281,10 +1330,7 @@ class V2ADAManager:
 
         return res
 
-    async def create_connection_qr_code(
-        self,
-        connection_id: str
-    ) -> dict:
+    async def create_connection_qr_code(self, connection_id: str) -> dict:
         """Create connection QR code.
 
         Args:
@@ -1296,18 +1342,19 @@ class V2ADAManager:
 
         # Connection record.
         connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
-            self.context,
-            connection_id
+            self.context, connection_id
         )
 
         # Connection invitation
-        connection_invitation: ConnectionInvitation = await connection_record.retrieve_invitation(
-            self.context
+        connection_invitation: ConnectionInvitation = (
+            await connection_record.retrieve_invitation(self.context)
         )
 
         # Generate firebase dynamic link.
         payload = connection_invitation.to_url()
-        firebase_dynamic_link = await generate_firebase_dynamic_link(self.context, payload)
+        firebase_dynamic_link = await generate_firebase_dynamic_link(
+            self.context, payload
+        )
 
         res = {"dynamic_link": firebase_dynamic_link}
 
@@ -1323,11 +1370,15 @@ class V2ADAManager:
             PaginationResult: List of qr code records.
         """
 
-        records = await DataAgreementQRCodeRecord.query(self.context, {"template_id": template_id})
+        records = await DataAgreementQRCodeRecord.query(
+            self.context, {"template_id": template_id}
+        )
         pagination_result = paginate_records(records, page=1, page_size=1000000)
         return pagination_result
 
-    async def send_reply_message(self, message: AgentMessage, connection_id: str = None) -> None:
+    async def send_reply_message(
+        self, message: AgentMessage, connection_id: str = None
+    ) -> None:
         """Send reply message to remote agent.
 
         Args:
@@ -1335,12 +1386,16 @@ class V2ADAManager:
             connection_id (str): Connection identifier
         """
         # Responder instance
-        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+        responder: DispatcherResponder = await self.context.inject(
+            BaseResponder, required=False
+        )
 
         if responder:
             await responder.send_reply(message, connection_id=connection_id)
 
-    async def send_problem_report_message(self, explain: str, connection_id: str) -> None:
+    async def send_problem_report_message(
+        self, explain: str, connection_id: str
+    ) -> None:
         """Send problem report message as reply.
 
         Args:
@@ -1349,27 +1404,23 @@ class V2ADAManager:
         """
 
         # Responder instance
-        responder: DispatcherResponder = await self.context.inject(BaseResponder, required=False)
+        responder: DispatcherResponder = await self.context.inject(
+            BaseResponder, required=False
+        )
 
         problem_report = ProblemReport(explain_ltxt=explain)
 
         if responder:
             await responder.send_reply(problem_report, connection_id=connection_id)
 
-    async def delete_data_agreement_qr_code(
-        self,
-        template_id: str,
-        qr_id: str
-    ) -> None:
+    async def delete_data_agreement_qr_code(self, template_id: str, qr_id: str) -> None:
         """Delete data agreement qr code."""
         record = await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
         assert record.template_id == template_id, "Data agreement not found."
         await record.delete_record(self.context)
 
     async def process_data_agreement_qr_code_initiate_message(
-        self,
-        message: DataAgreementQrCodeInitiateMessage,
-        receipt: MessageReceipt
+        self, message: DataAgreementQrCodeInitiateMessage, receipt: MessageReceipt
     ):
         """Process data QR code initiate message.
 
@@ -1380,14 +1431,14 @@ class V2ADAManager:
         qr_id = message.body.qr_id
         connection_id = self.context.connection_record.connection_id
 
-        connection_record = await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+        connection_record = await ConnectionRecord.retrieve_by_id(
+            self.context, connection_id
+        )
 
         # Fetch the qr code record.
-        record: DataAgreementQRCodeRecord = \
-            await DataAgreementQRCodeRecord.retrieve_by_id(
-                self.context,
-                qr_id
-            )
+        record: DataAgreementQRCodeRecord = (
+            await DataAgreementQRCodeRecord.retrieve_by_id(self.context, qr_id)
+        )
 
         if record._multi_use_flag:
             record._scanned_flag = True
@@ -1399,11 +1450,11 @@ class V2ADAManager:
                 raise Exception(explain)
 
         # Fetch data agreement template record.
-        template_record: DataAgreementTemplateRecord = \
+        template_record: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
-                self.context,
-                record.template_id
+                self.context, record.template_id
             )
+        )
 
         # Construct presentation request
         preset_presentation_request = template_record.presentation_request
@@ -1433,15 +1484,14 @@ class V2ADAManager:
         await record.save(self.context)
 
         offer_message = await self.build_data_agreement_offer_for_presentation_exchange(
-            template_record.template_id,
-            connection_record,
-            pres_ex_record
+            template_record.template_id, connection_record, pres_ex_record
         )
 
         # Add data agreement context decorator
-        presentation_request._decorators["data-agreement-context"] = DataAgreementContextDecorator(
-            message_type="protocol",
-            message=offer_message.serialize()
+        presentation_request._decorators[
+            "data-agreement-context"
+        ] = DataAgreementContextDecorator(
+            message_type="protocol", message=offer_message.serialize()
         )
 
         pres_ex_record.presentation_request_dict = presentation_request.serialize()
@@ -1450,11 +1500,7 @@ class V2ADAManager:
 
         await self.send_reply_message(presentation_request, connection_id)
 
-    async def send_qr_code_initiate_message(
-        self,
-        qr_id,
-        connection_id
-    ):
+    async def send_qr_code_initiate_message(self, qr_id, connection_id):
         """Send data agreement qr code initiate message.
 
         Args:
@@ -1463,17 +1509,12 @@ class V2ADAManager:
         """
 
         message = DataAgreementQrCodeInitiateMessage(
-            body=DataAgreementQrCodeInitiateBody(
-                qr_id=qr_id
-            )
+            body=DataAgreementQrCodeInitiateBody(qr_id=qr_id)
         )
 
         await self.send_reply_message(message, connection_id)
 
-    async def send_data_controller_details_message(
-        self,
-        connection_id: str
-    ):
+    async def send_data_controller_details_message(self, connection_id: str):
         """Send data controller details message
 
         Args:
@@ -1484,9 +1525,7 @@ class V2ADAManager:
         await self.send_reply_message(message, connection_id)
 
     async def process_data_controller_details_message(
-        self,
-        message: DataControllerDetailsMessage,
-        receipt: MessageReceipt
+        self, message: DataControllerDetailsMessage, receipt: MessageReceipt
     ):
         """Process data controller details message.
 
@@ -1515,7 +1554,9 @@ class V2ADAManager:
                     cached = entry.result
                     controller_details = DataController.deserialize(cached)
                 else:
-                    org_details = await fetch_org_details_from_intermediary(self.context)
+                    org_details = await fetch_org_details_from_intermediary(
+                        self.context
+                    )
 
                     # Organisation did
                     organisation_did = f"did:sov:{controller_did.did}"
@@ -1529,7 +1570,7 @@ class V2ADAManager:
                         organisation_type=org_details["Type"]["Type"],
                         description=org_details["Description"],
                         policy_url=org_details["PolicyURL"],
-                        eula_url=org_details["EulaURL"]
+                        eula_url=org_details["EulaURL"],
                     )
                     cache_val = controller_details.serialize()
                     await entry.set_result(cache_val, 3600)
@@ -1552,7 +1593,7 @@ class V2ADAManager:
                 organisation_type=record.organisation_type,
                 description=record.description,
                 policy_url=record.policy_url,
-                eula_url=record.eula_url
+                eula_url=record.eula_url,
             )
 
             response_message = DataControllerDetailsResponseMessage(
@@ -1570,7 +1611,7 @@ class V2ADAManager:
         organisation_type: str = None,
         description: str = None,
         policy_url: str = None,
-        eula_url: str = None
+        eula_url: str = None,
     ) -> ControllerDetailsRecord:
         """Update controller details
 
@@ -1608,7 +1649,7 @@ class V2ADAManager:
                 organisation_type=organisation_type,
                 description=description,
                 policy_url=policy_url,
-                eula_url=eula_url
+                eula_url=eula_url,
             )
 
             await record.save(self.context)
@@ -1629,9 +1670,7 @@ class V2ADAManager:
         return record
 
     async def process_existing_connections_message(
-        self,
-        message: ExistingConnectionsMessage,
-        message_receipt: MessageReceipt
+        self, message: ExistingConnectionsMessage, message_receipt: MessageReceipt
     ):
         """Process existing connections message.
 
@@ -1645,31 +1684,27 @@ class V2ADAManager:
 
         # Fetch current connection record using invitation key
         connection_record = await ConnectionRecord.retrieve_by_invitation_key(
-            self.context,
-            invitation_key
+            self.context, invitation_key
         )
 
         # Fetch existing connections record for the current connection.
-        tag_filter = {
-            "connection_id": connection_record.connection_id
-        }
+        tag_filter = {"connection_id": connection_record.connection_id}
         existing_connection_records = await ExistingConnectionRecord.query(
-            self.context,
-            tag_filter
+            self.context, tag_filter
         )
 
         if existing_connection_records:
             # Existing connection record.
-            existing_connection_record: ExistingConnectionRecord = existing_connection_records[0]
+            existing_connection_record: ExistingConnectionRecord = (
+                existing_connection_records[0]
+            )
 
             # Delete the record.
             await existing_connection_record.delete_record(self.context)
 
         # Fetch associated connection record.
         old_connection_record = await ConnectionRecord.retrieve_by_did(
-            self.context,
-            their_did=None,
-            my_did=message.body.theirdid
+            self.context, their_did=None, my_did=message.body.theirdid
         )
 
         # Create a new existing connection record.
@@ -1677,7 +1712,7 @@ class V2ADAManager:
             existing_connection_id=old_connection_record.connection_id,
             my_did=old_connection_record.my_did,
             connection_status="available",
-            connection_id=connection_record.connection_id
+            connection_id=connection_record.connection_id,
         )
 
         await existing_connection_record.save(self.context)
@@ -1687,8 +1722,7 @@ class V2ADAManager:
         await connection_record.save(context=self.context)
 
     async def get_existing_connection_record_for_new_connection_id(
-        self,
-        connection_id: str
+        self, connection_id: str
     ) -> ExistingConnectionRecord:
         """Get existing connection record for new connection id.
 
@@ -1700,14 +1734,11 @@ class V2ADAManager:
         """
 
         # Tag filter.
-        tag_filter = {
-            "connection_id": connection_id
-        }
+        tag_filter = {"connection_id": connection_id}
 
         # Fetch existing connection records.
         existing_connection_records = await ExistingConnectionRecord.query(
-            self.context,
-            tag_filter
+            self.context, tag_filter
         )
 
         res = None
@@ -1731,8 +1762,9 @@ class V2ADAManager:
             typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
         """
         # Fetch connection record.
-        connection_record: ConnectionRecord = \
-            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context, connection_id
+        )
 
         # Get invitation key.
         invitation_key = connection_record.invitation_key
@@ -1744,23 +1776,17 @@ class V2ADAManager:
         wallet: IndyWallet = await self.context.inject(BaseWallet)
 
         # Set transport return route all
-        message._decorators["transport"] = TransportDecorator(
-            return_route="all"
-        )
+        message._decorators["transport"] = TransportDecorator(return_route="all")
 
         # Create a local did
         did: DIDInfo = await wallet.create_local_did()
 
         sender_key = did.verkey
         packed_message = await wallet.pack_message(
-            message.to_json(),
-            [invitation_key],
-            sender_key
+            message.to_json(), [invitation_key], sender_key
         )
 
-        headers = {
-            "Content-Type": "application/ssi-agent-wire"
-        }
+        headers = {"Content-Type": "application/ssi-agent-wire"}
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(service_endpoint, data=packed_message) as response:
@@ -1788,8 +1814,9 @@ class V2ADAManager:
             connection_id (str): Connection id.
         """
         # Fetch connection record.
-        connection_record: ConnectionRecord = \
-            await ConnectionRecord.retrieve_by_id(self.context, connection_id)
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context, connection_id
+        )
 
         # Get invitation key.
         invitation_key = connection_record.invitation_key
@@ -1805,14 +1832,10 @@ class V2ADAManager:
 
         sender_key = did.verkey
         packed_message = await wallet.pack_message(
-            message.to_json(),
-            [invitation_key],
-            sender_key
+            message.to_json(), [invitation_key], sender_key
         )
 
-        headers = {
-            "Content-Type": "application/ssi-agent-wire"
-        }
+        headers = {"Content-Type": "application/ssi-agent-wire"}
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(service_endpoint, data=packed_message) as response:
@@ -1820,9 +1843,7 @@ class V2ADAManager:
                     self._logger.info("Posted existing connection message...")
 
     async def send_existing_connections_message(
-        self,
-        theirdid: str,
-        connection_id: str
+        self, theirdid: str, connection_id: str
     ):
         """Send existing connections notification message.
 
@@ -1833,16 +1854,11 @@ class V2ADAManager:
 
         # Construct existing connection message.
         message = ExistingConnectionsMessage(
-            body=ExistingConnectionsBody(
-                theirdid=theirdid
-            )
+            body=ExistingConnectionsBody(theirdid=theirdid)
         )
 
         # Send the message to remote agent.
-        await self.send_message_with_connection_invitation(
-            message,
-            connection_id
-        )
+        await self.send_message_with_connection_invitation(message, connection_id)
 
     async def query_connections_and_categorise_results(
         self,
@@ -1856,61 +1872,48 @@ class V2ADAManager:
 
         # Query the connection records.
         records = await ConnectionRecord.query(
-            self.context,
-            tag_filter,
-            post_filter_positive
+            self.context, tag_filter, post_filter_positive
         )
 
         # Sort the connection records.
-        records = sorted(
-            records,
-            key=lambda k: k.created_at,
-            reverse=True
-        )
+        records = sorted(records, key=lambda k: k.created_at, reverse=True)
 
         res = []
         for record in records:
             tag_filter = {"connection_id": record.connection_id}
 
             # Fetch controller details attached to the connection.
-            controller_details: typing.List[ConnectionControllerDetailsRecord] = \
-                await ConnectionControllerDetailsRecord.query(
-                self.context,
-                tag_filter
-            )
+            controller_details: typing.List[
+                ConnectionControllerDetailsRecord
+            ] = await ConnectionControllerDetailsRecord.query(self.context, tag_filter)
 
             # Fetch marketplace connection record.
-            marketplace_connections: typing.List[MarketplaceConnectionRecord] = \
-                await MarketplaceConnectionRecord.query(
-                self.context,
-                tag_filter
-            )
+            marketplace_connections: typing.List[
+                MarketplaceConnectionRecord
+            ] = await MarketplaceConnectionRecord.query(self.context, tag_filter)
 
             connection = record.serialize()
 
             # Update controller details to the connection dict.
             if controller_details:
-                connection.update({
-                    "org_flag": True,
-                    "controller_details": controller_details[0].controller_details
-                })
+                connection.update(
+                    {
+                        "org_flag": True,
+                        "controller_details": controller_details[0].controller_details,
+                    }
+                )
             else:
-                connection.update({
-                    "controller_details": {},
-                    "org_flag": False
-                })
+                connection.update({"controller_details": {}, "org_flag": False})
 
             if marketplace_connections:
-                connection.update({
-                    "marketplace_flag": True
-                })
+                connection.update({"marketplace_flag": True})
             else:
                 connection.update({"marketplace_flag": False})
 
             # Apply category filter on connections.
             categorise_filter = {
                 "org_flag": org_flag,
-                "marketplace_flag": marketplace_flag
+                "marketplace_flag": marketplace_flag,
             }
 
             categorise_filter = drop_none_dict(categorise_filter)
@@ -1918,15 +1921,19 @@ class V2ADAManager:
             if match_post_filter(connection, categorise_filter, True):
                 res.append(connection)
 
-        pagination_result = paginate(res, page if page else 1, page_size if page_size else 10)
+        pagination_result = paginate(
+            res, page if page else 1, page_size if page_size else 10
+        )
 
         return pagination_result
 
-    async def add_task(self,
-                       context: InjectionContext,
-                       coro: typing.Coroutine,
-                       task_complete: typing.Callable = None,
-                       ident: str = None) -> PendingTask:
+    async def add_task(
+        self,
+        context: InjectionContext,
+        coro: typing.Coroutine,
+        task_complete: typing.Callable = None,
+        ident: str = None,
+    ) -> PendingTask:
         """
         Add a new task to the queue, delaying execution if busy.
 
@@ -1939,13 +1946,17 @@ class V2ADAManager:
         Returns: a future resolving to the asyncio task instance once queued
         """
         loop = asyncio.get_event_loop()
-        pack_format: PackWireFormat = await context.inject(BaseWireFormat, required=False)
-        return pack_format.task_queue.put(coro, lambda x: loop.create_task(task_complete(x)), ident)
+        pack_format: PackWireFormat = await context.inject(
+            BaseWireFormat, required=False
+        )
+        return pack_format.task_queue.put(
+            coro, lambda x: loop.create_task(task_complete(x)), ident
+        )
 
     async def process_da_negotiation_receipt_message(
         self,
         message: DataAgreementNegotiationReceiptMessage,
-        message_receipt: MessageReceipt
+        message_receipt: MessageReceipt,
     ):
         """Process DA negotiation receipt message.
 
@@ -1960,14 +1971,12 @@ class V2ADAManager:
         mydata_did = message.body.mydata_did
 
         # Fetch the DDA instance record.
-        tag_filter = {
-            "instance_id": instance_id
-        }
-        instance_record: DataAgreementInstanceRecord = \
+        tag_filter = {"instance_id": instance_id}
+        instance_record: DataAgreementInstanceRecord = (
             await DataAgreementInstanceRecord.retrieve_by_tag_filter(
-                self.context,
-                tag_filter
+                self.context, tag_filter
             )
+        )
 
         # Update instance record.
         instance_record.blockchain_receipt = blockchain_receipt
@@ -1975,3 +1984,134 @@ class V2ADAManager:
         instance_record.mydata_did = mydata_did
 
         await instance_record.save(self.context)
+
+    async def process_json_ld_processed_message(
+        self, json_ld_processed_message: JSONLDProcessedMessage, receipt: MessageReceipt
+    ) -> None:
+        """Process JSONLD processed message.
+
+        Args:
+            json_ld_processed_message (JSONLDProcessedMessage): JSONLD processed message.
+            receipt (MessageReceipt): Message receipt.
+        """
+
+        # Responder instance
+        responder: DispatcherResponder = await self.context.inject(
+            BaseResponder, required=False
+        )
+
+        # Base64 decode data
+        data = base64.b64decode(json_ld_processed_message.body.data_base64)
+        data_dict = json.loads(data)
+
+        # Base64 decode signature options
+        signature_options = base64.b64decode(
+            json_ld_processed_message.body.signature_options_base64
+        )
+        signature_options_dict = json.loads(signature_options)
+
+        # Create normalised data for JSONLD proofs
+        framed, combine_hash = create_verify_data(data_dict, signature_options_dict)
+
+        # Base64 encode framed
+        framed_base64_encoded = base64.b64encode(
+            json.dumps(framed).encode("utf-8")
+        ).decode("utf-8")
+
+        # Base64 encode combine_hash
+        combine_hash_base64_encoded = base64.b64encode(
+            combine_hash.encode("utf-8")
+        ).decode("utf-8")
+
+        # Send response message.
+        json_ld_processed_response_message = JSONLDProcessedResponseMessage(
+            body=JSONLDProcessedResponseBody(
+                framed_base64=framed_base64_encoded,
+                combined_hash_base64=combine_hash_base64_encoded,
+            ),
+        )
+
+        if responder:
+            await responder.send_reply(json_ld_processed_response_message)
+
+    async def send_json_ld_processed_message(
+        self,
+        *,
+        connection_id: str,
+        data: dict,
+        signature_options: dict,
+    ) -> None:
+        """Send JSONLD processed message.
+
+        Args:
+            connection_id (str): Connection ID
+            data (dict): Data
+            signature_options (dict): Signature options
+        """
+
+        # Retrieve connection record by id
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context, connection_id
+        )
+
+        # Base64 encode data
+        data_base64 = base64.b64encode(json.dumps(data).encode("utf-8")).decode("utf-8")
+
+        # Base64 encode signature options
+        signature_options_base64 = base64.b64encode(
+            json.dumps(signature_options).encode("utf-8")
+        ).decode("utf-8")
+
+        # Construct JSONLD Processed Message
+        message = JSONLDProcessedMessage(
+            body=JSONLDProcessedBody(
+                data_base64=data_base64,
+                signature_options_base64=signature_options_base64,
+            )
+        )
+
+        # Send JSONLD Processed Message
+        await self.send_reply_message(message, connection_record.connection_id)
+
+    async def send_da_permissions_message(self, instance_id: str, state: str):
+        """Send DA permission message.
+
+        Args:
+            instance_id (str): Instance ID
+            state (str): State of the permission.
+        """
+
+        # Set permissions locally.
+        (
+            instance_record,
+            permission_record,
+        ) = await DAInstancePermissionRecord.add_permission(
+            self.context, instance_id, state
+        )
+
+        # Send DA permissions message.
+        message = DAPermissionsMessage(
+            body=DAPermissionsBodyModel(instance_id=instance_id, state=state)
+        )
+
+        mgr = V2ADAManager(self.context)
+        connection_record = await instance_record.get_connection_record(self.context)
+        await mgr.send_reply_message(message, connection_record.connection_id)
+
+    async def process_da_permissions_message(
+        self, message: DAPermissionsMessage, message_receipt: MessageReceipt
+    ):
+        """Process DA permissions message.
+
+        Args:
+            message (DAPermissionsMessage): DA permissions message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+
+        instance_id = message.body.instance_id
+        state = message.body.state
+
+        # Set permissions.
+        await DAInstancePermissionRecord.add_permission(
+            self.context, instance_id, state
+        )

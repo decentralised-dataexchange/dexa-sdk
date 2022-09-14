@@ -1,13 +1,11 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class PublishDDARecord(BaseRecord):
     """Publish DDA record."""
+
     class Meta:
         schema_class = "PublishDDARecordSchema"
 
@@ -18,11 +16,7 @@ class PublishDDARecord(BaseRecord):
     RECORD_ID_NAME = "id"
 
     # Record tags
-    TAG_NAMES = {
-        "~connection_id",
-        "~template_id",
-        "~state"
-    }
+    TAG_NAMES = {"~connection_id", "~template_id", "~state"}
 
     # States
     STATE_REQUEST = "request"
@@ -54,21 +48,12 @@ class PublishDDARecord(BaseRecord):
         """Accessor for JSON record value generated for this transaction record."""
         return {
             prop: getattr(self, prop)
-            for prop in (
-                "connection_id",
-                "state",
-                "dda",
-                "template_id"
-            )
+            for prop in ("connection_id", "state", "dda", "template_id")
         }
 
     @classmethod
     async def store_publish_dda_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str,
-        template_id: str,
-        dda: dict
+        cls, context: InjectionContext, connection_id: str, template_id: str, dda: dict
     ) -> "PublishDDARecord":
         """Store publish dda record.
 
@@ -82,10 +67,7 @@ class PublishDDARecord(BaseRecord):
             PublishDDARecord: Publish dda record.
         """
         #  Check if an existing publish dda record exists.
-        tag_filter = {
-            "connection_id": connection_id,
-            "template_id": template_id
-        }
+        tag_filter = {"connection_id": connection_id, "template_id": template_id}
         records = await cls.query(context, tag_filter)
         assert len(records) == 0, "DDA cannot be published twice."
 
@@ -93,7 +75,7 @@ class PublishDDARecord(BaseRecord):
             connection_id=connection_id,
             template_id=template_id,
             dda=dda,
-            state=PublishDDARecord.STATE_REQUEST
+            state=PublishDDARecord.STATE_REQUEST,
         )
 
         await record.save(context)

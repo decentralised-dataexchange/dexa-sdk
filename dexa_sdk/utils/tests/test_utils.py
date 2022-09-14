@@ -1,6 +1,6 @@
 import semver
 from asynctest import TestCase as AsyncTestCase
-from ..utils import bump_major_for_semver_string, paginate
+from dexa_sdk.utils.utils import bump_major_for_semver_string, paginate
 
 
 class TestUtils(AsyncTestCase):

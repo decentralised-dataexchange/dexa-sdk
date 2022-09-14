@@ -5,19 +5,20 @@ import functools
 import logging
 import os
 import signal
-from configargparse import ArgumentParser
 from typing import Coroutine, Sequence
+
+from configargparse import ArgumentParser
 
 try:
     import uvloop
 except ImportError:
     uvloop = None
 
-from ..core.conductor import Conductor
-from ..config.default_context import DefaultContextBuilder
-from ..config import argparse as custom_arg
 from aries_cloudagent.config import argparse as arg
 from aries_cloudagent.config.util import common_config
+from dexa_sdk.agent.config import argparse as custom_arg
+from dexa_sdk.agent.config.default_context import DefaultContextBuilder
+from dexa_sdk.agent.core.conductor import Conductor
 
 LOGGER = logging.getLogger(__name__)
 

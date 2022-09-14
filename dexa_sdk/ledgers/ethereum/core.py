@@ -1,12 +1,13 @@
-import typing
 import asyncio
-from web3 import Web3, Account
+import typing
+
+from aries_cloudagent.config.injection_context import InjectionContext
+from eth_account.signers.local import LocalAccount
+from loguru import logger
+from web3 import Account, Web3
+from web3._utils.encoding import to_json
 from web3.contract import Contract
 from web3.exceptions import ContractLogicError
-from web3._utils.encoding import to_json
-from eth_account.signers.local import LocalAccount
-from aries_cloudagent.config.injection_context import InjectionContext
-from loguru import logger
 
 
 class EthereumClient:
@@ -25,17 +26,22 @@ class EthereumClient:
         self._eth_node_rpc = self._context.settings.get("dexa.eth_node_rpc")
 
         # Eth private key of the controller
-        self._org_eth_private_key = self._context.settings.get("dexa.org_eth_private_key")
+        self._org_eth_private_key = self._context.settings.get(
+            "dexa.org_eth_private_key"
+        )
 
         # Set organisation account for ethereum client
         self._org_eth_account = Account.from_key(self._org_eth_private_key)
 
         # Eth private key of the intermediary
         self._intermediary_eth_private_key = self._context.settings.get(
-            "dexa.intermediary_eth_private_key")
+            "dexa.intermediary_eth_private_key"
+        )
 
         # Set intermediary account for ethereum client
-        self._intermediary_eth_account = Account.from_key(self._intermediary_eth_private_key)
+        self._intermediary_eth_account = Account.from_key(
+            self._intermediary_eth_private_key
+        )
 
         # Ethereum client
         self._client = Web3(Web3.HTTPProvider(self._eth_node_rpc))
@@ -48,8 +54,7 @@ class EthereumClient:
 
         # Contract interface
         self._contract: Contract = self._client.eth.contract(
-            address=self._contract_address,
-            abi=self._contract_abi
+            address=self._contract_address, abi=self._contract_abi
         )
 
     @property
@@ -155,30 +160,28 @@ class EthereumClient:
             contract_function = contract.functions.emitDADID(did)
             contract_function_txn = contract_function.buildTransaction(
                 {
-                    'from': org_account.address,
-                    'nonce': self.client.eth.get_transaction_count(org_account.address),
-                    'maxFeePerGas': 2000000000,
-                    'maxPriorityFeePerGas': 1000000000
+                    "from": org_account.address,
+                    "nonce": self.client.eth.get_transaction_count(org_account.address),
+                    "maxFeePerGas": 2000000000,
+                    "maxPriorityFeePerGas": 1000000000,
                 }
             )
 
             tx_create = self.client.eth.account.sign_transaction(
-                contract_function_txn,
-                org_account.privateKey
+                contract_function_txn, org_account.privateKey
             )
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
 
             # Suspend execution and let other task run.
-            await asyncio.sleep(5)
+            await asyncio.sleep(1)
 
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
             if tx_receipt.get("status") == 1:
                 self.logger.info(f"Status (emitDADID): Succesfully emitted {did}")
             else:
-                self.logger.info(
-                    "Status (emitDADID): Failed to emit {did}")
+                self.logger.info("Status (emitDADID): Failed to emit {did}")
 
             return (tx_hash, tx_receipt)
         except ContractLogicError as err:
@@ -197,30 +200,28 @@ class EthereumClient:
             contract_function = contract.functions.emitDDADID(did)
             contract_function_txn = contract_function.buildTransaction(
                 {
-                    'from': org_account.address,
-                    'nonce': self.client.eth.get_transaction_count(org_account.address),
-                    'maxFeePerGas': 2000000000,
-                    'maxPriorityFeePerGas': 1000000000
+                    "from": org_account.address,
+                    "nonce": self.client.eth.get_transaction_count(org_account.address),
+                    "maxFeePerGas": 2000000000,
+                    "maxPriorityFeePerGas": 1000000000,
                 }
             )
 
             tx_create = self.client.eth.account.sign_transaction(
-                contract_function_txn,
-                org_account.privateKey
+                contract_function_txn, org_account.privateKey
             )
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
 
             # Suspend execution and let other task run.
-            await asyncio.sleep(5)
+            await asyncio.sleep(1)
 
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
             if tx_receipt.get("status") == 1:
                 self.logger.info(f"Status (emitDDADID): Succesfully emitted {did}")
             else:
-                self.logger.info(
-                    "Status (emitDDADID): Failed to emit {did}")
+                self.logger.info("Status (emitDDADID): Failed to emit {did}")
 
             return (tx_hash, tx_receipt)
         except ContractLogicError as err:
@@ -237,26 +238,31 @@ class EthereumClient:
         intermediary_account = self.intermediary_account
         intermediary_balance = self.client.eth.get_balance(intermediary_account.address)
 
-        self.logger.info(f"Intermediary account address: {intermediary_account.address}")
+        self.logger.info(
+            f"Intermediary account address: {intermediary_account.address}"
+        )
         self.logger.info(f"Intermediary account balance: {intermediary_balance}")
-        self.logger.info(f"Transaction count: \
-                {self.client.eth.get_transaction_count(intermediary_account.address)}")
+        self.logger.info(
+            f"Transaction count: \
+                {self.client.eth.get_transaction_count(intermediary_account.address)}"
+        )
 
         try:
             contract = self.contract
             contract_function = contract.functions.addOrganisation(org_account.address)
             contract_function_txn = contract_function.buildTransaction(
                 {
-                    'from': intermediary_account.address,
-                    'nonce': self.client.eth.get_transaction_count(intermediary_account.address),
-                    'maxFeePerGas': 2000000000,
-                    'maxPriorityFeePerGas': 1000000000
+                    "from": intermediary_account.address,
+                    "nonce": self.client.eth.get_transaction_count(
+                        intermediary_account.address
+                    ),
+                    "maxFeePerGas": 2000000000,
+                    "maxPriorityFeePerGas": 1000000000,
                 }
             )
 
             tx_create = self.client.eth.account.sign_transaction(
-                contract_function_txn,
-                intermediary_account.privateKey
+                contract_function_txn, intermediary_account.privateKey
             )
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
@@ -265,12 +271,17 @@ class EthereumClient:
 
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
-            self.logger.info(f"Transaction receipt (addOrganisation): {to_json(tx_receipt)}")
+            self.logger.info(
+                f"Transaction receipt (addOrganisation): {to_json(tx_receipt)}"
+            )
 
             if tx_receipt.get("status") == 1:
-                self.logger.info("Status (addOrganisation): Added organisation to whitelist.")
+                self.logger.info(
+                    "Status (addOrganisation): Added organisation to whitelist."
+                )
             else:
                 self.logger.info(
-                    "Status (addOrganisation): Organisation is already present in whitelist.")
+                    "Status (addOrganisation): Organisation is already present in whitelist."
+                )
         except ContractLogicError as err:
             self.logger.info(f"Status (addOrganisation): {err}")

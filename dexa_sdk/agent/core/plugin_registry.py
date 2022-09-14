@@ -5,11 +5,10 @@ from collections import OrderedDict
 from types import ModuleType
 from typing import Sequence
 
-from ..config.injection_context import InjectionContext
-
-from aries_cloudagent.utils.classloader import ClassLoader, ModuleLoadError
 from aries_cloudagent.core.error import ProtocolDefinitionValidationError
 from aries_cloudagent.core.protocol_registry import ProtocolRegistry
+from aries_cloudagent.utils.classloader import ClassLoader, ModuleLoadError
+from dexa_sdk.agent.config.injection_context import InjectionContext
 
 LOGGER = logging.getLogger(__name__)
 
@@ -134,8 +133,7 @@ class PluginRegistry:
             # that contain admin routes and for old-style protocol
             # modules without version support
             routes = ClassLoader.load_module("routes", module_name)
-            message_types = ClassLoader.load_module(
-                "message_types", module_name)
+            message_types = ClassLoader.load_module("message_types", module_name)
             if routes or message_types:
                 self._plugins[module_name] = mod
                 return mod
@@ -144,8 +142,7 @@ class PluginRegistry:
 
             # definition.py must exist in protocol
             if not definition:
-                LOGGER.error(
-                    f"Protocol does not include definition.py: {module_name}")
+                LOGGER.error(f"Protocol does not include definition.py: {module_name}")
                 return None
 
             # definition.py must include versions attribute
@@ -172,10 +169,9 @@ class PluginRegistry:
         #     self._plugins[module_name] = mod
         #     return mod
 
-    def register_package(self,
-                         package_name: str,
-                         disabled_plugins: Sequence[str] = []
-                         ) -> Sequence[ModuleType]:
+    def register_package(
+        self, package_name: str, disabled_plugins: Sequence[str] = []
+    ) -> Sequence[ModuleType]:
         """Register all modules (sub-packages) under a given package name."""
         try:
             module_names = ClassLoader.scan_subpackages(package_name)
@@ -257,8 +253,7 @@ class PluginRegistry:
             # Otherwise, try check for definition.py for versioned
             # protocol packages
             try:
-                definition = ClassLoader.load_module(
-                    plugin.__name__ + ".definition")
+                definition = ClassLoader.load_module(plugin.__name__ + ".definition")
             except ModuleLoadError as e:
                 LOGGER.error("Error loading plugin definition module: %s", e)
                 return
@@ -273,8 +268,7 @@ class PluginRegistry:
                         await self.load_protocol_version(context, mod, protocol_version)
 
                     except ModuleLoadError as e:
-                        LOGGER.error(
-                            "Error loading plugin module message types: %s", e)
+                        LOGGER.error("Error loading plugin module message types: %s", e)
                         return
 
     async def register_admin_routes(self, app):

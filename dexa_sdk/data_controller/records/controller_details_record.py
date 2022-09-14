@@ -1,12 +1,10 @@
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class ControllerDetailsRecord(BaseRecord):
     """Data controller details record."""
+
     class Meta:
         schema_class = "ControllerDetailsRecordSchema"
 
@@ -62,7 +60,7 @@ class ControllerDetailsRecord(BaseRecord):
                 "organisation_type",
                 "description",
                 "policy_url",
-                "eula_url"
+                "eula_url",
             )
         }
 
