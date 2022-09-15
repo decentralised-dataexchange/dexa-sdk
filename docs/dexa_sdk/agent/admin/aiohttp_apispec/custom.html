@@ -26,10 +26,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aiohttp_apispec import AiohttpApiSpec
+<pre><code class="python">from pathlib import Path
+
 from aiohttp import web
-from pathlib import Path
 from jinja2 import Template
+
+from aiohttp_apispec import AiohttpApiSpec
 
 
 class CustomAiohttpApiSpec(AiohttpApiSpec):
@@ -40,14 +42,12 @@ class CustomAiohttpApiSpec(AiohttpApiSpec):
         app.router.add_static(static_path, static_files)
 
         with open(str(static_files / &#34;index.html&#34;)) as swg_tmp:
-            tmp = Template(swg_tmp.read()).render(
-                path=self.url, static=static_path)
+            tmp = Template(swg_tmp.read()).render(path=self.url, static=static_path)
 
         async def swagger_view(_):
             return web.Response(text=tmp, content_type=&#34;text/html&#34;)
 
-        app.router.add_route(
-            &#34;GET&#34;, view_path, swagger_view, name=&#34;swagger.docs&#34;)
+        app.router.add_route(&#34;GET&#34;, view_path, swagger_view, name=&#34;swagger.docs&#34;)
 
 
 def custom_setup_aiohttp_apispec(
@@ -58,10 +58,10 @@ def custom_setup_aiohttp_apispec(
     url: str = &#34;/api/docs/swagger.json&#34;,
     request_data_name: str = &#34;data&#34;,
     swagger_path: str = None,
-    static_path: str = &#39;/static/swagger&#39;,
+    static_path: str = &#34;/static/swagger&#34;,
     error_callback=None,
     in_place: bool = False,
-    prefix: str = &#39;&#39;,
+    prefix: str = &#34;&#34;,
     **kwargs
 ) -&gt; None:
     CustomAiohttpApiSpec(
@@ -103,10 +103,10 @@ def custom_setup_aiohttp_apispec(
     url: str = &#34;/api/docs/swagger.json&#34;,
     request_data_name: str = &#34;data&#34;,
     swagger_path: str = None,
-    static_path: str = &#39;/static/swagger&#39;,
+    static_path: str = &#34;/static/swagger&#34;,
     error_callback=None,
     in_place: bool = False,
-    prefix: str = &#39;&#39;,
+    prefix: str = &#34;&#34;,
     **kwargs
 ) -&gt; None:
     CustomAiohttpApiSpec(
@@ -147,14 +147,12 @@ def custom_setup_aiohttp_apispec(
         app.router.add_static(static_path, static_files)
 
         with open(str(static_files / &#34;index.html&#34;)) as swg_tmp:
-            tmp = Template(swg_tmp.read()).render(
-                path=self.url, static=static_path)
+            tmp = Template(swg_tmp.read()).render(path=self.url, static=static_path)
 
         async def swagger_view(_):
             return web.Response(text=tmp, content_type=&#34;text/html&#34;)
 
-        app.router.add_route(
-            &#34;GET&#34;, view_path, swagger_view, name=&#34;swagger.docs&#34;)</code></pre>
+        app.router.add_route(&#34;GET&#34;, view_path, swagger_view, name=&#34;swagger.docs&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

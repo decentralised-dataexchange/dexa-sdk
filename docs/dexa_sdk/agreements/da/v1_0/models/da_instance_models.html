@@ -26,27 +26,29 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import uuid
-import typing
-from marshmallow import fields, EXCLUDE, validate
+<pre><code class="python">import typing
+import uuid
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from .da_models import (
+from dexa_sdk.agreements.da.v1_0.models.da_models import (
     DA_DEFAULT_CONTEXT,
     DA_TYPE,
     DataAgreementDataPolicyModel,
-    DataAgreementPersonalDataModel,
-    DataAgreementDPIAModel,
     DataAgreementDataPolicySchema,
+    DataAgreementDPIAModel,
+    DataAgreementDPIASchema,
+    DataAgreementPersonalDataModel,
     DataAgreementPersonalDataSchema,
-    DataAgreementDPIASchema
 )
-from ....dda.v1_0.models.fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields, validate
 
 
 class DataAgreementProofModel(BaseModel):
     &#34;&#34;&#34;
     Data agreement proof model class
     &#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;DataAgreementProofSchema&#34;
@@ -63,7 +65,7 @@ class DataAgreementProofModel(BaseModel):
         verification_method: str = None,
         proof_purpose: str = None,
         proof_value: str = None,
-        **kwargs
+        **kwargs,
     ):
         # Call parent constructor
         super().__init__(**kwargs)
@@ -81,6 +83,7 @@ class DataAgreementProofSchema(BaseModelSchema):
     &#34;&#34;&#34;
     Data agreement proof schema class
     &#34;&#34;&#34;
+
     class Meta:
         # Model class
         model_class = DataAgreementProofModel
@@ -89,44 +92,27 @@ class DataAgreementProofSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # Proof identifier
-    proof_id = fields.Str(
-        data_key=&#34;id&#34;,
-        required=True
-    )
+    proof_id = fields.Str(data_key=&#34;id&#34;, required=True)
 
     # Proof type
-    proof_type = fields.Str(
-        data_key=&#34;type&#34;,
-        required=True
-    )
+    proof_type = fields.Str(data_key=&#34;type&#34;, required=True)
 
     # Created
-    created = fields.Str(
-        data_key=&#34;created&#34;,
-        required=True
-    )
+    created = fields.Str(data_key=&#34;created&#34;, required=True)
 
     # Verification method
-    verification_method = fields.Str(
-        data_key=&#34;verificationMethod&#34;,
-        required=True
-    )
+    verification_method = fields.Str(data_key=&#34;verificationMethod&#34;, required=True)
 
     # Proof purpose
-    proof_purpose = fields.Str(
-        data_key=&#34;proofPurpose&#34;,
-        required=True
-    )
+    proof_purpose = fields.Str(data_key=&#34;proofPurpose&#34;, required=True)
 
     # Proof value
-    proof_value = fields.Str(
-        data_key=&#34;proofValue&#34;,
-        required=True
-    )
+    proof_value = fields.Str(data_key=&#34;proofValue&#34;, required=True)
 
 
 class DataAgreementInstanceModel(BaseModel):
     &#34;&#34;&#34;Data agreement instance model&#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;DataAgreementInstanceSchema&#34;
@@ -186,6 +172,7 @@ class DataAgreementInstanceModel(BaseModel):
 
 class DataAgreementInstanceSchema(BaseModelSchema):
     &#34;&#34;&#34;Data agreement instance schema&#34;&#34;&#34;
+
     class Meta:
         # Model class
         model_class = DataAgreementInstanceModel
@@ -198,15 +185,16 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         data_key=&#34;@context&#34;,
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement instance identifier
     id = fields.Str(data_key=&#34;@id&#34;, required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key=&#34;@type&#34;, required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement instance version
     version = fields.Str(data_key=&#34;version&#34;, required=True)
@@ -235,7 +223,9 @@ class DataAgreementInstanceSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;)
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -289,7 +279,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key=&#34;personalData&#34;
+        data_key=&#34;personalData&#34;,
     )
 
     # Data agreement DPIA metadata
@@ -300,9 +290,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 
     # Proof chain
     proof_chain = fields.List(
-        fields.Nested(DataAgreementProofSchema),
-        data_key=&#34;proofChain&#34;,
-        required=False
+        fields.Nested(DataAgreementProofSchema), data_key=&#34;proofChain&#34;, required=False
     )
 
     # Data agreement proof
@@ -320,7 +308,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 <dl>
 <dt id="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementInstanceModel"><code class="flex name class">
 <span>class <span class="ident">DataAgreementInstanceModel</span></span>
-<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str = '11ef56c8-4fbc-4580-97d5-22094cf21755', type: List[str] = ['DataAgreement'], version: str, template_id: str, template_version: str, language: str = 'en', data_controller_name: str = None, data_controller_url: str = None, data_policy: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel">DataAgreementDataPolicyModel</a> = None, purpose: str = None, purpose_description: str = None, lawful_basis: str = None, method_of_use: str = None, personal_data: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a>] = None, dpia: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel">DataAgreementDPIAModel</a> = None, proof_chain: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel" href="#dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel">DataAgreementProofModel</a>] = None, proof: <a title="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel" href="#dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel">DataAgreementProofModel</a> = None, data_subject_did: str = None, **kwargs)</span>
+<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str = 'd337a013-3372-4a5c-8849-ea74962998a4', type: List[str] = ['DataAgreement'], version: str, template_id: str, template_version: str, language: str = 'en', data_controller_name: str = None, data_controller_url: str = None, data_policy: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel">DataAgreementDataPolicyModel</a> = None, purpose: str = None, purpose_description: str = None, lawful_basis: str = None, method_of_use: str = None, personal_data: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a>] = None, dpia: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel" href="da_models.html#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel">DataAgreementDPIAModel</a> = None, proof_chain: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel" href="#dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel">DataAgreementProofModel</a>] = None, proof: <a title="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel" href="#dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementProofModel">DataAgreementProofModel</a> = None, data_subject_did: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Data agreement instance model</p>
@@ -331,6 +319,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 </summary>
 <pre><code class="python">class DataAgreementInstanceModel(BaseModel):
     &#34;&#34;&#34;Data agreement instance model&#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;DataAgreementInstanceSchema&#34;
@@ -418,6 +407,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 </summary>
 <pre><code class="python">class DataAgreementInstanceSchema(BaseModelSchema):
     &#34;&#34;&#34;Data agreement instance schema&#34;&#34;&#34;
+
     class Meta:
         # Model class
         model_class = DataAgreementInstanceModel
@@ -430,15 +420,16 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         data_key=&#34;@context&#34;,
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement instance identifier
     id = fields.Str(data_key=&#34;@id&#34;, required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key=&#34;@type&#34;, required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement instance version
     version = fields.Str(data_key=&#34;version&#34;, required=True)
@@ -467,7 +458,9 @@ class DataAgreementInstanceSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;)
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -521,7 +514,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key=&#34;personalData&#34;
+        data_key=&#34;personalData&#34;,
     )
 
     # Data agreement DPIA metadata
@@ -532,9 +525,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
 
     # Proof chain
     proof_chain = fields.List(
-        fields.Nested(DataAgreementProofSchema),
-        data_key=&#34;proofChain&#34;,
-        required=False
+        fields.Nested(DataAgreementProofSchema), data_key=&#34;proofChain&#34;, required=False
     )
 
     # Data agreement proof
@@ -578,6 +569,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
     &#34;&#34;&#34;
     Data agreement proof model class
     &#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;DataAgreementProofSchema&#34;
@@ -594,7 +586,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         verification_method: str = None,
         proof_purpose: str = None,
         proof_value: str = None,
-        **kwargs
+        **kwargs,
     ):
         # Call parent constructor
         super().__init__(**kwargs)
@@ -640,6 +632,7 @@ class DataAgreementInstanceSchema(BaseModelSchema):
     &#34;&#34;&#34;
     Data agreement proof schema class
     &#34;&#34;&#34;
+
     class Meta:
         # Model class
         model_class = DataAgreementProofModel
@@ -648,40 +641,22 @@ class DataAgreementInstanceSchema(BaseModelSchema):
         unknown = EXCLUDE
 
     # Proof identifier
-    proof_id = fields.Str(
-        data_key=&#34;id&#34;,
-        required=True
-    )
+    proof_id = fields.Str(data_key=&#34;id&#34;, required=True)
 
     # Proof type
-    proof_type = fields.Str(
-        data_key=&#34;type&#34;,
-        required=True
-    )
+    proof_type = fields.Str(data_key=&#34;type&#34;, required=True)
 
     # Created
-    created = fields.Str(
-        data_key=&#34;created&#34;,
-        required=True
-    )
+    created = fields.Str(data_key=&#34;created&#34;, required=True)
 
     # Verification method
-    verification_method = fields.Str(
-        data_key=&#34;verificationMethod&#34;,
-        required=True
-    )
+    verification_method = fields.Str(data_key=&#34;verificationMethod&#34;, required=True)
 
     # Proof purpose
-    proof_purpose = fields.Str(
-        data_key=&#34;proofPurpose&#34;,
-        required=True
-    )
+    proof_purpose = fields.Str(data_key=&#34;proofPurpose&#34;, required=True)
 
     # Proof value
-    proof_value = fields.Str(
-        data_key=&#34;proofValue&#34;,
-        required=True
-    )</code></pre>
+    proof_value = fields.Str(data_key=&#34;proofValue&#34;, required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

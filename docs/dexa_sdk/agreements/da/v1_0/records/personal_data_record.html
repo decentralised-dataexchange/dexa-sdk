@@ -27,15 +27,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import typing
-from marshmallow import fields, EXCLUDE
+
+from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from aries_cloudagent.config.injection_context import InjectionContext
-from ..models.da_models import (
+from dexa_sdk.agreements.da.v1_0.models.da_models import (
     DataAgreementPersonalDataModel,
-    DataAgreementPersonalDataRestrictionModel
+    DataAgreementPersonalDataRestrictionModel,
 )
-from .....utils import bump_major_for_semver_string
+from dexa_sdk.utils import bump_major_for_semver_string
+from marshmallow import EXCLUDE, fields
 
 
 class PersonalDataRecord(BaseRecord):
@@ -55,10 +56,7 @@ class PersonalDataRecord(BaseRecord):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~data_agreement_template_id&#34;,
-        &#34;~data_agreement_template_version&#34;
-    }
+    TAG_NAMES = {&#34;~data_agreement_template_id&#34;, &#34;~data_agreement_template_version&#34;}
 
     def __init__(
         self,
@@ -92,9 +90,7 @@ class PersonalDataRecord(BaseRecord):
         super().__init__(id, **kwargs)
 
         if not data_agreement_template_id:
-            raise TypeError(
-                &#34;Data agreement template identifier is not provided&#34;
-            )
+            raise TypeError(&#34;Data agreement template identifier is not provided&#34;)
 
         # Set the record attributes
         self.data_agreement_template_id = data_agreement_template_id
@@ -127,10 +123,9 @@ class PersonalDataRecord(BaseRecord):
         return self._id
 
     @classmethod
-    async def list_by_template_id(cls,
-                                  context: InjectionContext,
-                                  template_id: str,
-                                  template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+    async def list_by_template_id(
+        cls, context: InjectionContext, template_id: str, template_version: str
+    ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
         &#34;&#34;&#34;List by template id and template version
 
         Returns:
@@ -138,7 +133,7 @@ class PersonalDataRecord(BaseRecord):
         &#34;&#34;&#34;
         tag_filter = {
             &#34;data_agreement_template_id&#34;: template_id,
-            &#34;data_agreement_template_version&#34;: template_version
+            &#34;data_agreement_template_version&#34;: template_version,
         }
 
         records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
@@ -147,11 +142,11 @@ class PersonalDataRecord(BaseRecord):
 
     @classmethod
     async def batch_update_by_da_template_id(
-            cls,
-            context: InjectionContext,
-            template_id: str,
-            template_version: str,
-            pds: typing.List[dict]
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pds: typing.List[dict],
     ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
         &#34;&#34;&#34;Batch update by DA template id
 
@@ -177,7 +172,7 @@ class PersonalDataRecord(BaseRecord):
                 attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
                 attribute_category=pd.get(&#34;attributeCategory&#34;),
                 attribute_description=pd.get(&#34;attributeDescription&#34;),
-                restrictions=pd.get(&#34;restrictions&#34;)
+                restrictions=pd.get(&#34;restrictions&#34;),
             )
 
             await record.save(context)
@@ -198,7 +193,7 @@ class PersonalDataRecord(BaseRecord):
             attribute_name=self.attribute_name,
             attribute_sensitive=self.attribute_sensitive,
             attribute_category=self.attribute_category,
-            attribute_description=self.attribute_description
+            attribute_description=self.attribute_description,
         )
 
         restriction_models = []
@@ -208,7 +203,7 @@ class PersonalDataRecord(BaseRecord):
 
                 restriction_model = DataAgreementPersonalDataRestrictionModel(
                     schema_id=restriction.get(&#34;schemaId&#34;),
-                    cred_def_id=restriction.get(&#34;credDefId&#34;)
+                    cred_def_id=restriction.get(&#34;credDefId&#34;),
                 )
 
                 restriction_models.append(restriction_model)
@@ -219,11 +214,11 @@ class PersonalDataRecord(BaseRecord):
 
     @classmethod
     async def build_and_save_record_from_pd_model(
-            cls,
-            context: InjectionContext,
-            template_id: str,
-            template_version: str,
-            pd_model: DataAgreementPersonalDataModel
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pd_model: DataAgreementPersonalDataModel,
     ) -&gt; &#34;PersonalDataRecord&#34;:
         &#34;&#34;&#34;Build personal data record from personal data model
 
@@ -268,16 +263,10 @@ class PersonalDataRecordSchema(BaseRecordSchema):
         unknown = EXCLUDE
 
     # Attribute identifier
-    attribute_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    attribute_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template identifier
-    data_agreement_template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    data_agreement_template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
     data_agreement_template_version = fields.Str(
@@ -285,32 +274,20 @@ class PersonalDataRecordSchema(BaseRecordSchema):
     )
 
     # Attribute name
-    attribute_name = fields.Str(
-        required=True
-    )
+    attribute_name = fields.Str(required=True)
 
     # Attribute sensitive
-    attribute_sensitive = fields.Bool(
-        required=False
-    )
+    attribute_sensitive = fields.Bool(required=False)
 
     # Attribute category
-    attribute_category = fields.Str(
-        required=False
-    )
+    attribute_category = fields.Str(required=False)
 
     # Attribute description
-    attribute_description = fields.Str(
-        required=False
-    )
+    attribute_description = fields.Str(required=False)
 
     # Restrictions
     restrictions = fields.List(
-        fields.Dict(
-            keys=fields.Str,
-            values=fields.Str
-        ),
-        required=False
+        fields.Dict(keys=fields.Str, values=fields.Str), required=False
     )</code></pre>
 </details>
 </section>
@@ -372,10 +349,7 @@ Defaults to None.</dd>
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~data_agreement_template_id&#34;,
-        &#34;~data_agreement_template_version&#34;
-    }
+    TAG_NAMES = {&#34;~data_agreement_template_id&#34;, &#34;~data_agreement_template_version&#34;}
 
     def __init__(
         self,
@@ -409,9 +383,7 @@ Defaults to None.</dd>
         super().__init__(id, **kwargs)
 
         if not data_agreement_template_id:
-            raise TypeError(
-                &#34;Data agreement template identifier is not provided&#34;
-            )
+            raise TypeError(&#34;Data agreement template identifier is not provided&#34;)
 
         # Set the record attributes
         self.data_agreement_template_id = data_agreement_template_id
@@ -444,10 +416,9 @@ Defaults to None.</dd>
         return self._id
 
     @classmethod
-    async def list_by_template_id(cls,
-                                  context: InjectionContext,
-                                  template_id: str,
-                                  template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+    async def list_by_template_id(
+        cls, context: InjectionContext, template_id: str, template_version: str
+    ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
         &#34;&#34;&#34;List by template id and template version
 
         Returns:
@@ -455,7 +426,7 @@ Defaults to None.</dd>
         &#34;&#34;&#34;
         tag_filter = {
             &#34;data_agreement_template_id&#34;: template_id,
-            &#34;data_agreement_template_version&#34;: template_version
+            &#34;data_agreement_template_version&#34;: template_version,
         }
 
         records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
@@ -464,11 +435,11 @@ Defaults to None.</dd>
 
     @classmethod
     async def batch_update_by_da_template_id(
-            cls,
-            context: InjectionContext,
-            template_id: str,
-            template_version: str,
-            pds: typing.List[dict]
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pds: typing.List[dict],
     ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
         &#34;&#34;&#34;Batch update by DA template id
 
@@ -494,7 +465,7 @@ Defaults to None.</dd>
                 attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
                 attribute_category=pd.get(&#34;attributeCategory&#34;),
                 attribute_description=pd.get(&#34;attributeDescription&#34;),
-                restrictions=pd.get(&#34;restrictions&#34;)
+                restrictions=pd.get(&#34;restrictions&#34;),
             )
 
             await record.save(context)
@@ -515,7 +486,7 @@ Defaults to None.</dd>
             attribute_name=self.attribute_name,
             attribute_sensitive=self.attribute_sensitive,
             attribute_category=self.attribute_category,
-            attribute_description=self.attribute_description
+            attribute_description=self.attribute_description,
         )
 
         restriction_models = []
@@ -525,7 +496,7 @@ Defaults to None.</dd>
 
                 restriction_model = DataAgreementPersonalDataRestrictionModel(
                     schema_id=restriction.get(&#34;schemaId&#34;),
-                    cred_def_id=restriction.get(&#34;credDefId&#34;)
+                    cred_def_id=restriction.get(&#34;credDefId&#34;),
                 )
 
                 restriction_models.append(restriction_model)
@@ -536,11 +507,11 @@ Defaults to None.</dd>
 
     @classmethod
     async def build_and_save_record_from_pd_model(
-            cls,
-            context: InjectionContext,
-            template_id: str,
-            template_version: str,
-            pd_model: DataAgreementPersonalDataModel
+        cls,
+        context: InjectionContext,
+        template_id: str,
+        template_version: str,
+        pd_model: DataAgreementPersonalDataModel,
     ) -&gt; &#34;PersonalDataRecord&#34;:
         &#34;&#34;&#34;Build personal data record from personal data model
 
@@ -622,11 +593,11 @@ Defaults to None.</dd>
 </summary>
 <pre><code class="python">@classmethod
 async def batch_update_by_da_template_id(
-        cls,
-        context: InjectionContext,
-        template_id: str,
-        template_version: str,
-        pds: typing.List[dict]
+    cls,
+    context: InjectionContext,
+    template_id: str,
+    template_version: str,
+    pds: typing.List[dict],
 ) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
     &#34;&#34;&#34;Batch update by DA template id
 
@@ -652,7 +623,7 @@ async def batch_update_by_da_template_id(
             attribute_sensitive=pd.get(&#34;attributeSensitive&#34;),
             attribute_category=pd.get(&#34;attributeCategory&#34;),
             attribute_description=pd.get(&#34;attributeDescription&#34;),
-            restrictions=pd.get(&#34;restrictions&#34;)
+            restrictions=pd.get(&#34;restrictions&#34;),
         )
 
         await record.save(context)
@@ -683,11 +654,11 @@ async def batch_update_by_da_template_id(
 </summary>
 <pre><code class="python">@classmethod
 async def build_and_save_record_from_pd_model(
-        cls,
-        context: InjectionContext,
-        template_id: str,
-        template_version: str,
-        pd_model: DataAgreementPersonalDataModel
+    cls,
+    context: InjectionContext,
+    template_id: str,
+    template_version: str,
+    pd_model: DataAgreementPersonalDataModel,
 ) -&gt; &#34;PersonalDataRecord&#34;:
     &#34;&#34;&#34;Build personal data record from personal data model
 
@@ -733,10 +704,9 @@ async def build_and_save_record_from_pd_model(
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-async def list_by_template_id(cls,
-                              context: InjectionContext,
-                              template_id: str,
-                              template_version: str) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
+async def list_by_template_id(
+    cls, context: InjectionContext, template_id: str, template_version: str
+) -&gt; typing.List[&#34;PersonalDataRecord&#34;]:
     &#34;&#34;&#34;List by template id and template version
 
     Returns:
@@ -744,7 +714,7 @@ async def list_by_template_id(cls,
     &#34;&#34;&#34;
     tag_filter = {
         &#34;data_agreement_template_id&#34;: template_id,
-        &#34;data_agreement_template_version&#34;: template_version
+        &#34;data_agreement_template_version&#34;: template_version,
     }
 
     records: typing.List[PersonalDataRecord] = await cls.query(context, tag_filter)
@@ -821,7 +791,7 @@ def record_value(self) -&gt; dict:
         attribute_name=self.attribute_name,
         attribute_sensitive=self.attribute_sensitive,
         attribute_category=self.attribute_category,
-        attribute_description=self.attribute_description
+        attribute_description=self.attribute_description,
     )
 
     restriction_models = []
@@ -831,7 +801,7 @@ def record_value(self) -&gt; dict:
 
             restriction_model = DataAgreementPersonalDataRestrictionModel(
                 schema_id=restriction.get(&#34;schemaId&#34;),
-                cred_def_id=restriction.get(&#34;credDefId&#34;)
+                cred_def_id=restriction.get(&#34;credDefId&#34;),
             )
 
             restriction_models.append(restriction_model)
@@ -870,16 +840,10 @@ def record_value(self) -&gt; dict:
         unknown = EXCLUDE
 
     # Attribute identifier
-    attribute_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    attribute_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template identifier
-    data_agreement_template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    data_agreement_template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
     data_agreement_template_version = fields.Str(
@@ -887,32 +851,20 @@ def record_value(self) -&gt; dict:
     )
 
     # Attribute name
-    attribute_name = fields.Str(
-        required=True
-    )
+    attribute_name = fields.Str(required=True)
 
     # Attribute sensitive
-    attribute_sensitive = fields.Bool(
-        required=False
-    )
+    attribute_sensitive = fields.Bool(required=False)
 
     # Attribute category
-    attribute_category = fields.Str(
-        required=False
-    )
+    attribute_category = fields.Str(required=False)
 
     # Attribute description
-    attribute_description = fields.Str(
-        required=False
-    )
+    attribute_description = fields.Str(required=False)
 
     # Restrictions
     restrictions = fields.List(
-        fields.Dict(
-            keys=fields.Str,
-            values=fields.Str
-        ),
-        required=False
+        fields.Dict(keys=fields.Str, values=fields.Str), required=False
     )</code></pre>
 </details>
 <h3>Ancestors</h3>

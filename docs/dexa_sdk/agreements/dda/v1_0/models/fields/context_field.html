@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from marshmallow import fields, ValidationError
+<pre><code class="python">from marshmallow import ValidationError, fields
 
 
 class ContextField(fields.Field):
@@ -35,14 +35,12 @@ class ContextField(fields.Field):
 
     def _serialize(self, value, attr, obj, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                &#34;Context must be an instance of List[str] or str&#34;)
+            raise ValidationError(&#34;Context must be an instance of List[str] or str&#34;)
         return value
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                &#34;Context must be an instance of List[str] or str&#34;)
+            raise ValidationError(&#34;Context must be an instance of List[str] or str&#34;)
         return value</code></pre>
 </details>
 </section>
@@ -72,14 +70,12 @@ it can be a list of strings or a string</p></div>
 
     def _serialize(self, value, attr, obj, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                &#34;Context must be an instance of List[str] or str&#34;)
+            raise ValidationError(&#34;Context must be an instance of List[str] or str&#34;)
         return value
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not (isinstance(value, list) or isinstance(value, str)):
-            raise ValidationError(
-                &#34;Context must be an instance of List[str] or str&#34;)
+            raise ValidationError(&#34;Context must be an instance of List[str] or str&#34;)
         return value</code></pre>
 </details>
 <h3>Ancestors</h3>

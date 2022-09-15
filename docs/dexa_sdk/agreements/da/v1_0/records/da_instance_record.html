@@ -26,22 +26,31 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import uuid
-import typing
-from loguru import logger
-from marshmallow import fields, validate, EXCLUDE
+<pre><code class="python">import typing
+import uuid
+
+from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.wallet.base import BaseWallet
 from aries_cloudagent.wallet.indy import IndyWallet
-from aries_cloudagent.connections.models.connection_record import ConnectionRecord
-from mydata_did.v1_0.utils.util import current_datetime_in_iso8601, bool_to_str
-from mydata_did.v1_0.messages.data_agreement_offer import DataAgreementNegotiationOfferMessage
-from mydata_did.v1_0.messages.data_agreement_accept import DataAgreementNegotiationAcceptMessage
-from .da_template_record import DataAgreementTemplateRecord
-from ..models.da_instance_models import DataAgreementInstanceModel
-from .....jsonld.core import sign_agreement, verify_agreement
+from dexa_sdk.agreements.da.v1_0.models.da_instance_models import (
+    DataAgreementInstanceModel,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
+    DataAgreementTemplateRecord,
+)
+from dexa_sdk.jsonld.core import sign_agreement, verify_agreement
+from loguru import logger
+from marshmallow import EXCLUDE, fields, validate
+from mydata_did.v1_0.messages.data_agreement_accept import (
+    DataAgreementNegotiationAcceptMessage,
+)
+from mydata_did.v1_0.messages.data_agreement_offer import (
+    DataAgreementNegotiationOfferMessage,
+)
+from mydata_did.v1_0.utils.util import bool_to_str, current_datetime_in_iso8601
 
 
 class DataAgreementInstanceRecord(BaseRecord):
@@ -71,7 +80,9 @@ class DataAgreementInstanceRecord(BaseRecord):
         &#34;~data_subject_did&#34;,
         &#34;~controller_did&#34;,
         &#34;~mydata_did&#34;,
-        &#34;~blink&#34;
+        &#34;~blink&#34;,
+        &#34;~connection_id&#34;,
+        &#34;~state&#34;,
     }
 
     # States of the data agreement.
@@ -100,7 +111,8 @@ class DataAgreementInstanceRecord(BaseRecord):
         mydata_did: str = None,
         blink: str = None,
         blockchain_receipt: dict = None,
-        **kwargs
+        connection_id: str = None,
+        **kwargs,
     ):
         &#34;&#34;&#34;Instantiate data agreement instance record
 
@@ -120,25 +132,20 @@ class DataAgreementInstanceRecord(BaseRecord):
             mydata_did (str, optional): did:mydata identifier for the instance. Defaults to None.
             blink (str, optional): blockchain link for mydata_did. Defaults to None.
             blockchain_receipt (dict, optional): Blockchain receipt. Defaults to None.
+            connection_id (str, optional): Connection ID. Defaults to None.
         &#34;&#34;&#34;
 
         # Pass identifier and state to parent class
         super().__init__(id, state, **kwargs)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         if not instance_id:
-            raise TypeError(
-                &#34;Instance identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Instance identifier is not specified.&#34;)
 
         if not template_version:
-            raise TypeError(
-                &#34;Template version is not specified.&#34;
-            )
+            raise TypeError(&#34;Template version is not specified.&#34;)
 
         # Set the record attributes
         self.instance_id = instance_id
@@ -154,6 +161,7 @@ class DataAgreementInstanceRecord(BaseRecord):
         self.mydata_did = mydata_did
         self.blink = blink
         self.blockchain_receipt = blockchain_receipt
+        self.connection_id = connection_id
 
     @property
     def record_value(self) -&gt; dict:
@@ -173,7 +181,8 @@ class DataAgreementInstanceRecord(BaseRecord):
                 &#34;controller_did&#34;,
                 &#34;mydata_did&#34;,
                 &#34;blink&#34;,
-                &#34;blockchain_receipt&#34;
+                &#34;blockchain_receipt&#34;,
+                &#34;connection_id&#34;,
             )
         }
 
@@ -182,7 +191,7 @@ class DataAgreementInstanceRecord(BaseRecord):
         context: InjectionContext,
         da_offer: DataAgreementNegotiationOfferMessage,
         connection_record: ConnectionRecord,
-        data_ex_id: str
+        data_ex_id: str,
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Build instance from da offer.
 
@@ -206,10 +215,13 @@ class DataAgreementInstanceRecord(BaseRecord):
             state=DataAgreementInstanceRecord.STATE_PREPARATION,
             method_of_use=da_model.method_of_use,
             data_agreement=da_model.serialize(),
-            third_party_data_sharing=bool_to_str(da_model.data_policy.third_party_data_sharing),
+            third_party_data_sharing=bool_to_str(
+                da_model.data_policy.third_party_data_sharing
+            ),
             data_ex_id=data_ex_id,
             data_subject_did=f&#34;did:sov:{connection_record.my_did}&#34;,
-            controller_did=f&#34;did:sov:{connection_record.their_did}&#34;
+            controller_did=f&#34;did:sov:{connection_record.their_did}&#34;,
+            connection_id=connection_record.connection_id,
         )
 
         await da_instance.save(context)
@@ -220,7 +232,7 @@ class DataAgreementInstanceRecord(BaseRecord):
     async def update_instance_from_da_accept(
         context: InjectionContext,
         da_accept: DataAgreementNegotiationAcceptMessage,
-        data_ex_id: str
+        data_ex_id: str,
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Update instance record with da accept message.
 
@@ -245,13 +257,13 @@ class DataAgreementInstanceRecord(BaseRecord):
 
         # Verify agreement
         valid = await verify_agreement(
-            agreement=da_accept.body.serialize(),
-            wallet=wallet
+            agreement=da_accept.body.serialize(), wallet=wallet
         )
 
         assert valid, &#34;Data agreement instance verification failed.&#34;
         logger.info(
-            f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;)
+            f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;
+        )
 
         instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
         instance_record.data_agreement = da_accept.body.serialize()
@@ -274,10 +286,11 @@ class DataAgreementInstanceRecord(BaseRecord):
         &#34;&#34;&#34;
 
         # Fetch the data agreement template.
-        template: DataAgreementTemplateRecord = \
+        template: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
                 context, template_id
             )
+        )
 
         assert template._publish_flag, &#34;Data agreement template is not published.&#34;
 
@@ -312,10 +325,12 @@ class DataAgreementInstanceRecord(BaseRecord):
             agreement=da,
             verkey=controller_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+            signed_da
+        )
 
         da_instance = DataAgreementInstanceRecord(
             instance_id=instance_id,
@@ -327,7 +342,8 @@ class DataAgreementInstanceRecord(BaseRecord):
             third_party_data_sharing=template.third_party_data_sharing,
             data_ex_id=data_ex_id,
             data_subject_did=f&#34;did:sov:{connection_record.their_did}&#34;,
-            controller_did=f&#34;did:sov:{controller_did.did}&#34;
+            controller_did=f&#34;did:sov:{controller_did.did}&#34;,
+            connection_id=connection_record.connection_id,
         )
 
         await da_instance.save(context)
@@ -336,21 +352,16 @@ class DataAgreementInstanceRecord(BaseRecord):
 
     @staticmethod
     async def counter_sign_instance(
-        context: InjectionContext,
-        instance_id: str,
-        connection_record: ConnectionRecord
+        context: InjectionContext, instance_id: str, connection_record: ConnectionRecord
     ) -&gt; typing.Union[&#34;DataAgreementInstanceRecord&#34;, DataAgreementInstanceModel]:
-        &#34;&#34;&#34;Counter sign data agreement instance
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Counter sign data agreement instance&#34;&#34;&#34;
 
         # Fetch wallet from context
         wallet: IndyWallet = await context.inject(BaseWallet)
 
         data_subject_did = await wallet.get_local_did(connection_record.my_did)
 
-        tag_filter = {
-            &#34;instance_id&#34;: instance_id
-        }
+        tag_filter = {&#34;instance_id&#34;: instance_id}
 
         # Fetch data agreement instance record.
         da_instance_records = await DataAgreementInstanceRecord.query(
@@ -364,14 +375,12 @@ class DataAgreementInstanceRecord(BaseRecord):
         da = da_instance_record.data_agreement
 
         # Verify agreement
-        valid = await verify_agreement(
-            agreement=da.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=da.copy(), wallet=wallet)
 
         assert valid, &#34;Data agreement instance verification failed.&#34;
         logger.info(
-            f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;)
+            f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;
+        )
 
         # Signature options
         signature_options = {
@@ -387,10 +396,12 @@ class DataAgreementInstanceRecord(BaseRecord):
             agreement=da,
             verkey=data_subject_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+            signed_da
+        )
 
         da_instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
         da_instance_record.data_agreement = da_model.serialize()
@@ -400,8 +411,7 @@ class DataAgreementInstanceRecord(BaseRecord):
 
     @staticmethod
     async def fetch_by_data_ex_id(
-        context: InjectionContext,
-        data_ex_id: str
+        context: InjectionContext, data_ex_id: str
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Fetch by data exchange record identifier
 
@@ -420,6 +430,34 @@ class DataAgreementInstanceRecord(BaseRecord):
 
         return instances[0]
 
+    async def get_connection_record(
+        self, context: InjectionContext
+    ) -&gt; ConnectionRecord:
+        &#34;&#34;&#34;Get connection record.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            ConnectionRecord: Connection record.
+        &#34;&#34;&#34;
+
+        # Find the connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            context, self.connection_id
+        )
+
+        return connection_record
+
+    @property
+    def data_agreement_model(self) -&gt; DataAgreementInstanceModel:
+        &#34;&#34;&#34;Accessor for data agreement instance model.
+
+        Returns:
+            DataAgreementInstanceModel: DA instance model.
+        &#34;&#34;&#34;
+        return DataAgreementInstanceModel.deserialize(self.data_agreement)
+
 
 class DataAgreementInstanceRecordSchema(BaseRecordSchema):
     &#34;&#34;&#34;Data agreement instance record schema&#34;&#34;&#34;
@@ -432,21 +470,13 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         unknown = EXCLUDE
 
     # Data agreement instance identifier
-    instance_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    instance_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -457,7 +487,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
                 DataAgreementInstanceRecord.STATE_DEFINITION,
                 DataAgreementInstanceRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Method of use for the data agreement.
@@ -469,13 +499,11 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
                 DataAgreementInstanceRecord.METHOD_OF_USE_DATA_SOURCE,
                 DataAgreementInstanceRecord.METHOD_OF_USE_DATA_USING_SERVICE,
             ]
-        )
+        ),
     )
 
     # Data agreement
-    data_agreement = fields.Dict(
-        required=True
-    )
+    data_agreement = fields.Dict(required=True)
 
     # Third party data sharing
     third_party_data_sharing = fields.Str(
@@ -486,7 +514,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Data exchange identifier
@@ -505,7 +533,10 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
     blink = fields.Str(required=False)
 
     # Blockchain receipt
-    blockchain_receipt = fields.Dict(required=False)</code></pre>
+    blockchain_receipt = fields.Dict(required=False)
+
+    # Connection ID
+    connection_id = fields.Str(required=False)</code></pre>
 </details>
 </section>
 <section>
@@ -519,7 +550,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 <dl>
 <dt id="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord"><code class="flex name class">
 <span>class <span class="ident">DataAgreementInstanceRecord</span></span>
-<span>(</span><span>*, id: str = None, instance_id: str = None, template_id: str = None, template_version: str = None, state: str = None, method_of_use: str = None, data_agreement: dict = None, third_party_data_sharing: str = 'false', data_ex_id: str = None, data_subject_did: str = None, controller_did: str = None, mydata_did: str = None, blink: str = None, blockchain_receipt: dict = None, **kwargs)</span>
+<span>(</span><span>*, id: str = None, instance_id: str = None, template_id: str = None, template_version: str = None, state: str = None, method_of_use: str = None, data_agreement: dict = None, third_party_data_sharing: str = 'false', data_ex_id: str = None, data_subject_did: str = None, controller_did: str = None, mydata_did: str = None, blink: str = None, blockchain_receipt: dict = None, connection_id: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Data agreement instance record to be persisted in the storage</p>
@@ -556,6 +587,8 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 <dd>blockchain link for mydata_did. Defaults to None.</dd>
 <dt><strong><code>blockchain_receipt</code></strong> :&ensp;<code>dict</code>, optional</dt>
 <dd>Blockchain receipt. Defaults to None.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Connection ID. Defaults to None.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -588,7 +621,9 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         &#34;~data_subject_did&#34;,
         &#34;~controller_did&#34;,
         &#34;~mydata_did&#34;,
-        &#34;~blink&#34;
+        &#34;~blink&#34;,
+        &#34;~connection_id&#34;,
+        &#34;~state&#34;,
     }
 
     # States of the data agreement.
@@ -617,7 +652,8 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         mydata_did: str = None,
         blink: str = None,
         blockchain_receipt: dict = None,
-        **kwargs
+        connection_id: str = None,
+        **kwargs,
     ):
         &#34;&#34;&#34;Instantiate data agreement instance record
 
@@ -637,25 +673,20 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
             mydata_did (str, optional): did:mydata identifier for the instance. Defaults to None.
             blink (str, optional): blockchain link for mydata_did. Defaults to None.
             blockchain_receipt (dict, optional): Blockchain receipt. Defaults to None.
+            connection_id (str, optional): Connection ID. Defaults to None.
         &#34;&#34;&#34;
 
         # Pass identifier and state to parent class
         super().__init__(id, state, **kwargs)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         if not instance_id:
-            raise TypeError(
-                &#34;Instance identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Instance identifier is not specified.&#34;)
 
         if not template_version:
-            raise TypeError(
-                &#34;Template version is not specified.&#34;
-            )
+            raise TypeError(&#34;Template version is not specified.&#34;)
 
         # Set the record attributes
         self.instance_id = instance_id
@@ -671,6 +702,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         self.mydata_did = mydata_did
         self.blink = blink
         self.blockchain_receipt = blockchain_receipt
+        self.connection_id = connection_id
 
     @property
     def record_value(self) -&gt; dict:
@@ -690,7 +722,8 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
                 &#34;controller_did&#34;,
                 &#34;mydata_did&#34;,
                 &#34;blink&#34;,
-                &#34;blockchain_receipt&#34;
+                &#34;blockchain_receipt&#34;,
+                &#34;connection_id&#34;,
             )
         }
 
@@ -699,7 +732,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         context: InjectionContext,
         da_offer: DataAgreementNegotiationOfferMessage,
         connection_record: ConnectionRecord,
-        data_ex_id: str
+        data_ex_id: str,
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Build instance from da offer.
 
@@ -723,10 +756,13 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
             state=DataAgreementInstanceRecord.STATE_PREPARATION,
             method_of_use=da_model.method_of_use,
             data_agreement=da_model.serialize(),
-            third_party_data_sharing=bool_to_str(da_model.data_policy.third_party_data_sharing),
+            third_party_data_sharing=bool_to_str(
+                da_model.data_policy.third_party_data_sharing
+            ),
             data_ex_id=data_ex_id,
             data_subject_did=f&#34;did:sov:{connection_record.my_did}&#34;,
-            controller_did=f&#34;did:sov:{connection_record.their_did}&#34;
+            controller_did=f&#34;did:sov:{connection_record.their_did}&#34;,
+            connection_id=connection_record.connection_id,
         )
 
         await da_instance.save(context)
@@ -737,7 +773,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
     async def update_instance_from_da_accept(
         context: InjectionContext,
         da_accept: DataAgreementNegotiationAcceptMessage,
-        data_ex_id: str
+        data_ex_id: str,
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Update instance record with da accept message.
 
@@ -762,13 +798,13 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 
         # Verify agreement
         valid = await verify_agreement(
-            agreement=da_accept.body.serialize(),
-            wallet=wallet
+            agreement=da_accept.body.serialize(), wallet=wallet
         )
 
         assert valid, &#34;Data agreement instance verification failed.&#34;
         logger.info(
-            f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;)
+            f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;
+        )
 
         instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
         instance_record.data_agreement = da_accept.body.serialize()
@@ -791,10 +827,11 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         &#34;&#34;&#34;
 
         # Fetch the data agreement template.
-        template: DataAgreementTemplateRecord = \
+        template: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
                 context, template_id
             )
+        )
 
         assert template._publish_flag, &#34;Data agreement template is not published.&#34;
 
@@ -829,10 +866,12 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
             agreement=da,
             verkey=controller_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+            signed_da
+        )
 
         da_instance = DataAgreementInstanceRecord(
             instance_id=instance_id,
@@ -844,7 +883,8 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
             third_party_data_sharing=template.third_party_data_sharing,
             data_ex_id=data_ex_id,
             data_subject_did=f&#34;did:sov:{connection_record.their_did}&#34;,
-            controller_did=f&#34;did:sov:{controller_did.did}&#34;
+            controller_did=f&#34;did:sov:{controller_did.did}&#34;,
+            connection_id=connection_record.connection_id,
         )
 
         await da_instance.save(context)
@@ -853,21 +893,16 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 
     @staticmethod
     async def counter_sign_instance(
-        context: InjectionContext,
-        instance_id: str,
-        connection_record: ConnectionRecord
+        context: InjectionContext, instance_id: str, connection_record: ConnectionRecord
     ) -&gt; typing.Union[&#34;DataAgreementInstanceRecord&#34;, DataAgreementInstanceModel]:
-        &#34;&#34;&#34;Counter sign data agreement instance
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Counter sign data agreement instance&#34;&#34;&#34;
 
         # Fetch wallet from context
         wallet: IndyWallet = await context.inject(BaseWallet)
 
         data_subject_did = await wallet.get_local_did(connection_record.my_did)
 
-        tag_filter = {
-            &#34;instance_id&#34;: instance_id
-        }
+        tag_filter = {&#34;instance_id&#34;: instance_id}
 
         # Fetch data agreement instance record.
         da_instance_records = await DataAgreementInstanceRecord.query(
@@ -881,14 +916,12 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
         da = da_instance_record.data_agreement
 
         # Verify agreement
-        valid = await verify_agreement(
-            agreement=da.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=da.copy(), wallet=wallet)
 
         assert valid, &#34;Data agreement instance verification failed.&#34;
         logger.info(
-            f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;)
+            f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;
+        )
 
         # Signature options
         signature_options = {
@@ -904,10 +937,12 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
             agreement=da,
             verkey=data_subject_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+        da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+            signed_da
+        )
 
         da_instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
         da_instance_record.data_agreement = da_model.serialize()
@@ -917,8 +952,7 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 
     @staticmethod
     async def fetch_by_data_ex_id(
-        context: InjectionContext,
-        data_ex_id: str
+        context: InjectionContext, data_ex_id: str
     ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Fetch by data exchange record identifier
 
@@ -935,7 +969,35 @@ class DataAgreementInstanceRecordSchema(BaseRecordSchema):
 
         assert instances, &#34;Data agreement instance not found.&#34;
 
-        return instances[0]</code></pre>
+        return instances[0]
+
+    async def get_connection_record(
+        self, context: InjectionContext
+    ) -&gt; ConnectionRecord:
+        &#34;&#34;&#34;Get connection record.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            ConnectionRecord: Connection record.
+        &#34;&#34;&#34;
+
+        # Find the connection record.
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            context, self.connection_id
+        )
+
+        return connection_record
+
+    @property
+    def data_agreement_model(self) -&gt; DataAgreementInstanceModel:
+        &#34;&#34;&#34;Accessor for data agreement instance model.
+
+        Returns:
+            DataAgreementInstanceModel: DA instance model.
+        &#34;&#34;&#34;
+        return DataAgreementInstanceModel.deserialize(self.data_agreement)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1022,7 +1084,7 @@ async def build_instance_from_da_offer(
     context: InjectionContext,
     da_offer: DataAgreementNegotiationOfferMessage,
     connection_record: ConnectionRecord,
-    data_ex_id: str
+    data_ex_id: str,
 ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
     &#34;&#34;&#34;Build instance from da offer.
 
@@ -1046,10 +1108,13 @@ async def build_instance_from_da_offer(
         state=DataAgreementInstanceRecord.STATE_PREPARATION,
         method_of_use=da_model.method_of_use,
         data_agreement=da_model.serialize(),
-        third_party_data_sharing=bool_to_str(da_model.data_policy.third_party_data_sharing),
+        third_party_data_sharing=bool_to_str(
+            da_model.data_policy.third_party_data_sharing
+        ),
         data_ex_id=data_ex_id,
         data_subject_did=f&#34;did:sov:{connection_record.my_did}&#34;,
-        controller_did=f&#34;did:sov:{connection_record.their_did}&#34;
+        controller_did=f&#34;did:sov:{connection_record.their_did}&#34;,
+        connection_id=connection_record.connection_id,
     )
 
     await da_instance.save(context)
@@ -1088,10 +1153,11 @@ async def build_instance_from_template(
     &#34;&#34;&#34;
 
     # Fetch the data agreement template.
-    template: DataAgreementTemplateRecord = \
+    template: DataAgreementTemplateRecord = (
         await DataAgreementTemplateRecord.latest_template_by_id(
             context, template_id
         )
+    )
 
     assert template._publish_flag, &#34;Data agreement template is not published.&#34;
 
@@ -1126,10 +1192,12 @@ async def build_instance_from_template(
         agreement=da,
         verkey=controller_did.verkey,
         wallet=wallet,
-        signature_options=signature_options
+        signature_options=signature_options,
     )
 
-    da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+    da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+        signed_da
+    )
 
     da_instance = DataAgreementInstanceRecord(
         instance_id=instance_id,
@@ -1141,7 +1209,8 @@ async def build_instance_from_template(
         third_party_data_sharing=template.third_party_data_sharing,
         data_ex_id=data_ex_id,
         data_subject_did=f&#34;did:sov:{connection_record.their_did}&#34;,
-        controller_did=f&#34;did:sov:{controller_did.did}&#34;
+        controller_did=f&#34;did:sov:{controller_did.did}&#34;,
+        connection_id=connection_record.connection_id,
     )
 
     await da_instance.save(context)
@@ -1160,21 +1229,16 @@ async def build_instance_from_template(
 </summary>
 <pre><code class="python">@staticmethod
 async def counter_sign_instance(
-    context: InjectionContext,
-    instance_id: str,
-    connection_record: ConnectionRecord
+    context: InjectionContext, instance_id: str, connection_record: ConnectionRecord
 ) -&gt; typing.Union[&#34;DataAgreementInstanceRecord&#34;, DataAgreementInstanceModel]:
-    &#34;&#34;&#34;Counter sign data agreement instance
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Counter sign data agreement instance&#34;&#34;&#34;
 
     # Fetch wallet from context
     wallet: IndyWallet = await context.inject(BaseWallet)
 
     data_subject_did = await wallet.get_local_did(connection_record.my_did)
 
-    tag_filter = {
-        &#34;instance_id&#34;: instance_id
-    }
+    tag_filter = {&#34;instance_id&#34;: instance_id}
 
     # Fetch data agreement instance record.
     da_instance_records = await DataAgreementInstanceRecord.query(
@@ -1188,14 +1252,12 @@ async def counter_sign_instance(
     da = da_instance_record.data_agreement
 
     # Verify agreement
-    valid = await verify_agreement(
-        agreement=da.copy(),
-        wallet=wallet
-    )
+    valid = await verify_agreement(agreement=da.copy(), wallet=wallet)
 
     assert valid, &#34;Data agreement instance verification failed.&#34;
     logger.info(
-        f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;)
+        f&#34;Data agreement({da_instance_record.instance_id}) successfully verified.&#34;
+    )
 
     # Signature options
     signature_options = {
@@ -1211,10 +1273,12 @@ async def counter_sign_instance(
         agreement=da,
         verkey=data_subject_did.verkey,
         wallet=wallet,
-        signature_options=signature_options
+        signature_options=signature_options,
     )
 
-    da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(signed_da)
+    da_model: DataAgreementInstanceModel = DataAgreementInstanceModel.deserialize(
+        signed_da
+    )
 
     da_instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
     da_instance_record.data_agreement = da_model.serialize()
@@ -1246,8 +1310,7 @@ async def counter_sign_instance(
 </summary>
 <pre><code class="python">@staticmethod
 async def fetch_by_data_ex_id(
-    context: InjectionContext,
-    data_ex_id: str
+    context: InjectionContext, data_ex_id: str
 ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
     &#34;&#34;&#34;Fetch by data exchange record identifier
 
@@ -1294,7 +1357,7 @@ async def fetch_by_data_ex_id(
 async def update_instance_from_da_accept(
     context: InjectionContext,
     da_accept: DataAgreementNegotiationAcceptMessage,
-    data_ex_id: str
+    data_ex_id: str,
 ) -&gt; &#34;DataAgreementInstanceRecord&#34;:
     &#34;&#34;&#34;Update instance record with da accept message.
 
@@ -1319,13 +1382,13 @@ async def update_instance_from_da_accept(
 
     # Verify agreement
     valid = await verify_agreement(
-        agreement=da_accept.body.serialize(),
-        wallet=wallet
+        agreement=da_accept.body.serialize(), wallet=wallet
     )
 
     assert valid, &#34;Data agreement instance verification failed.&#34;
     logger.info(
-        f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;)
+        f&#34;Data agreement({instance_record.instance_id}) successfully verified.&#34;
+    )
 
     instance_record.state = DataAgreementInstanceRecord.STATE_CAPTURE
     instance_record.data_agreement = da_accept.body.serialize()
@@ -1337,6 +1400,28 @@ async def update_instance_from_da_accept(
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.data_agreement_model"><code class="name">var <span class="ident">data_agreement_model</span> : <a title="dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementInstanceModel" href="../models/da_instance_models.html#dexa_sdk.agreements.da.v1_0.models.da_instance_models.DataAgreementInstanceModel">DataAgreementInstanceModel</a></code></dt>
+<dd>
+<div class="desc"><p>Accessor for data agreement instance model.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>DataAgreementInstanceModel</code></dt>
+<dd>DA instance model.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def data_agreement_model(self) -&gt; DataAgreementInstanceModel:
+    &#34;&#34;&#34;Accessor for data agreement instance model.
+
+    Returns:
+        DataAgreementInstanceModel: DA instance model.
+    &#34;&#34;&#34;
+    return DataAgreementInstanceModel.deserialize(self.data_agreement)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.record_value"><code class="name">var <span class="ident">record_value</span> : dict</code></dt>
 <dd>
 <div class="desc"><p>Accessor for JSON record value generated for this transaction record.</p></div>
@@ -1362,9 +1447,52 @@ def record_value(self) -&gt; dict:
             &#34;controller_did&#34;,
             &#34;mydata_did&#34;,
             &#34;blink&#34;,
-            &#34;blockchain_receipt&#34;
+            &#34;blockchain_receipt&#34;,
+            &#34;connection_id&#34;,
         )
     }</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.get_connection_record"><code class="name flex">
+<span>async def <span class="ident">get_connection_record</span></span>(<span>self, context: aries_cloudagent.config.injection_context.InjectionContext) ‑> aries_cloudagent.connections.models.connection_record.ConnectionRecord</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get connection record.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ConnectionRecord</code></dt>
+<dd>Connection record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_connection_record(
+    self, context: InjectionContext
+) -&gt; ConnectionRecord:
+    &#34;&#34;&#34;Get connection record.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+
+    Returns:
+        ConnectionRecord: Connection record.
+    &#34;&#34;&#34;
+
+    # Find the connection record.
+    connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+        context, self.connection_id
+    )
+
+    return connection_record</code></pre>
 </details>
 </dd>
 </dl>
@@ -1396,21 +1524,13 @@ def record_value(self) -&gt; dict:
         unknown = EXCLUDE
 
     # Data agreement instance identifier
-    instance_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    instance_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -1421,7 +1541,7 @@ def record_value(self) -&gt; dict:
                 DataAgreementInstanceRecord.STATE_DEFINITION,
                 DataAgreementInstanceRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Method of use for the data agreement.
@@ -1433,13 +1553,11 @@ def record_value(self) -&gt; dict:
                 DataAgreementInstanceRecord.METHOD_OF_USE_DATA_SOURCE,
                 DataAgreementInstanceRecord.METHOD_OF_USE_DATA_USING_SERVICE,
             ]
-        )
+        ),
     )
 
     # Data agreement
-    data_agreement = fields.Dict(
-        required=True
-    )
+    data_agreement = fields.Dict(required=True)
 
     # Third party data sharing
     third_party_data_sharing = fields.Str(
@@ -1450,7 +1568,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Data exchange identifier
@@ -1469,7 +1587,10 @@ def record_value(self) -&gt; dict:
     blink = fields.Str(required=False)
 
     # Blockchain receipt
-    blockchain_receipt = fields.Dict(required=False)</code></pre>
+    blockchain_receipt = fields.Dict(required=False)
+
+    # Connection ID
+    connection_id = fields.Str(required=False)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1523,7 +1644,9 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.build_instance_from_da_offer" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.build_instance_from_da_offer">build_instance_from_da_offer</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.build_instance_from_template" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.build_instance_from_template">build_instance_from_template</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.counter_sign_instance" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.counter_sign_instance">counter_sign_instance</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.data_agreement_model" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.data_agreement_model">data_agreement_model</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.fetch_by_data_ex_id" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.fetch_by_data_ex_id">fetch_by_data_ex_id</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.get_connection_record" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.get_connection_record">get_connection_record</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.record_value" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.record_value">record_value</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.update_instance_from_da_accept" href="#dexa_sdk.agreements.da.v1_0.records.da_instance_record.DataAgreementInstanceRecord.update_instance_from_da_accept">update_instance_from_da_accept</a></code></li>
 </ul>

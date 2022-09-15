@@ -26,15 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
+<pre><code class="python">from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class ControllerDetailsRecord(BaseRecord):
     &#34;&#34;&#34;Data controller details record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;ControllerDetailsRecordSchema&#34;
 
@@ -90,7 +88,7 @@ class ControllerDetailsRecord(BaseRecord):
                 &#34;organisation_type&#34;,
                 &#34;description&#34;,
                 &#34;policy_url&#34;,
-                &#34;eula_url&#34;
+                &#34;eula_url&#34;,
             )
         }
 
@@ -134,6 +132,7 @@ class ControllerDetailsRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class ControllerDetailsRecord(BaseRecord):
     &#34;&#34;&#34;Data controller details record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;ControllerDetailsRecordSchema&#34;
 
@@ -189,7 +188,7 @@ class ControllerDetailsRecordSchema(BaseRecordSchema):
                 &#34;organisation_type&#34;,
                 &#34;description&#34;,
                 &#34;policy_url&#34;,
-                &#34;eula_url&#34;
+                &#34;eula_url&#34;,
             )
         }</code></pre>
 </details>
@@ -242,7 +241,7 @@ def record_value(self) -&gt; dict:
             &#34;organisation_type&#34;,
             &#34;description&#34;,
             &#34;policy_url&#34;,
-            &#34;eula_url&#34;
+            &#34;eula_url&#34;,
         )
     }</code></pre>
 </details>

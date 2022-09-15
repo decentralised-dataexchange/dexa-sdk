@@ -28,11 +28,12 @@
 </summary>
 <pre><code class="python">import typing
 import uuid
+from typing import List
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from marshmallow import fields, EXCLUDE, validate
-from typing import List
-from ....dda.v1_0.models.fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields, validate
 
 DA_DEFAULT_CONTEXT = [
     (
@@ -287,41 +288,31 @@ class DataAgreementPersonalDataSchema(BaseModelSchema):
 
     # Attribute identifier
     attribute_id = fields.Str(
-        data_key=&#34;attributeId&#34;,
-        example=UUIDFour.EXAMPLE,
-        required=False
+        data_key=&#34;attributeId&#34;, example=UUIDFour.EXAMPLE, required=False
     )
 
     # Attribute name
-    attribute_name = fields.Str(
-        example=&#34;Name&#34;, data_key=&#34;attributeName&#34;, required=True
-    )
+    attribute_name = fields.Str(example=&#34;Name&#34;, data_key=&#34;attributeName&#34;, required=True)
 
     # Attribute sensitive
     attribute_sensitive = fields.Bool(
-        example=True,
-        data_key=&#34;attributeSensitive&#34;,
-        required=False
+        example=True, data_key=&#34;attributeSensitive&#34;, required=False
     )
 
     # Attribute category
     attribute_category = fields.Str(
-        example=&#34;Personal&#34;,
-        required=False,
-        data_key=&#34;attributeCategory&#34;
+        example=&#34;Personal&#34;, required=False, data_key=&#34;attributeCategory&#34;
     )
 
     # Attribute description
     attribute_description = fields.Str(
-        required=True,
-        example=&#34;Name of the customer&#34;,
-        data_key=&#34;attributeDescription&#34;
+        required=True, example=&#34;Name of the customer&#34;, data_key=&#34;attributeDescription&#34;
     )
 
     restrictions = fields.List(
         fields.Nested(DataAgreementPersonalDataRestrictionSchema),
         required=False,
-        data_key=&#34;restrictions&#34;
+        data_key=&#34;restrictions&#34;,
     )
 
 
@@ -394,7 +385,7 @@ class DataAgreementSchema(BaseModelSchema):
         data_key=&#34;@context&#34;,
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement template identifier
@@ -402,8 +393,9 @@ class DataAgreementSchema(BaseModelSchema):
     id = fields.Str(data_key=&#34;@id&#34;, required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key=&#34;@type&#34;, required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement template version
     # i.e. version of the &#34;prepared&#34; data agreement template
@@ -427,7 +419,9 @@ class DataAgreementSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;)
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -481,7 +475,7 @@ class DataAgreementSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key=&#34;personalData&#34;
+        data_key=&#34;personalData&#34;,
     )
 
     # Data agreement DPIA metadata
@@ -760,7 +754,7 @@ class DataAgreementSchema(BaseModelSchema):
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementModel"><code class="flex name class">
 <span>class <span class="ident">DataAgreementModel</span></span>
-<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str = '99b5df6d-2830-4b7e-ba8d-125b7b84e708', type: List[str] = ['DataAgreement'], version: str, language: str = 'en', data_controller_name: str = None, data_controller_url: str = None, data_policy: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel">DataAgreementDataPolicyModel</a> = None, purpose: str = None, purpose_description: str = None, lawful_basis: str = None, method_of_use: str = None, personal_data: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a>] = None, dpia: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel">DataAgreementDPIAModel</a> = None, **kwargs)</span>
+<span>(</span><span>*, context: Union[str, List[str]] = ['https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld', 'https://w3id.org/security/v2'], id: str = 'b5dce4f0-2c99-4115-9b24-bf43d21550af', type: List[str] = ['DataAgreement'], version: str, language: str = 'en', data_controller_name: str = None, data_controller_url: str = None, data_policy: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDataPolicyModel">DataAgreementDataPolicyModel</a> = None, purpose: str = None, purpose_description: str = None, lawful_basis: str = None, method_of_use: str = None, personal_data: List[<a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementPersonalDataModel">DataAgreementPersonalDataModel</a>] = None, dpia: <a title="dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel" href="#dexa_sdk.agreements.da.v1_0.models.da_models.DataAgreementDPIAModel">DataAgreementDPIAModel</a> = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Data agreement model class</p>
@@ -1021,41 +1015,31 @@ class DataAgreementSchema(BaseModelSchema):
 
     # Attribute identifier
     attribute_id = fields.Str(
-        data_key=&#34;attributeId&#34;,
-        example=UUIDFour.EXAMPLE,
-        required=False
+        data_key=&#34;attributeId&#34;, example=UUIDFour.EXAMPLE, required=False
     )
 
     # Attribute name
-    attribute_name = fields.Str(
-        example=&#34;Name&#34;, data_key=&#34;attributeName&#34;, required=True
-    )
+    attribute_name = fields.Str(example=&#34;Name&#34;, data_key=&#34;attributeName&#34;, required=True)
 
     # Attribute sensitive
     attribute_sensitive = fields.Bool(
-        example=True,
-        data_key=&#34;attributeSensitive&#34;,
-        required=False
+        example=True, data_key=&#34;attributeSensitive&#34;, required=False
     )
 
     # Attribute category
     attribute_category = fields.Str(
-        example=&#34;Personal&#34;,
-        required=False,
-        data_key=&#34;attributeCategory&#34;
+        example=&#34;Personal&#34;, required=False, data_key=&#34;attributeCategory&#34;
     )
 
     # Attribute description
     attribute_description = fields.Str(
-        required=True,
-        example=&#34;Name of the customer&#34;,
-        data_key=&#34;attributeDescription&#34;
+        required=True, example=&#34;Name of the customer&#34;, data_key=&#34;attributeDescription&#34;
     )
 
     restrictions = fields.List(
         fields.Nested(DataAgreementPersonalDataRestrictionSchema),
         required=False,
-        data_key=&#34;restrictions&#34;
+        data_key=&#34;restrictions&#34;,
     )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1109,7 +1093,7 @@ class DataAgreementSchema(BaseModelSchema):
         data_key=&#34;@context&#34;,
         required=True,
         example=DA_DEFAULT_CONTEXT,
-        default=DA_DEFAULT_CONTEXT
+        default=DA_DEFAULT_CONTEXT,
     )
 
     # Data agreement template identifier
@@ -1117,8 +1101,9 @@ class DataAgreementSchema(BaseModelSchema):
     id = fields.Str(data_key=&#34;@id&#34;, required=True, default=str(uuid.uuid4()))
 
     # Type of the agreement
-    type = fields.List(fields.Str, data_key=&#34;@type&#34;, required=True,
-                       example=DA_TYPE, default=DA_TYPE)
+    type = fields.List(
+        fields.Str, data_key=&#34;@type&#34;, required=True, example=DA_TYPE, default=DA_TYPE
+    )
 
     # Data agreement template version
     # i.e. version of the &#34;prepared&#34; data agreement template
@@ -1142,7 +1127,9 @@ class DataAgreementSchema(BaseModelSchema):
     )
 
     # Data agreement data policy
-    data_policy = fields.Nested(DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;)
+    data_policy = fields.Nested(
+        DataAgreementDataPolicySchema, required=True, data_key=&#34;dataPolicy&#34;
+    )
 
     # Data agreement usage purpose
     purpose = fields.Str(
@@ -1196,7 +1183,7 @@ class DataAgreementSchema(BaseModelSchema):
         fields.Nested(DataAgreementPersonalDataSchema),
         required=True,
         validate=validate.Length(min=1),
-        data_key=&#34;personalData&#34;
+        data_key=&#34;personalData&#34;,
     )
 
     # Data agreement DPIA metadata

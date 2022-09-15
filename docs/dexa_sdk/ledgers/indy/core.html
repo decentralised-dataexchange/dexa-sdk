@@ -28,9 +28,10 @@
 </summary>
 <pre><code class="python">import typing
 from asyncio import shield
-from aries_cloudagent.ledger.base import BaseLedger
-from aries_cloudagent.issuer.base import BaseIssuer
+
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.issuer.base import BaseIssuer
+from aries_cloudagent.ledger.base import BaseLedger
 
 
 class IndyLegerConfigError(Exception):
@@ -41,7 +42,7 @@ async def create_schema_def_and_anchor_to_ledger(
     context: InjectionContext,
     schema_name: str,
     schema_version: str,
-    attributes: typing.List[str]
+    attributes: typing.List[str],
 ) -&gt; typing.Tuple[str, dict]:
     &#34;&#34;&#34;
     Create scheme definition and anchor to ledger.
@@ -61,9 +62,7 @@ async def create_schema_def_and_anchor_to_ledger(
         if not context.settings.get_value(&#34;wallet.type&#34;):
             reason += &#34;: missing wallet-type?&#34;
 
-        raise IndyLegerConfigError(
-            f&#34;{reason}&#34;
-        )
+        raise IndyLegerConfigError(f&#34;{reason}&#34;)
 
     # Issuer instance from context
     issuer: BaseIssuer = await context.inject(BaseIssuer)
@@ -87,7 +86,7 @@ async def create_cred_def_and_anchor_to_ledger(
     context: InjectionContext,
     schema_id: str,
     tag: str = &#34;default&#34;,
-    support_revocation: bool = False
+    support_revocation: bool = False,
 ) -&gt; typing.Tuple[str, dict, bool]:
     &#34;&#34;&#34;
     Create credential definition and anchor to ledger.
@@ -108,9 +107,7 @@ async def create_cred_def_and_anchor_to_ledger(
         if not context.settings.get_value(&#34;wallet.type&#34;):
             reason += &#34;: missing wallet-type?&#34;
 
-        raise IndyLegerConfigError(
-            f&#34;{reason}&#34;
-        )
+        raise IndyLegerConfigError(f&#34;{reason}&#34;)
 
     # Issuer instance from context
     issuer: BaseIssuer = await context.inject(BaseIssuer)
@@ -164,7 +161,7 @@ async def create_cred_def_and_anchor_to_ledger(
     context: InjectionContext,
     schema_id: str,
     tag: str = &#34;default&#34;,
-    support_revocation: bool = False
+    support_revocation: bool = False,
 ) -&gt; typing.Tuple[str, dict, bool]:
     &#34;&#34;&#34;
     Create credential definition and anchor to ledger.
@@ -185,9 +182,7 @@ async def create_cred_def_and_anchor_to_ledger(
         if not context.settings.get_value(&#34;wallet.type&#34;):
             reason += &#34;: missing wallet-type?&#34;
 
-        raise IndyLegerConfigError(
-            f&#34;{reason}&#34;
-        )
+        raise IndyLegerConfigError(f&#34;{reason}&#34;)
 
     # Issuer instance from context
     issuer: BaseIssuer = await context.inject(BaseIssuer)
@@ -233,7 +228,7 @@ async def create_cred_def_and_anchor_to_ledger(
     context: InjectionContext,
     schema_name: str,
     schema_version: str,
-    attributes: typing.List[str]
+    attributes: typing.List[str],
 ) -&gt; typing.Tuple[str, dict]:
     &#34;&#34;&#34;
     Create scheme definition and anchor to ledger.
@@ -253,9 +248,7 @@ async def create_cred_def_and_anchor_to_ledger(
         if not context.settings.get_value(&#34;wallet.type&#34;):
             reason += &#34;: missing wallet-type?&#34;
 
-        raise IndyLegerConfigError(
-            f&#34;{reason}&#34;
-        )
+        raise IndyLegerConfigError(f&#34;{reason}&#34;)
 
     # Issuer instance from context
     issuer: BaseIssuer = await context.inject(BaseIssuer)

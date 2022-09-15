@@ -27,15 +27,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import typing
-from marshmallow import fields, validate, EXCLUDE
-from loguru import logger
+
+from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
-from aries_cloudagent.config.injection_context import InjectionContext
+from dexa_sdk.agreements.da.v1_0.models.da_models import DataAgreementModel
+from dexa_sdk.agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
+from dexa_sdk.utils import bump_major_for_semver_string
+from loguru import logger
+from marshmallow import EXCLUDE, fields, validate
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
-from .....utils import bump_major_for_semver_string
-from .personal_data_record import PersonalDataRecord
-from ..models.da_models import DataAgreementModel
 
 
 class DataAgreementTemplateRecord(BaseRecord):
@@ -65,7 +66,7 @@ class DataAgreementTemplateRecord(BaseRecord):
         &#34;~cred_def_id&#34;,
         &#34;~existing_schema_flag&#34;,
         &#34;~latest_version_flag&#34;,
-        &#34;~third_party_data_sharing&#34;
+        &#34;~third_party_data_sharing&#34;,
     }
 
     # States of the data agreement.
@@ -94,7 +95,7 @@ class DataAgreementTemplateRecord(BaseRecord):
         existing_schema_flag: str = &#34;false&#34;,
         latest_version_flag: str = &#34;true&#34;,
         third_party_data_sharing: str = &#34;false&#34;,
-        **kwargs
+        **kwargs,
     ):
         &#34;&#34;&#34;Initialise data agreement template record
 
@@ -119,9 +120,7 @@ class DataAgreementTemplateRecord(BaseRecord):
         super().__init__(id, state, **kwargs)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         # Set the record attributes
         self.template_id = template_id
@@ -156,7 +155,7 @@ class DataAgreementTemplateRecord(BaseRecord):
                 &#34;presentation_request&#34;,
                 &#34;existing_schema_flag&#34;,
                 &#34;latest_version_flag&#34;,
-                &#34;third_party_data_sharing&#34;
+                &#34;third_party_data_sharing&#34;,
             )
         }
 
@@ -245,13 +244,10 @@ class DataAgreementTemplateRecord(BaseRecord):
             &#34;delete_flag&#34;: bool_to_str(False),
             &#34;template_id&#34;: template_id,
             &#34;latest_version_flag&#34;: bool_to_str(True),
-            &#34;publish_flag&#34;: bool_to_str(True)
+            &#34;publish_flag&#34;: bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -274,13 +270,10 @@ class DataAgreementTemplateRecord(BaseRecord):
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
             &#34;template_id&#34;: template_id,
-            &#34;latest_version_flag&#34;: bool_to_str(True)
+            &#34;latest_version_flag&#34;: bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -302,21 +295,16 @@ class DataAgreementTemplateRecord(BaseRecord):
 
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;template_id&#34;: template_id
+            &#34;template_id&#34;: template_id,
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return fetched
 
     @classmethod
     async def non_deleted_template_by_id(
-        cls,
-        context: InjectionContext,
-        template_id: str
+        cls, context: InjectionContext, template_id: str
     ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch non deleted template by id.
 
@@ -327,7 +315,7 @@ class DataAgreementTemplateRecord(BaseRecord):
         tag_filter: dict = {
             &#34;latest_version_flag&#34;: bool_to_str(True),
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;template_id&#34;: template_id
+            &#34;template_id&#34;: template_id,
         }
 
         return await cls.query(
@@ -337,8 +325,7 @@ class DataAgreementTemplateRecord(BaseRecord):
 
     @classmethod
     async def non_deleted_templates(
-        cls,
-        context: InjectionContext
+        cls, context: InjectionContext
     ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch all non-deleted agreements.
 
@@ -346,9 +333,7 @@ class DataAgreementTemplateRecord(BaseRecord):
             DataAgreementTemplateRecord: List of template records
         &#34;&#34;&#34;
 
-        tag_filter: dict = {
-            &#34;delete_flag&#34;: bool_to_str(False)
-        }
+        tag_filter: dict = {&#34;delete_flag&#34;: bool_to_str(False)}
 
         return await cls.query(
             context,
@@ -366,11 +351,11 @@ class DataAgreementTemplateRecord(BaseRecord):
         &#34;&#34;&#34;
 
         # Fetch the previous record
-        previous_record: DataAgreementTemplateRecord = \
+        previous_record: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
-                context,
-                self.template_id
+                context, self.template_id
             )
+        )
 
         assert previous_record, &#34;Atleast 1 previous record must be present&#34;
 
@@ -388,11 +373,7 @@ class DataAgreementTemplateRecord(BaseRecord):
                 f&#34; {previous_version} to {template_version}&#34;
             )
         )
-        self.data_agreement.update(
-            {
-                &#34;version&#34;: template_version
-            }
-        )
+        self.data_agreement.update({&#34;version&#34;: template_version})
 
         # Save as new record to the storage
         self._id = None
@@ -402,8 +383,9 @@ class DataAgreementTemplateRecord(BaseRecord):
         return self
 
     @classmethod
-    async def published_templates(cls, context: InjectionContext) \
-            -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
+    async def published_templates(
+        cls, context: InjectionContext
+    ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch all published templates (not-deleted)
 
         Returns:
@@ -412,13 +394,10 @@ class DataAgreementTemplateRecord(BaseRecord):
 
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;publish_flag&#34;: bool_to_str(True)
+            &#34;publish_flag&#34;: bool_to_str(True),
         }
 
-        return await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        return await cls.query(context, tag_filter=tag_filter)
 
     async def publish_template(self, context: InjectionContext, **kwargs) -&gt; str:
         &#34;&#34;&#34;Publish the data agreement template
@@ -445,8 +424,7 @@ class DataAgreementTemplateRecord(BaseRecord):
         return await self.save(context=context, **kwargs)
 
     async def fetch_personal_data_records(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; typing.List[PersonalDataRecord]:
         &#34;&#34;&#34;Fetch personal data records
 
@@ -465,15 +443,12 @@ class DataAgreementTemplateRecord(BaseRecord):
         )
 
         return await PersonalDataRecord.list_by_template_id(
-            context,
-            self.template_id,
-            self.template_version
+            context, self.template_id, self.template_version
         )
 
     @property
     def data_agreement_model(self) -&gt; DataAgreementModel:
-        &#34;&#34;&#34;Accessor for data agreement as model.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Accessor for data agreement as model.&#34;&#34;&#34;
         return DataAgreementModel.deserialize(self.data_agreement)
 
 
@@ -488,15 +463,10 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
         unknown = EXCLUDE
 
     # Data agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -507,7 +477,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 DataAgreementTemplateRecord.STATE_DEFINITION,
                 DataAgreementTemplateRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Method of use for the data agreement.
@@ -519,24 +489,20 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE,
                 DataAgreementTemplateRecord.METHOD_OF_USE_DATA_USING_SERVICE,
             ]
-        )
+        ),
     )
 
     # Data agreement
-    data_agreement = fields.Dict(
-        required=True
-    )
+    data_agreement = fields.Dict(required=True)
 
     # Schema identifier
     schema_id = fields.Str(
-        required=True,
-        example=&#34;WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0&#34;
+        required=True, example=&#34;WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0&#34;
     )
 
     # Credential definition identifier
     cred_def_id = fields.Str(
-        required=True,
-        example=&#34;WgWxqztrNooG92RXvxSTWv:3:CL:20:tag&#34;
+        required=True, example=&#34;WgWxqztrNooG92RXvxSTWv:3:CL:20:tag&#34;
     )
 
     # Presentation request
@@ -553,7 +519,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Is deleted or not
@@ -565,7 +531,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Is existing schema or not
@@ -577,7 +543,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Latest version of the record or not.
@@ -589,7 +555,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Third party data sharing
@@ -601,7 +567,7 @@ class DataAgreementTemplateRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )</code></pre>
 </details>
 </section>
@@ -682,7 +648,7 @@ Defaults to "false".</dd>
         &#34;~cred_def_id&#34;,
         &#34;~existing_schema_flag&#34;,
         &#34;~latest_version_flag&#34;,
-        &#34;~third_party_data_sharing&#34;
+        &#34;~third_party_data_sharing&#34;,
     }
 
     # States of the data agreement.
@@ -711,7 +677,7 @@ Defaults to "false".</dd>
         existing_schema_flag: str = &#34;false&#34;,
         latest_version_flag: str = &#34;true&#34;,
         third_party_data_sharing: str = &#34;false&#34;,
-        **kwargs
+        **kwargs,
     ):
         &#34;&#34;&#34;Initialise data agreement template record
 
@@ -736,9 +702,7 @@ Defaults to "false".</dd>
         super().__init__(id, state, **kwargs)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         # Set the record attributes
         self.template_id = template_id
@@ -773,7 +737,7 @@ Defaults to "false".</dd>
                 &#34;presentation_request&#34;,
                 &#34;existing_schema_flag&#34;,
                 &#34;latest_version_flag&#34;,
-                &#34;third_party_data_sharing&#34;
+                &#34;third_party_data_sharing&#34;,
             )
         }
 
@@ -862,13 +826,10 @@ Defaults to "false".</dd>
             &#34;delete_flag&#34;: bool_to_str(False),
             &#34;template_id&#34;: template_id,
             &#34;latest_version_flag&#34;: bool_to_str(True),
-            &#34;publish_flag&#34;: bool_to_str(True)
+            &#34;publish_flag&#34;: bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -891,13 +852,10 @@ Defaults to "false".</dd>
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
             &#34;template_id&#34;: template_id,
-            &#34;latest_version_flag&#34;: bool_to_str(True)
+            &#34;latest_version_flag&#34;: bool_to_str(True),
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return None if len(fetched) == 0 else fetched[0]
 
@@ -919,21 +877,16 @@ Defaults to "false".</dd>
 
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;template_id&#34;: template_id
+            &#34;template_id&#34;: template_id,
         }
 
-        fetched = await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        fetched = await cls.query(context, tag_filter=tag_filter)
 
         return fetched
 
     @classmethod
     async def non_deleted_template_by_id(
-        cls,
-        context: InjectionContext,
-        template_id: str
+        cls, context: InjectionContext, template_id: str
     ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch non deleted template by id.
 
@@ -944,7 +897,7 @@ Defaults to "false".</dd>
         tag_filter: dict = {
             &#34;latest_version_flag&#34;: bool_to_str(True),
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;template_id&#34;: template_id
+            &#34;template_id&#34;: template_id,
         }
 
         return await cls.query(
@@ -954,8 +907,7 @@ Defaults to "false".</dd>
 
     @classmethod
     async def non_deleted_templates(
-        cls,
-        context: InjectionContext
+        cls, context: InjectionContext
     ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch all non-deleted agreements.
 
@@ -963,9 +915,7 @@ Defaults to "false".</dd>
             DataAgreementTemplateRecord: List of template records
         &#34;&#34;&#34;
 
-        tag_filter: dict = {
-            &#34;delete_flag&#34;: bool_to_str(False)
-        }
+        tag_filter: dict = {&#34;delete_flag&#34;: bool_to_str(False)}
 
         return await cls.query(
             context,
@@ -983,11 +933,11 @@ Defaults to "false".</dd>
         &#34;&#34;&#34;
 
         # Fetch the previous record
-        previous_record: DataAgreementTemplateRecord = \
+        previous_record: DataAgreementTemplateRecord = (
             await DataAgreementTemplateRecord.latest_template_by_id(
-                context,
-                self.template_id
+                context, self.template_id
             )
+        )
 
         assert previous_record, &#34;Atleast 1 previous record must be present&#34;
 
@@ -1005,11 +955,7 @@ Defaults to "false".</dd>
                 f&#34; {previous_version} to {template_version}&#34;
             )
         )
-        self.data_agreement.update(
-            {
-                &#34;version&#34;: template_version
-            }
-        )
+        self.data_agreement.update({&#34;version&#34;: template_version})
 
         # Save as new record to the storage
         self._id = None
@@ -1019,8 +965,9 @@ Defaults to "false".</dd>
         return self
 
     @classmethod
-    async def published_templates(cls, context: InjectionContext) \
-            -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
+    async def published_templates(
+        cls, context: InjectionContext
+    ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
         &#34;&#34;&#34;Fetch all published templates (not-deleted)
 
         Returns:
@@ -1029,13 +976,10 @@ Defaults to "false".</dd>
 
         tag_filter: dict = {
             &#34;delete_flag&#34;: bool_to_str(False),
-            &#34;publish_flag&#34;: bool_to_str(True)
+            &#34;publish_flag&#34;: bool_to_str(True),
         }
 
-        return await cls.query(
-            context,
-            tag_filter=tag_filter
-        )
+        return await cls.query(context, tag_filter=tag_filter)
 
     async def publish_template(self, context: InjectionContext, **kwargs) -&gt; str:
         &#34;&#34;&#34;Publish the data agreement template
@@ -1062,8 +1006,7 @@ Defaults to "false".</dd>
         return await self.save(context=context, **kwargs)
 
     async def fetch_personal_data_records(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; typing.List[PersonalDataRecord]:
         &#34;&#34;&#34;Fetch personal data records
 
@@ -1082,15 +1025,12 @@ Defaults to "false".</dd>
         )
 
         return await PersonalDataRecord.list_by_template_id(
-            context,
-            self.template_id,
-            self.template_version
+            context, self.template_id, self.template_version
         )
 
     @property
     def data_agreement_model(self) -&gt; DataAgreementModel:
-        &#34;&#34;&#34;Accessor for data agreement as model.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Accessor for data agreement as model.&#34;&#34;&#34;
         return DataAgreementModel.deserialize(self.data_agreement)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1189,13 +1129,10 @@ async def latest_published_template_by_id(
         &#34;delete_flag&#34;: bool_to_str(False),
         &#34;template_id&#34;: template_id,
         &#34;latest_version_flag&#34;: bool_to_str(True),
-        &#34;publish_flag&#34;: bool_to_str(True)
+        &#34;publish_flag&#34;: bool_to_str(True),
     }
 
-    fetched = await cls.query(
-        context,
-        tag_filter=tag_filter
-    )
+    fetched = await cls.query(context, tag_filter=tag_filter)
 
     return None if len(fetched) == 0 else fetched[0]</code></pre>
 </details>
@@ -1240,13 +1177,10 @@ async def latest_template_by_id(
     tag_filter: dict = {
         &#34;delete_flag&#34;: bool_to_str(False),
         &#34;template_id&#34;: template_id,
-        &#34;latest_version_flag&#34;: bool_to_str(True)
+        &#34;latest_version_flag&#34;: bool_to_str(True),
     }
 
-    fetched = await cls.query(
-        context,
-        tag_filter=tag_filter
-    )
+    fetched = await cls.query(context, tag_filter=tag_filter)
 
     return None if len(fetched) == 0 else fetched[0]</code></pre>
 </details>
@@ -1267,9 +1201,7 @@ async def latest_template_by_id(
 </summary>
 <pre><code class="python">@classmethod
 async def non_deleted_template_by_id(
-    cls,
-    context: InjectionContext,
-    template_id: str
+    cls, context: InjectionContext, template_id: str
 ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
     &#34;&#34;&#34;Fetch non deleted template by id.
 
@@ -1280,7 +1212,7 @@ async def non_deleted_template_by_id(
     tag_filter: dict = {
         &#34;latest_version_flag&#34;: bool_to_str(True),
         &#34;delete_flag&#34;: bool_to_str(False),
-        &#34;template_id&#34;: template_id
+        &#34;template_id&#34;: template_id,
     }
 
     return await cls.query(
@@ -1305,8 +1237,7 @@ async def non_deleted_template_by_id(
 </summary>
 <pre><code class="python">@classmethod
 async def non_deleted_templates(
-    cls,
-    context: InjectionContext
+    cls, context: InjectionContext
 ) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
     &#34;&#34;&#34;Fetch all non-deleted agreements.
 
@@ -1314,9 +1245,7 @@ async def non_deleted_templates(
         DataAgreementTemplateRecord: List of template records
     &#34;&#34;&#34;
 
-    tag_filter: dict = {
-        &#34;delete_flag&#34;: bool_to_str(False)
-    }
+    tag_filter: dict = {&#34;delete_flag&#34;: bool_to_str(False)}
 
     return await cls.query(
         context,
@@ -1363,13 +1292,10 @@ async def non_deleted_templates_by_id(
 
     tag_filter: dict = {
         &#34;delete_flag&#34;: bool_to_str(False),
-        &#34;template_id&#34;: template_id
+        &#34;template_id&#34;: template_id,
     }
 
-    fetched = await cls.query(
-        context,
-        tag_filter=tag_filter
-    )
+    fetched = await cls.query(context, tag_filter=tag_filter)
 
     return fetched</code></pre>
 </details>
@@ -1389,8 +1315,9 @@ async def non_deleted_templates_by_id(
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-async def published_templates(cls, context: InjectionContext) \
-        -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
+async def published_templates(
+    cls, context: InjectionContext
+) -&gt; typing.List[&#34;DataAgreementTemplateRecord&#34;]:
     &#34;&#34;&#34;Fetch all published templates (not-deleted)
 
     Returns:
@@ -1399,13 +1326,10 @@ async def published_templates(cls, context: InjectionContext) \
 
     tag_filter: dict = {
         &#34;delete_flag&#34;: bool_to_str(False),
-        &#34;publish_flag&#34;: bool_to_str(True)
+        &#34;publish_flag&#34;: bool_to_str(True),
     }
 
-    return await cls.query(
-        context,
-        tag_filter=tag_filter
-    )</code></pre>
+    return await cls.query(context, tag_filter=tag_filter)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1420,8 +1344,7 @@ async def published_templates(cls, context: InjectionContext) \
 </summary>
 <pre><code class="python">@property
 def data_agreement_model(self) -&gt; DataAgreementModel:
-    &#34;&#34;&#34;Accessor for data agreement as model.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Accessor for data agreement as model.&#34;&#34;&#34;
     return DataAgreementModel.deserialize(self.data_agreement)</code></pre>
 </details>
 </dd>
@@ -1515,7 +1438,7 @@ def record_value(self) -&gt; dict:
             &#34;presentation_request&#34;,
             &#34;existing_schema_flag&#34;,
             &#34;latest_version_flag&#34;,
-            &#34;third_party_data_sharing&#34;
+            &#34;third_party_data_sharing&#34;,
         )
     }</code></pre>
 </details>
@@ -1575,8 +1498,7 @@ def record_value(self) -&gt; dict:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def fetch_personal_data_records(
-    self,
-    context: InjectionContext
+    self, context: InjectionContext
 ) -&gt; typing.List[PersonalDataRecord]:
     &#34;&#34;&#34;Fetch personal data records
 
@@ -1595,9 +1517,7 @@ def record_value(self) -&gt; dict:
     )
 
     return await PersonalDataRecord.list_by_template_id(
-        context,
-        self.template_id,
-        self.template_version
+        context, self.template_id, self.template_version
     )</code></pre>
 </details>
 </dd>
@@ -1663,11 +1583,11 @@ def record_value(self) -&gt; dict:
     &#34;&#34;&#34;
 
     # Fetch the previous record
-    previous_record: DataAgreementTemplateRecord = \
+    previous_record: DataAgreementTemplateRecord = (
         await DataAgreementTemplateRecord.latest_template_by_id(
-            context,
-            self.template_id
+            context, self.template_id
         )
+    )
 
     assert previous_record, &#34;Atleast 1 previous record must be present&#34;
 
@@ -1685,11 +1605,7 @@ def record_value(self) -&gt; dict:
             f&#34; {previous_version} to {template_version}&#34;
         )
     )
-    self.data_agreement.update(
-        {
-            &#34;version&#34;: template_version
-        }
-    )
+    self.data_agreement.update({&#34;version&#34;: template_version})
 
     # Save as new record to the storage
     self._id = None
@@ -1728,15 +1644,10 @@ def record_value(self) -&gt; dict:
         unknown = EXCLUDE
 
     # Data agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -1747,7 +1658,7 @@ def record_value(self) -&gt; dict:
                 DataAgreementTemplateRecord.STATE_DEFINITION,
                 DataAgreementTemplateRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Method of use for the data agreement.
@@ -1759,24 +1670,20 @@ def record_value(self) -&gt; dict:
                 DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE,
                 DataAgreementTemplateRecord.METHOD_OF_USE_DATA_USING_SERVICE,
             ]
-        )
+        ),
     )
 
     # Data agreement
-    data_agreement = fields.Dict(
-        required=True
-    )
+    data_agreement = fields.Dict(required=True)
 
     # Schema identifier
     schema_id = fields.Str(
-        required=True,
-        example=&#34;WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0&#34;
+        required=True, example=&#34;WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0&#34;
     )
 
     # Credential definition identifier
     cred_def_id = fields.Str(
-        required=True,
-        example=&#34;WgWxqztrNooG92RXvxSTWv:3:CL:20:tag&#34;
+        required=True, example=&#34;WgWxqztrNooG92RXvxSTWv:3:CL:20:tag&#34;
     )
 
     # Presentation request
@@ -1793,7 +1700,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Is deleted or not
@@ -1805,7 +1712,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Is existing schema or not
@@ -1817,7 +1724,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Latest version of the record or not.
@@ -1829,7 +1736,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Third party data sharing
@@ -1841,7 +1748,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )</code></pre>
 </details>
 <h3>Ancestors</h3>

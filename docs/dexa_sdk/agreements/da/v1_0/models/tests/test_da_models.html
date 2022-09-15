@@ -27,11 +27,11 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from asynctest import TestCase as AsyncTestCase
-from ..da_models import (
-    DataAgreementModel,
+from dexa_sdk.agreements.da.v1_0.models.da_models import (
     DataAgreementDataPolicyModel,
+    DataAgreementDPIAModel,
+    DataAgreementModel,
     DataAgreementPersonalDataModel,
-    DataAgreementDPIAModel
 )
 
 
@@ -42,7 +42,7 @@ class TestDAModels(AsyncTestCase):
         &#34;&#34;&#34;Test dpia model serialisation&#34;&#34;&#34;
         dpia_model = DataAgreementDPIAModel(
             dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
+            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
         )
 
         dpia_dict = dpia_model.serialize()
@@ -53,10 +53,12 @@ class TestDAModels(AsyncTestCase):
         &#34;&#34;&#34;Test dpia model deserialisation&#34;&#34;&#34;
         dpia_json = {
             &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
+            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
         }
 
-        dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(dpia_json)
+        dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(
+            dpia_json
+        )
 
         assert dpia_model.dpia_date == dpia_json[&#34;dpiaDate&#34;]
 
@@ -66,7 +68,7 @@ class TestDAModels(AsyncTestCase):
             attribute_id=&#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
             attribute_name=&#34;Name&#34;,
             attribute_sensitive=True,
-            attribute_description=&#34;Name of the individual&#34;
+            attribute_description=&#34;Name of the individual&#34;,
         )
 
         personal_data_dict = personal_data_model.serialize()
@@ -80,17 +82,23 @@ class TestDAModels(AsyncTestCase):
             &#34;attributeId&#34;: &#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
             &#34;attributeName&#34;: &#34;Name&#34;,
             &#34;attributeSensitive&#34;: True,
-            &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+            &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
         }
 
-        personal_data_model: DataAgreementPersonalDataModel = \
+        personal_data_model: DataAgreementPersonalDataModel = (
             DataAgreementPersonalDataModel.deserialize(personal_data_json)
+        )
 
         assert personal_data_model.attribute_id == personal_data_json[&#34;attributeId&#34;]
         assert personal_data_model.attribute_name == personal_data_json[&#34;attributeName&#34;]
-        assert personal_data_model.attribute_sensitive == personal_data_json[&#34;attributeSensitive&#34;]
-        assert personal_data_model.attribute_description == \
-            personal_data_json[&#34;attributeDescription&#34;]
+        assert (
+            personal_data_model.attribute_sensitive
+            == personal_data_json[&#34;attributeSensitive&#34;]
+        )
+        assert (
+            personal_data_model.attribute_description
+            == personal_data_json[&#34;attributeDescription&#34;]
+        )
 
     async def test_data_policy_serialisation(self):
         &#34;&#34;&#34;Test data policy serialisation&#34;&#34;&#34;
@@ -101,20 +109,27 @@ class TestDAModels(AsyncTestCase):
             industry_sector=&#34;Healthcare&#34;,
             geographic_restriction=&#34;EU&#34;,
             storage_location=&#34;EU&#34;,
-            third_party_data_sharing=False
+            third_party_data_sharing=False,
         )
 
         data_policy_dict = data_policy_model.serialize()
 
-        assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+        assert (
+            data_policy_dict[&#34;dataRetentionPeriod&#34;]
+            == data_policy_model.data_retention_period
+        )
         assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
         assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
         assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-        assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-            data_policy_model.geographic_restriction
+        assert (
+            data_policy_dict[&#34;geographicRestriction&#34;]
+            == data_policy_model.geographic_restriction
+        )
         assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-        assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-            data_policy_model.third_party_data_sharing
+        assert (
+            data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+            == data_policy_model.third_party_data_sharing
+        )
 
     async def test_data_policy_deserialisation(self):
         &#34;&#34;&#34;Test data policy deserialisation&#34;&#34;&#34;
@@ -125,20 +140,27 @@ class TestDAModels(AsyncTestCase):
             &#34;industrySector&#34;: &#34;Healthcare&#34;,
             &#34;geographicRestriction&#34;: &#34;EU&#34;,
             &#34;storageLocation&#34;: &#34;EU&#34;,
-            &#34;thirdPartyDataSharing&#34;: False
+            &#34;thirdPartyDataSharing&#34;: False,
         }
 
         data_policy_model = DataAgreementDataPolicyModel.deserialize(data_policy_dict)
 
-        assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+        assert (
+            data_policy_dict[&#34;dataRetentionPeriod&#34;]
+            == data_policy_model.data_retention_period
+        )
         assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
         assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
         assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-        assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-            data_policy_model.geographic_restriction
+        assert (
+            data_policy_dict[&#34;geographicRestriction&#34;]
+            == data_policy_model.geographic_restriction
+        )
         assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-        assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-            data_policy_model.third_party_data_sharing
+        assert (
+            data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+            == data_policy_model.third_party_data_sharing
+        )
 
     async def test_data_agreement_serialisation(self):
         &#34;&#34;&#34;Test data agreement serialisation&#34;&#34;&#34;
@@ -155,7 +177,7 @@ class TestDAModels(AsyncTestCase):
                 industry_sector=&#34;Healthcare&#34;,
                 geographic_restriction=&#34;EU&#34;,
                 storage_location=&#34;EU&#34;,
-                third_party_data_sharing=False
+                third_party_data_sharing=False,
             ),
             purpose=&#34;Fetch diabetic records and recommend foods&#34;,
             purpose_description=&#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -165,23 +187,27 @@ class TestDAModels(AsyncTestCase):
                 DataAgreementPersonalDataModel(
                     attribute_name=&#34;Name&#34;,
                     attribute_sensitive=True,
-                    attribute_description=&#34;Name of the individual&#34;
+                    attribute_description=&#34;Name of the individual&#34;,
                 )
             ],
             dpia=DataAgreementDPIAModel(
                 dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-                dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
-            )
+                dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
+            ),
         )
 
         data_agreement_dict = data_agreement_model.serialize()
 
         assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-        assert data_agreement_model.data_controller_name == \
-            data_agreement_dict[&#34;dataControllerName&#34;]
+        assert (
+            data_agreement_model.data_controller_name
+            == data_agreement_dict[&#34;dataControllerName&#34;]
+        )
         assert len(data_agreement_model.personal_data) == 1
-        assert data_agreement_model.data_policy.data_retention_period == \
-            data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        assert (
+            data_agreement_model.data_policy.data_retention_period
+            == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        )
 
     async def test_data_agreement_deserialisation(self):
         &#34;&#34;&#34;Test data agreement deserialisation&#34;&#34;&#34;
@@ -189,12 +215,10 @@ class TestDAModels(AsyncTestCase):
         data_agreement_dict = {
             &#34;@context&#34;: [
                 &#34;https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld&#34;,
-                &#34;https://w3id.org/security/v2&#34;
+                &#34;https://w3id.org/security/v2&#34;,
             ],
             &#34;@id&#34;: &#34;ea046a85-d460-44ab-9369-ed71f8abf3ba&#34;,
-            &#34;@type&#34;: [
-                &#34;DataAgreement&#34;
-            ],
+            &#34;@type&#34;: [&#34;DataAgreement&#34;],
             &#34;version&#34;: &#34;1.0.0&#34;,
             &#34;language&#34;: &#34;en&#34;,
             &#34;dataControllerName&#34;: &#34;XYZ Company&#34;,
@@ -206,7 +230,7 @@ class TestDAModels(AsyncTestCase):
                 &#34;dataRetentionPeriod&#34;: 365,
                 &#34;geographicRestriction&#34;: &#34;EU&#34;,
                 &#34;storageLocation&#34;: &#34;EU&#34;,
-                &#34;thirdPartyDataSharing&#34;: False
+                &#34;thirdPartyDataSharing&#34;: False,
             },
             &#34;purpose&#34;: &#34;Fetch diabetic records and recommend foods&#34;,
             &#34;purposeDescription&#34;: &#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -217,23 +241,27 @@ class TestDAModels(AsyncTestCase):
                     &#34;attributeId&#34;: &#34;fbcd8bd5-7706-4042-8fd8-04b7f78e8adf&#34;,
                     &#34;attributeName&#34;: &#34;Name&#34;,
                     &#34;attributeSensitive&#34;: True,
-                    &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+                    &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
                 }
             ],
             &#34;dpia&#34;: {
                 &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-                &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
-            }
+                &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
+            },
         }
 
         data_agreement_model = DataAgreementModel.deserialize(data_agreement_dict)
 
         assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-        assert data_agreement_model.data_controller_name == \
-            data_agreement_dict[&#34;dataControllerName&#34;]
+        assert (
+            data_agreement_model.data_controller_name
+            == data_agreement_dict[&#34;dataControllerName&#34;]
+        )
         assert len(data_agreement_model.personal_data) == 1
-        assert data_agreement_model.data_policy.data_retention_period == \
-            data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]</code></pre>
+        assert (
+            data_agreement_model.data_policy.data_retention_period
+            == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -265,7 +293,7 @@ not have a method with the specified name.</p></div>
         &#34;&#34;&#34;Test dpia model serialisation&#34;&#34;&#34;
         dpia_model = DataAgreementDPIAModel(
             dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
+            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
         )
 
         dpia_dict = dpia_model.serialize()
@@ -276,10 +304,12 @@ not have a method with the specified name.</p></div>
         &#34;&#34;&#34;Test dpia model deserialisation&#34;&#34;&#34;
         dpia_json = {
             &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
+            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
         }
 
-        dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(dpia_json)
+        dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(
+            dpia_json
+        )
 
         assert dpia_model.dpia_date == dpia_json[&#34;dpiaDate&#34;]
 
@@ -289,7 +319,7 @@ not have a method with the specified name.</p></div>
             attribute_id=&#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
             attribute_name=&#34;Name&#34;,
             attribute_sensitive=True,
-            attribute_description=&#34;Name of the individual&#34;
+            attribute_description=&#34;Name of the individual&#34;,
         )
 
         personal_data_dict = personal_data_model.serialize()
@@ -303,17 +333,23 @@ not have a method with the specified name.</p></div>
             &#34;attributeId&#34;: &#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
             &#34;attributeName&#34;: &#34;Name&#34;,
             &#34;attributeSensitive&#34;: True,
-            &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+            &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
         }
 
-        personal_data_model: DataAgreementPersonalDataModel = \
+        personal_data_model: DataAgreementPersonalDataModel = (
             DataAgreementPersonalDataModel.deserialize(personal_data_json)
+        )
 
         assert personal_data_model.attribute_id == personal_data_json[&#34;attributeId&#34;]
         assert personal_data_model.attribute_name == personal_data_json[&#34;attributeName&#34;]
-        assert personal_data_model.attribute_sensitive == personal_data_json[&#34;attributeSensitive&#34;]
-        assert personal_data_model.attribute_description == \
-            personal_data_json[&#34;attributeDescription&#34;]
+        assert (
+            personal_data_model.attribute_sensitive
+            == personal_data_json[&#34;attributeSensitive&#34;]
+        )
+        assert (
+            personal_data_model.attribute_description
+            == personal_data_json[&#34;attributeDescription&#34;]
+        )
 
     async def test_data_policy_serialisation(self):
         &#34;&#34;&#34;Test data policy serialisation&#34;&#34;&#34;
@@ -324,20 +360,27 @@ not have a method with the specified name.</p></div>
             industry_sector=&#34;Healthcare&#34;,
             geographic_restriction=&#34;EU&#34;,
             storage_location=&#34;EU&#34;,
-            third_party_data_sharing=False
+            third_party_data_sharing=False,
         )
 
         data_policy_dict = data_policy_model.serialize()
 
-        assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+        assert (
+            data_policy_dict[&#34;dataRetentionPeriod&#34;]
+            == data_policy_model.data_retention_period
+        )
         assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
         assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
         assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-        assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-            data_policy_model.geographic_restriction
+        assert (
+            data_policy_dict[&#34;geographicRestriction&#34;]
+            == data_policy_model.geographic_restriction
+        )
         assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-        assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-            data_policy_model.third_party_data_sharing
+        assert (
+            data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+            == data_policy_model.third_party_data_sharing
+        )
 
     async def test_data_policy_deserialisation(self):
         &#34;&#34;&#34;Test data policy deserialisation&#34;&#34;&#34;
@@ -348,20 +391,27 @@ not have a method with the specified name.</p></div>
             &#34;industrySector&#34;: &#34;Healthcare&#34;,
             &#34;geographicRestriction&#34;: &#34;EU&#34;,
             &#34;storageLocation&#34;: &#34;EU&#34;,
-            &#34;thirdPartyDataSharing&#34;: False
+            &#34;thirdPartyDataSharing&#34;: False,
         }
 
         data_policy_model = DataAgreementDataPolicyModel.deserialize(data_policy_dict)
 
-        assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+        assert (
+            data_policy_dict[&#34;dataRetentionPeriod&#34;]
+            == data_policy_model.data_retention_period
+        )
         assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
         assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
         assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-        assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-            data_policy_model.geographic_restriction
+        assert (
+            data_policy_dict[&#34;geographicRestriction&#34;]
+            == data_policy_model.geographic_restriction
+        )
         assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-        assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-            data_policy_model.third_party_data_sharing
+        assert (
+            data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+            == data_policy_model.third_party_data_sharing
+        )
 
     async def test_data_agreement_serialisation(self):
         &#34;&#34;&#34;Test data agreement serialisation&#34;&#34;&#34;
@@ -378,7 +428,7 @@ not have a method with the specified name.</p></div>
                 industry_sector=&#34;Healthcare&#34;,
                 geographic_restriction=&#34;EU&#34;,
                 storage_location=&#34;EU&#34;,
-                third_party_data_sharing=False
+                third_party_data_sharing=False,
             ),
             purpose=&#34;Fetch diabetic records and recommend foods&#34;,
             purpose_description=&#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -388,23 +438,27 @@ not have a method with the specified name.</p></div>
                 DataAgreementPersonalDataModel(
                     attribute_name=&#34;Name&#34;,
                     attribute_sensitive=True,
-                    attribute_description=&#34;Name of the individual&#34;
+                    attribute_description=&#34;Name of the individual&#34;,
                 )
             ],
             dpia=DataAgreementDPIAModel(
                 dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-                dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
-            )
+                dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
+            ),
         )
 
         data_agreement_dict = data_agreement_model.serialize()
 
         assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-        assert data_agreement_model.data_controller_name == \
-            data_agreement_dict[&#34;dataControllerName&#34;]
+        assert (
+            data_agreement_model.data_controller_name
+            == data_agreement_dict[&#34;dataControllerName&#34;]
+        )
         assert len(data_agreement_model.personal_data) == 1
-        assert data_agreement_model.data_policy.data_retention_period == \
-            data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        assert (
+            data_agreement_model.data_policy.data_retention_period
+            == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        )
 
     async def test_data_agreement_deserialisation(self):
         &#34;&#34;&#34;Test data agreement deserialisation&#34;&#34;&#34;
@@ -412,12 +466,10 @@ not have a method with the specified name.</p></div>
         data_agreement_dict = {
             &#34;@context&#34;: [
                 &#34;https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld&#34;,
-                &#34;https://w3id.org/security/v2&#34;
+                &#34;https://w3id.org/security/v2&#34;,
             ],
             &#34;@id&#34;: &#34;ea046a85-d460-44ab-9369-ed71f8abf3ba&#34;,
-            &#34;@type&#34;: [
-                &#34;DataAgreement&#34;
-            ],
+            &#34;@type&#34;: [&#34;DataAgreement&#34;],
             &#34;version&#34;: &#34;1.0.0&#34;,
             &#34;language&#34;: &#34;en&#34;,
             &#34;dataControllerName&#34;: &#34;XYZ Company&#34;,
@@ -429,7 +481,7 @@ not have a method with the specified name.</p></div>
                 &#34;dataRetentionPeriod&#34;: 365,
                 &#34;geographicRestriction&#34;: &#34;EU&#34;,
                 &#34;storageLocation&#34;: &#34;EU&#34;,
-                &#34;thirdPartyDataSharing&#34;: False
+                &#34;thirdPartyDataSharing&#34;: False,
             },
             &#34;purpose&#34;: &#34;Fetch diabetic records and recommend foods&#34;,
             &#34;purposeDescription&#34;: &#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -440,23 +492,27 @@ not have a method with the specified name.</p></div>
                     &#34;attributeId&#34;: &#34;fbcd8bd5-7706-4042-8fd8-04b7f78e8adf&#34;,
                     &#34;attributeName&#34;: &#34;Name&#34;,
                     &#34;attributeSensitive&#34;: True,
-                    &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+                    &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
                 }
             ],
             &#34;dpia&#34;: {
                 &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-                &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
-            }
+                &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
+            },
         }
 
         data_agreement_model = DataAgreementModel.deserialize(data_agreement_dict)
 
         assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-        assert data_agreement_model.data_controller_name == \
-            data_agreement_dict[&#34;dataControllerName&#34;]
+        assert (
+            data_agreement_model.data_controller_name
+            == data_agreement_dict[&#34;dataControllerName&#34;]
+        )
         assert len(data_agreement_model.personal_data) == 1
-        assert data_agreement_model.data_policy.data_retention_period == \
-            data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]</code></pre>
+        assert (
+            data_agreement_model.data_policy.data_retention_period
+            == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -480,12 +536,10 @@ not have a method with the specified name.</p></div>
     data_agreement_dict = {
         &#34;@context&#34;: [
             &#34;https://raw.githubusercontent.com/decentralised-dataexchange/data-exchange-agreements/main/interface-specs/jsonld/contexts/dexa-context.jsonld&#34;,
-            &#34;https://w3id.org/security/v2&#34;
+            &#34;https://w3id.org/security/v2&#34;,
         ],
         &#34;@id&#34;: &#34;ea046a85-d460-44ab-9369-ed71f8abf3ba&#34;,
-        &#34;@type&#34;: [
-            &#34;DataAgreement&#34;
-        ],
+        &#34;@type&#34;: [&#34;DataAgreement&#34;],
         &#34;version&#34;: &#34;1.0.0&#34;,
         &#34;language&#34;: &#34;en&#34;,
         &#34;dataControllerName&#34;: &#34;XYZ Company&#34;,
@@ -497,7 +551,7 @@ not have a method with the specified name.</p></div>
             &#34;dataRetentionPeriod&#34;: 365,
             &#34;geographicRestriction&#34;: &#34;EU&#34;,
             &#34;storageLocation&#34;: &#34;EU&#34;,
-            &#34;thirdPartyDataSharing&#34;: False
+            &#34;thirdPartyDataSharing&#34;: False,
         },
         &#34;purpose&#34;: &#34;Fetch diabetic records and recommend foods&#34;,
         &#34;purposeDescription&#34;: &#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -508,23 +562,27 @@ not have a method with the specified name.</p></div>
                 &#34;attributeId&#34;: &#34;fbcd8bd5-7706-4042-8fd8-04b7f78e8adf&#34;,
                 &#34;attributeName&#34;: &#34;Name&#34;,
                 &#34;attributeSensitive&#34;: True,
-                &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+                &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
             }
         ],
         &#34;dpia&#34;: {
             &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
-        }
+            &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
+        },
     }
 
     data_agreement_model = DataAgreementModel.deserialize(data_agreement_dict)
 
     assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-    assert data_agreement_model.data_controller_name == \
-        data_agreement_dict[&#34;dataControllerName&#34;]
+    assert (
+        data_agreement_model.data_controller_name
+        == data_agreement_dict[&#34;dataControllerName&#34;]
+    )
     assert len(data_agreement_model.personal_data) == 1
-    assert data_agreement_model.data_policy.data_retention_period == \
-        data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]</code></pre>
+    assert (
+        data_agreement_model.data_policy.data_retention_period
+        == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.tests.test_da_models.TestDAModels.test_data_agreement_serialisation"><code class="name flex">
@@ -551,7 +609,7 @@ not have a method with the specified name.</p></div>
             industry_sector=&#34;Healthcare&#34;,
             geographic_restriction=&#34;EU&#34;,
             storage_location=&#34;EU&#34;,
-            third_party_data_sharing=False
+            third_party_data_sharing=False,
         ),
         purpose=&#34;Fetch diabetic records and recommend foods&#34;,
         purpose_description=&#34;To perform ML on diabetic records and recommend foods&#34;,
@@ -561,23 +619,27 @@ not have a method with the specified name.</p></div>
             DataAgreementPersonalDataModel(
                 attribute_name=&#34;Name&#34;,
                 attribute_sensitive=True,
-                attribute_description=&#34;Name of the individual&#34;
+                attribute_description=&#34;Name of the individual&#34;,
             )
         ],
         dpia=DataAgreementDPIAModel(
             dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
-        )
+            dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
+        ),
     )
 
     data_agreement_dict = data_agreement_model.serialize()
 
     assert data_agreement_model.version == data_agreement_dict[&#34;version&#34;]
-    assert data_agreement_model.data_controller_name == \
-        data_agreement_dict[&#34;dataControllerName&#34;]
+    assert (
+        data_agreement_model.data_controller_name
+        == data_agreement_dict[&#34;dataControllerName&#34;]
+    )
     assert len(data_agreement_model.personal_data) == 1
-    assert data_agreement_model.data_policy.data_retention_period == \
-        data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]</code></pre>
+    assert (
+        data_agreement_model.data_policy.data_retention_period
+        == data_agreement_dict[&#34;dataPolicy&#34;][&#34;dataRetentionPeriod&#34;]
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.tests.test_da_models.TestDAModels.test_data_policy_deserialisation"><code class="name flex">
@@ -598,20 +660,27 @@ not have a method with the specified name.</p></div>
         &#34;industrySector&#34;: &#34;Healthcare&#34;,
         &#34;geographicRestriction&#34;: &#34;EU&#34;,
         &#34;storageLocation&#34;: &#34;EU&#34;,
-        &#34;thirdPartyDataSharing&#34;: False
+        &#34;thirdPartyDataSharing&#34;: False,
     }
 
     data_policy_model = DataAgreementDataPolicyModel.deserialize(data_policy_dict)
 
-    assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+    assert (
+        data_policy_dict[&#34;dataRetentionPeriod&#34;]
+        == data_policy_model.data_retention_period
+    )
     assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
     assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
     assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-    assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-        data_policy_model.geographic_restriction
+    assert (
+        data_policy_dict[&#34;geographicRestriction&#34;]
+        == data_policy_model.geographic_restriction
+    )
     assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-    assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-        data_policy_model.third_party_data_sharing</code></pre>
+    assert (
+        data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+        == data_policy_model.third_party_data_sharing
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.tests.test_da_models.TestDAModels.test_data_policy_serialisation"><code class="name flex">
@@ -632,20 +701,27 @@ not have a method with the specified name.</p></div>
         industry_sector=&#34;Healthcare&#34;,
         geographic_restriction=&#34;EU&#34;,
         storage_location=&#34;EU&#34;,
-        third_party_data_sharing=False
+        third_party_data_sharing=False,
     )
 
     data_policy_dict = data_policy_model.serialize()
 
-    assert data_policy_dict[&#34;dataRetentionPeriod&#34;] == data_policy_model.data_retention_period
+    assert (
+        data_policy_dict[&#34;dataRetentionPeriod&#34;]
+        == data_policy_model.data_retention_period
+    )
     assert data_policy_dict[&#34;policyUrl&#34;] == data_policy_model.policy_url
     assert data_policy_dict[&#34;jurisdiction&#34;] == data_policy_model.jurisdiction
     assert data_policy_dict[&#34;industrySector&#34;] == data_policy_model.industry_sector
-    assert data_policy_dict[&#34;geographicRestriction&#34;] == \
-        data_policy_model.geographic_restriction
+    assert (
+        data_policy_dict[&#34;geographicRestriction&#34;]
+        == data_policy_model.geographic_restriction
+    )
     assert data_policy_dict[&#34;storageLocation&#34;] == data_policy_model.storage_location
-    assert data_policy_dict[&#34;thirdPartyDataSharing&#34;] == \
-        data_policy_model.third_party_data_sharing</code></pre>
+    assert (
+        data_policy_dict[&#34;thirdPartyDataSharing&#34;]
+        == data_policy_model.third_party_data_sharing
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.tests.test_da_models.TestDAModels.test_dpia_model_deserialisation"><code class="name flex">
@@ -661,10 +737,12 @@ not have a method with the specified name.</p></div>
     &#34;&#34;&#34;Test dpia model deserialisation&#34;&#34;&#34;
     dpia_json = {
         &#34;dpiaDate&#34;: &#34;2011-10-05T14:48:00.000Z&#34;,
-        &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;
+        &#34;dpiaSummaryUrl&#34;: &#34;https://org.com/dpia_results.html&#34;,
     }
 
-    dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(dpia_json)
+    dpia_model: DataAgreementDPIAModel = DataAgreementDPIAModel.deserialize(
+        dpia_json
+    )
 
     assert dpia_model.dpia_date == dpia_json[&#34;dpiaDate&#34;]</code></pre>
 </details>
@@ -682,7 +760,7 @@ not have a method with the specified name.</p></div>
     &#34;&#34;&#34;Test dpia model serialisation&#34;&#34;&#34;
     dpia_model = DataAgreementDPIAModel(
         dpia_date=&#34;2011-10-05T14:48:00.000Z&#34;,
-        dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;
+        dpia_summary_url=&#34;https://org.com/dpia_results.html&#34;,
     )
 
     dpia_dict = dpia_model.serialize()
@@ -705,17 +783,23 @@ not have a method with the specified name.</p></div>
         &#34;attributeId&#34;: &#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
         &#34;attributeName&#34;: &#34;Name&#34;,
         &#34;attributeSensitive&#34;: True,
-        &#34;attributeDescription&#34;: &#34;Name of the individual&#34;
+        &#34;attributeDescription&#34;: &#34;Name of the individual&#34;,
     }
 
-    personal_data_model: DataAgreementPersonalDataModel = \
+    personal_data_model: DataAgreementPersonalDataModel = (
         DataAgreementPersonalDataModel.deserialize(personal_data_json)
+    )
 
     assert personal_data_model.attribute_id == personal_data_json[&#34;attributeId&#34;]
     assert personal_data_model.attribute_name == personal_data_json[&#34;attributeName&#34;]
-    assert personal_data_model.attribute_sensitive == personal_data_json[&#34;attributeSensitive&#34;]
-    assert personal_data_model.attribute_description == \
-        personal_data_json[&#34;attributeDescription&#34;]</code></pre>
+    assert (
+        personal_data_model.attribute_sensitive
+        == personal_data_json[&#34;attributeSensitive&#34;]
+    )
+    assert (
+        personal_data_model.attribute_description
+        == personal_data_json[&#34;attributeDescription&#34;]
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.da.v1_0.models.tests.test_da_models.TestDAModels.test_personal_data_model_serialisation"><code class="name flex">
@@ -733,7 +817,7 @@ not have a method with the specified name.</p></div>
         attribute_id=&#34;18038282-0eb8-4796-b0b5-fc57ac27c861&#34;,
         attribute_name=&#34;Name&#34;,
         attribute_sensitive=True,
-        attribute_description=&#34;Name of the individual&#34;
+        attribute_description=&#34;Name of the individual&#34;,
     )
 
     personal_data_dict = personal_data_model.serialize()

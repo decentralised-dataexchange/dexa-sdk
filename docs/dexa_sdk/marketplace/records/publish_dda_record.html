@@ -26,16 +26,14 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
-from aries_cloudagent.config.injection_context import InjectionContext
+<pre><code class="python">from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class PublishDDARecord(BaseRecord):
     &#34;&#34;&#34;Publish DDA record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;PublishDDARecordSchema&#34;
 
@@ -46,11 +44,7 @@ class PublishDDARecord(BaseRecord):
     RECORD_ID_NAME = &#34;id&#34;
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~connection_id&#34;,
-        &#34;~template_id&#34;,
-        &#34;~state&#34;
-    }
+    TAG_NAMES = {&#34;~connection_id&#34;, &#34;~template_id&#34;, &#34;~state&#34;}
 
     # States
     STATE_REQUEST = &#34;request&#34;
@@ -82,21 +76,12 @@ class PublishDDARecord(BaseRecord):
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
         return {
             prop: getattr(self, prop)
-            for prop in (
-                &#34;connection_id&#34;,
-                &#34;state&#34;,
-                &#34;dda&#34;,
-                &#34;template_id&#34;
-            )
+            for prop in (&#34;connection_id&#34;, &#34;state&#34;, &#34;dda&#34;, &#34;template_id&#34;)
         }
 
     @classmethod
     async def store_publish_dda_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str,
-        template_id: str,
-        dda: dict
+        cls, context: InjectionContext, connection_id: str, template_id: str, dda: dict
     ) -&gt; &#34;PublishDDARecord&#34;:
         &#34;&#34;&#34;Store publish dda record.
 
@@ -110,10 +95,7 @@ class PublishDDARecord(BaseRecord):
             PublishDDARecord: Publish dda record.
         &#34;&#34;&#34;
         #  Check if an existing publish dda record exists.
-        tag_filter = {
-            &#34;connection_id&#34;: connection_id,
-            &#34;template_id&#34;: template_id
-        }
+        tag_filter = {&#34;connection_id&#34;: connection_id, &#34;template_id&#34;: template_id}
         records = await cls.query(context, tag_filter)
         assert len(records) == 0, &#34;DDA cannot be published twice.&#34;
 
@@ -121,7 +103,7 @@ class PublishDDARecord(BaseRecord):
             connection_id=connection_id,
             template_id=template_id,
             dda=dda,
-            state=PublishDDARecord.STATE_REQUEST
+            state=PublishDDARecord.STATE_REQUEST,
         )
 
         await record.save(context)
@@ -163,6 +145,7 @@ class PublishDDARecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class PublishDDARecord(BaseRecord):
     &#34;&#34;&#34;Publish DDA record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;PublishDDARecordSchema&#34;
 
@@ -173,11 +156,7 @@ class PublishDDARecordSchema(BaseRecordSchema):
     RECORD_ID_NAME = &#34;id&#34;
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~connection_id&#34;,
-        &#34;~template_id&#34;,
-        &#34;~state&#34;
-    }
+    TAG_NAMES = {&#34;~connection_id&#34;, &#34;~template_id&#34;, &#34;~state&#34;}
 
     # States
     STATE_REQUEST = &#34;request&#34;
@@ -209,21 +188,12 @@ class PublishDDARecordSchema(BaseRecordSchema):
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
         return {
             prop: getattr(self, prop)
-            for prop in (
-                &#34;connection_id&#34;,
-                &#34;state&#34;,
-                &#34;dda&#34;,
-                &#34;template_id&#34;
-            )
+            for prop in (&#34;connection_id&#34;, &#34;state&#34;, &#34;dda&#34;, &#34;template_id&#34;)
         }
 
     @classmethod
     async def store_publish_dda_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str,
-        template_id: str,
-        dda: dict
+        cls, context: InjectionContext, connection_id: str, template_id: str, dda: dict
     ) -&gt; &#34;PublishDDARecord&#34;:
         &#34;&#34;&#34;Store publish dda record.
 
@@ -237,10 +207,7 @@ class PublishDDARecordSchema(BaseRecordSchema):
             PublishDDARecord: Publish dda record.
         &#34;&#34;&#34;
         #  Check if an existing publish dda record exists.
-        tag_filter = {
-            &#34;connection_id&#34;: connection_id,
-            &#34;template_id&#34;: template_id
-        }
+        tag_filter = {&#34;connection_id&#34;: connection_id, &#34;template_id&#34;: template_id}
         records = await cls.query(context, tag_filter)
         assert len(records) == 0, &#34;DDA cannot be published twice.&#34;
 
@@ -248,7 +215,7 @@ class PublishDDARecordSchema(BaseRecordSchema):
             connection_id=connection_id,
             template_id=template_id,
             dda=dda,
-            state=PublishDDARecord.STATE_REQUEST
+            state=PublishDDARecord.STATE_REQUEST,
         )
 
         await record.save(context)
@@ -316,11 +283,7 @@ class PublishDDARecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">@classmethod
 async def store_publish_dda_record(
-    cls,
-    context: InjectionContext,
-    connection_id: str,
-    template_id: str,
-    dda: dict
+    cls, context: InjectionContext, connection_id: str, template_id: str, dda: dict
 ) -&gt; &#34;PublishDDARecord&#34;:
     &#34;&#34;&#34;Store publish dda record.
 
@@ -334,10 +297,7 @@ async def store_publish_dda_record(
         PublishDDARecord: Publish dda record.
     &#34;&#34;&#34;
     #  Check if an existing publish dda record exists.
-    tag_filter = {
-        &#34;connection_id&#34;: connection_id,
-        &#34;template_id&#34;: template_id
-    }
+    tag_filter = {&#34;connection_id&#34;: connection_id, &#34;template_id&#34;: template_id}
     records = await cls.query(context, tag_filter)
     assert len(records) == 0, &#34;DDA cannot be published twice.&#34;
 
@@ -345,7 +305,7 @@ async def store_publish_dda_record(
         connection_id=connection_id,
         template_id=template_id,
         dda=dda,
-        state=PublishDDARecord.STATE_REQUEST
+        state=PublishDDARecord.STATE_REQUEST,
     )
 
     await record.save(context)
@@ -367,12 +327,7 @@ def record_value(self) -&gt; dict:
     &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
     return {
         prop: getattr(self, prop)
-        for prop in (
-            &#34;connection_id&#34;,
-            &#34;state&#34;,
-            &#34;dda&#34;,
-            &#34;template_id&#34;
-        )
+        for prop in (&#34;connection_id&#34;, &#34;state&#34;, &#34;dda&#34;, &#34;template_id&#34;)
     }</code></pre>
 </details>
 </dd>

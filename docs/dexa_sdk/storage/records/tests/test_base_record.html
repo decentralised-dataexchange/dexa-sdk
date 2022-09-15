@@ -26,12 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from asynctest import TestCase as AsyncTestCase
-from asynctest import mock as async_mock
-from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
+<pre><code class="python">from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
 from aries_cloudagent.storage.record import StorageRecord
-from marshmallow import fields, EXCLUDE
-from ..base_record import BaseRecord
+from asynctest import TestCase as AsyncTestCase
+from dexa_sdk.storage.records.base_record import BaseRecord
+from marshmallow import EXCLUDE, fields
 
 
 class MockModel(BaseModel):

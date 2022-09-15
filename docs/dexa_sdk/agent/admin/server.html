@@ -31,33 +31,27 @@
 
 import asyncio
 import logging
-from typing import Callable, Coroutine, Sequence, Set
 import uuid
+from typing import Callable, Coroutine, Sequence, Set
 
-from aiohttp import web
-from aiohttp_apispec import (
-    docs,
-    response_schema,
-    validation_middleware,
-)
 import aiohttp_cors
-
-from marshmallow import fields, Schema
-
-from ..config.injection_context import InjectionContext
-from .aiohttp_apispec.custom import custom_setup_aiohttp_apispec
+from aiohttp import web
+from aries_cloudagent.admin.base_server import BaseAdminServer
+from aries_cloudagent.admin.error import AdminSetupError
 from aries_cloudagent.core.plugin_registry import PluginRegistry
 from aries_cloudagent.ledger.error import LedgerConfigError, LedgerTransactionError
 from aries_cloudagent.messaging.responder import BaseResponder
-from aries_cloudagent.transport.queue.basic import BasicMessageQueue
 from aries_cloudagent.transport.outbound.message import OutboundMessage
+from aries_cloudagent.transport.queue.basic import BasicMessageQueue
 from aries_cloudagent.utils.stats import Collector
 from aries_cloudagent.utils.task_queue import TaskQueue
 from aries_cloudagent.version import __version__
-from aries_cloudagent.admin.base_server import BaseAdminServer
-from aries_cloudagent.admin.error import AdminSetupError
-from ...managers.dexa_manager import DexaManager
+from dexa_sdk.agent.admin.aiohttp_apispec.custom import custom_setup_aiohttp_apispec
+from dexa_sdk.agent.config.injection_context import InjectionContext
+from dexa_sdk.managers.dexa_manager import DexaManager
+from marshmallow import Schema, fields
 
+from aiohttp_apispec import docs, response_schema, validation_middleware
 
 LOGGER = logging.getLogger(__name__)
 
@@ -161,14 +155,10 @@ class WebhookTarget:
 async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     &#34;&#34;&#34;Only continue if application is ready to take work.&#34;&#34;&#34;
 
-    if (
-        str(request.rel_url).rstrip(&#34;/&#34;)
-        in (
-            &#34;/status/live&#34;,
-            &#34;/status/ready&#34;,
-        )
-        or request.app._state.get(&#34;ready&#34;)
-    ):
+    if str(request.rel_url).rstrip(&#34;/&#34;) in (
+        &#34;/status/live&#34;,
+        &#34;/status/ready&#34;,
+    ) or request.app._state.get(&#34;ready&#34;):
         try:
             return await handler(request)
         except (LedgerConfigError, LedgerTransactionError) as e:
@@ -259,8 +249,7 @@ class AdminServer(BaseAdminServer):
     async def make_application(self) -&gt; web.Application:
         &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
 
-        middlewares = [ready_middleware,
-                       debug_middleware, validation_middleware]
+        middlewares = [ready_middleware, debug_middleware, validation_middleware]
 
         # admin-token and admin-token are mutually exclusive and required.
         # This should be enforced during parameter parsing but to be sure,
@@ -268,16 +257,12 @@ class AdminServer(BaseAdminServer):
         assert self.admin_insecure_mode ^ bool(self.admin_api_key)
 
         def is_unprotected_path(path: str):
-            return (
-                path
-                in [
-                    &#34;/api/doc&#34;,
-                    &#34;/api/docs/swagger.json&#34;,
-                    &#34;/favicon.ico&#34;,
-                    &#34;/ws&#34;,  # ws handler checks authentication
-                ]
-                or path.startswith(&#34;/static/swagger/&#34;)
-            )
+            return path in [
+                &#34;/api/doc&#34;,
+                &#34;/api/docs/swagger.json&#34;,
+                &#34;/favicon.ico&#34;,
+                &#34;/ws&#34;,  # ws handler checks authentication
+            ] or path.startswith(&#34;/static/swagger/&#34;)
 
         # If admin_api_key is None, then admin_insecure_mode must be set so
         # we can safely enable the admin server with no security
@@ -325,13 +310,11 @@ class AdminServer(BaseAdminServer):
                 web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
                 web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
                 web.post(&#34;/status/reset&#34;, self.status_reset_handler),
-                web.get(&#34;/status/live&#34;, self.liveliness_handler,
-                        allow_head=False),
-                web.get(&#34;/status/ready&#34;, self.readiness_handler,
-                        allow_head=False),
+                web.get(&#34;/status/live&#34;, self.liveliness_handler, allow_head=False),
+                web.get(&#34;/status/ready&#34;, self.readiness_handler, allow_head=False),
                 web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
                 web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+                web.post(&#34;/webhooks/topic/{topic}/&#34;, self.webhook_handler),
             ]
         )
 
@@ -359,10 +342,7 @@ class AdminServer(BaseAdminServer):
         version_string = f&#34;v{__version__}&#34;
 
         custom_setup_aiohttp_apispec(
-            app=app,
-            title=agent_label,
-            version=version_string,
-            swagger_path=&#34;/api/doc&#34;
+            app=app, title=agent_label, version=version_string, swagger_path=&#34;/api/doc&#34;
         )
         app.on_startup.append(self.on_startup)
 
@@ -500,7 +480,7 @@ class AdminServer(BaseAdminServer):
         return web.json_response({})
 
     @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-    async def connections_webhook_handler(self, request: web.BaseRequest):
+    async def webhook_handler(self, request: web.BaseRequest):
         &#34;&#34;&#34;
         Request handler for webhooks
 
@@ -512,14 +492,18 @@ class AdminServer(BaseAdminServer):
 
         &#34;&#34;&#34;
 
+        webhook_topic = request.match_info[&#34;topic&#34;]
+
         # Request body
         body = await request.json()
 
-        # Initialise manager
-        mgr = DexaManager(self.context)
+        if webhook_topic == &#34;connections&#34;:
 
-        # Handle webhook.
-        await mgr.handle_connections_webhook(body)
+            # Initialise manager
+            mgr = DexaManager(self.context)
+
+            # Handle webhook.
+            await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 
@@ -722,7 +706,7 @@ class AdminServer(BaseAdminServer):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dexa_sdk.agent.admin.server.debug_middleware"><code class="name flex">
-<span>async def <span class="ident">debug_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine[+T_co, -T_contra, +V_co])</span>
+<span>async def <span class="ident">debug_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Show request detail in debug log.</p></div>
@@ -744,7 +728,7 @@ async def debug_middleware(request: web.BaseRequest, handler: Coroutine):
 </details>
 </dd>
 <dt id="dexa_sdk.agent.admin.server.ready_middleware"><code class="name flex">
-<span>async def <span class="ident">ready_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine[+T_co, -T_contra, +V_co])</span>
+<span>async def <span class="ident">ready_middleware</span></span>(<span>request: aiohttp.web_request.BaseRequest, handler: Coroutine)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Only continue if application is ready to take work.</p></div>
@@ -756,14 +740,10 @@ async def debug_middleware(request: web.BaseRequest, handler: Coroutine):
 async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     &#34;&#34;&#34;Only continue if application is ready to take work.&#34;&#34;&#34;
 
-    if (
-        str(request.rel_url).rstrip(&#34;/&#34;)
-        in (
-            &#34;/status/live&#34;,
-            &#34;/status/ready&#34;,
-        )
-        or request.app._state.get(&#34;ready&#34;)
-    ):
+    if str(request.rel_url).rstrip(&#34;/&#34;) in (
+        &#34;/status/live&#34;,
+        &#34;/status/ready&#34;,
+    ) or request.app._state.get(&#34;ready&#34;):
         try:
             return await handler(request)
         except (LedgerConfigError, LedgerTransactionError) as e:
@@ -795,7 +775,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
 <dl>
 <dt id="dexa_sdk.agent.admin.server.AdminModulesSchema"><code class="flex name class">
 <span>class <span class="ident">AdminModulesSchema</span></span>
-<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Schema for the modules endpoint.</p></div>
@@ -825,7 +805,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
 </dd>
 <dt id="dexa_sdk.agent.admin.server.AdminResponder"><code class="flex name class">
 <span>class <span class="ident">AdminResponder</span></span>
-<span>(</span><span>context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, send: Coroutine[+T_co, -T_contra, +V_co], webhook: Coroutine[+T_co, -T_contra, +V_co], **kwargs)</span>
+<span>(</span><span>context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, send: Coroutine, webhook: Coroutine, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Handle outgoing messages from message handlers.</p>
@@ -942,7 +922,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
 </dd>
 <dt id="dexa_sdk.agent.admin.server.AdminServer"><code class="flex name class">
 <span>class <span class="ident">AdminServer</span></span>
-<span>(</span><span>host: str, port: int, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound_message_router: Coroutine[+T_co, -T_contra, +V_co], webhook_router: Callable, conductor_stop: Coroutine[+T_co, -T_contra, +V_co], task_queue: aries_cloudagent.utils.task_queue.TaskQueue = None, conductor_stats: Coroutine[+T_co, -T_contra, +V_co] = None)</span>
+<span>(</span><span>host: str, port: int, context: <a title="dexa_sdk.agent.config.injection_context.InjectionContext" href="../config/injection_context.html#dexa_sdk.agent.config.injection_context.InjectionContext">InjectionContext</a>, outbound_message_router: Coroutine, webhook_router: Callable, conductor_stop: Coroutine, task_queue: aries_cloudagent.utils.task_queue.TaskQueue = None, conductor_stats: Coroutine = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Admin HTTP server class.</p>
@@ -1021,8 +1001,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     async def make_application(self) -&gt; web.Application:
         &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
 
-        middlewares = [ready_middleware,
-                       debug_middleware, validation_middleware]
+        middlewares = [ready_middleware, debug_middleware, validation_middleware]
 
         # admin-token and admin-token are mutually exclusive and required.
         # This should be enforced during parameter parsing but to be sure,
@@ -1030,16 +1009,12 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
         assert self.admin_insecure_mode ^ bool(self.admin_api_key)
 
         def is_unprotected_path(path: str):
-            return (
-                path
-                in [
-                    &#34;/api/doc&#34;,
-                    &#34;/api/docs/swagger.json&#34;,
-                    &#34;/favicon.ico&#34;,
-                    &#34;/ws&#34;,  # ws handler checks authentication
-                ]
-                or path.startswith(&#34;/static/swagger/&#34;)
-            )
+            return path in [
+                &#34;/api/doc&#34;,
+                &#34;/api/docs/swagger.json&#34;,
+                &#34;/favicon.ico&#34;,
+                &#34;/ws&#34;,  # ws handler checks authentication
+            ] or path.startswith(&#34;/static/swagger/&#34;)
 
         # If admin_api_key is None, then admin_insecure_mode must be set so
         # we can safely enable the admin server with no security
@@ -1087,13 +1062,11 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
                 web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
                 web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
                 web.post(&#34;/status/reset&#34;, self.status_reset_handler),
-                web.get(&#34;/status/live&#34;, self.liveliness_handler,
-                        allow_head=False),
-                web.get(&#34;/status/ready&#34;, self.readiness_handler,
-                        allow_head=False),
+                web.get(&#34;/status/live&#34;, self.liveliness_handler, allow_head=False),
+                web.get(&#34;/status/ready&#34;, self.readiness_handler, allow_head=False),
                 web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
                 web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-                web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+                web.post(&#34;/webhooks/topic/{topic}/&#34;, self.webhook_handler),
             ]
         )
 
@@ -1121,10 +1094,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
         version_string = f&#34;v{__version__}&#34;
 
         custom_setup_aiohttp_apispec(
-            app=app,
-            title=agent_label,
-            version=version_string,
-            swagger_path=&#34;/api/doc&#34;
+            app=app, title=agent_label, version=version_string, swagger_path=&#34;/api/doc&#34;
         )
         app.on_startup.append(self.on_startup)
 
@@ -1262,7 +1232,7 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
         return web.json_response({})
 
     @docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-    async def connections_webhook_handler(self, request: web.BaseRequest):
+    async def webhook_handler(self, request: web.BaseRequest):
         &#34;&#34;&#34;
         Request handler for webhooks
 
@@ -1274,14 +1244,18 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
 
         &#34;&#34;&#34;
 
+        webhook_topic = request.match_info[&#34;topic&#34;]
+
         # Request body
         body = await request.json()
 
-        # Initialise manager
-        mgr = DexaManager(self.context)
+        if webhook_topic == &#34;connections&#34;:
 
-        # Handle webhook.
-        await mgr.handle_connections_webhook(body)
+            # Initialise manager
+            mgr = DexaManager(self.context)
+
+            # Handle webhook.
+            await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 
@@ -1503,47 +1477,6 @@ async def ready_middleware(request: web.BaseRequest, handler: Coroutine):
     )</code></pre>
 </details>
 </dd>
-<dt id="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler"><code class="name flex">
-<span>async def <span class="ident">connections_webhook_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request handler for webhooks</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>request</code></strong></dt>
-<dd>aiohttp request object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>The web response</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
-async def connections_webhook_handler(self, request: web.BaseRequest):
-    &#34;&#34;&#34;
-    Request handler for webhooks
-
-    Args:
-        request: aiohttp request object
-
-    Returns:
-        The web response
-
-    &#34;&#34;&#34;
-
-    # Request body
-    body = await request.json()
-
-    # Initialise manager
-    mgr = DexaManager(self.context)
-
-    # Handle webhook.
-    await mgr.handle_connections_webhook(body)
-
-    return web.json_response({})</code></pre>
-</details>
-</dd>
 <dt id="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler"><code class="name flex">
 <span>async def <span class="ident">liveliness_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
 </code></dt>
@@ -1592,8 +1525,7 @@ async def liveliness_handler(self, request: web.BaseRequest):
 <pre><code class="python">async def make_application(self) -&gt; web.Application:
     &#34;&#34;&#34;Get the aiohttp application instance.&#34;&#34;&#34;
 
-    middlewares = [ready_middleware,
-                   debug_middleware, validation_middleware]
+    middlewares = [ready_middleware, debug_middleware, validation_middleware]
 
     # admin-token and admin-token are mutually exclusive and required.
     # This should be enforced during parameter parsing but to be sure,
@@ -1601,16 +1533,12 @@ async def liveliness_handler(self, request: web.BaseRequest):
     assert self.admin_insecure_mode ^ bool(self.admin_api_key)
 
     def is_unprotected_path(path: str):
-        return (
-            path
-            in [
-                &#34;/api/doc&#34;,
-                &#34;/api/docs/swagger.json&#34;,
-                &#34;/favicon.ico&#34;,
-                &#34;/ws&#34;,  # ws handler checks authentication
-            ]
-            or path.startswith(&#34;/static/swagger/&#34;)
-        )
+        return path in [
+            &#34;/api/doc&#34;,
+            &#34;/api/docs/swagger.json&#34;,
+            &#34;/favicon.ico&#34;,
+            &#34;/ws&#34;,  # ws handler checks authentication
+        ] or path.startswith(&#34;/static/swagger/&#34;)
 
     # If admin_api_key is None, then admin_insecure_mode must be set so
     # we can safely enable the admin server with no security
@@ -1658,13 +1586,11 @@ async def liveliness_handler(self, request: web.BaseRequest):
             web.get(&#34;/plugins&#34;, self.plugins_handler, allow_head=False),
             web.get(&#34;/status&#34;, self.status_handler, allow_head=False),
             web.post(&#34;/status/reset&#34;, self.status_reset_handler),
-            web.get(&#34;/status/live&#34;, self.liveliness_handler,
-                    allow_head=False),
-            web.get(&#34;/status/ready&#34;, self.readiness_handler,
-                    allow_head=False),
+            web.get(&#34;/status/live&#34;, self.liveliness_handler, allow_head=False),
+            web.get(&#34;/status/ready&#34;, self.readiness_handler, allow_head=False),
             web.get(&#34;/shutdown&#34;, self.shutdown_handler, allow_head=False),
             web.get(&#34;/ws&#34;, self.websocket_handler, allow_head=False),
-            web.post(&#34;/webhooks/topic/connections/&#34;, self.connections_webhook_handler),
+            web.post(&#34;/webhooks/topic/{topic}/&#34;, self.webhook_handler),
         ]
     )
 
@@ -1692,10 +1618,7 @@ async def liveliness_handler(self, request: web.BaseRequest):
     version_string = f&#34;v{__version__}&#34;
 
     custom_setup_aiohttp_apispec(
-        app=app,
-        title=agent_label,
-        version=version_string,
-        swagger_path=&#34;/api/doc&#34;
+        app=app, title=agent_label, version=version_string, swagger_path=&#34;/api/doc&#34;
     )
     app.on_startup.append(self.on_startup)
 
@@ -2058,6 +1981,51 @@ async def status_reset_handler(self, request: web.BaseRequest):
         self.site = None</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.agent.admin.server.AdminServer.webhook_handler"><code class="name flex">
+<span>async def <span class="ident">webhook_handler</span></span>(<span>self, request: aiohttp.web_request.BaseRequest)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request handler for webhooks</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>request</code></strong></dt>
+<dd>aiohttp request object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The web response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@docs(tags=[&#34;server&#34;], summary=&#34;Webhooks handler&#34;)
+async def webhook_handler(self, request: web.BaseRequest):
+    &#34;&#34;&#34;
+    Request handler for webhooks
+
+    Args:
+        request: aiohttp request object
+
+    Returns:
+        The web response
+
+    &#34;&#34;&#34;
+
+    webhook_topic = request.match_info[&#34;topic&#34;]
+
+    # Request body
+    body = await request.json()
+
+    if webhook_topic == &#34;connections&#34;:
+
+        # Initialise manager
+        mgr = DexaManager(self.context)
+
+        # Handle webhook.
+        await mgr.handle_connections_webhook(body)
+
+    return web.json_response({})</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.agent.admin.server.AdminServer.websocket_handler"><code class="name flex">
 <span>async def <span class="ident">websocket_handler</span></span>(<span>self, request)</span>
 </code></dt>
@@ -2167,7 +2135,7 @@ async def status_reset_handler(self, request: web.BaseRequest):
 </dd>
 <dt id="dexa_sdk.agent.admin.server.AdminStatusLivelinessSchema"><code class="flex name class">
 <span>class <span class="ident">AdminStatusLivelinessSchema</span></span>
-<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Schema for the liveliness endpoint.</p></div>
@@ -2195,7 +2163,7 @@ async def status_reset_handler(self, request: web.BaseRequest):
 </dd>
 <dt id="dexa_sdk.agent.admin.server.AdminStatusReadinessSchema"><code class="flex name class">
 <span>class <span class="ident">AdminStatusReadinessSchema</span></span>
-<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Schema for the readiness endpoint.</p></div>
@@ -2223,7 +2191,7 @@ async def status_reset_handler(self, request: web.BaseRequest):
 </dd>
 <dt id="dexa_sdk.agent.admin.server.AdminStatusSchema"><code class="flex name class">
 <span>class <span class="ident">AdminStatusSchema</span></span>
-<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict[~KT, ~VT] = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
+<span>(</span><span>*, only: Union[Sequence[str], Set[str]] = None, exclude: Union[Sequence[str], Set[str]] = (), many: bool = False, context: Dict = None, load_only: Union[Sequence[str], Set[str]] = (), dump_only: Union[Sequence[str], Set[str]] = (), partial: Union[bool, Sequence[str], Set[str]] = False, unknown: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Schema for the status endpoint.</p></div>
@@ -2342,7 +2310,6 @@ def topic_filter(self) -&gt; Set[str]:
 <h4><code><a title="dexa_sdk.agent.admin.server.AdminServer" href="#dexa_sdk.agent.admin.server.AdminServer">AdminServer</a></code></h4>
 <ul class="">
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.add_webhook_target" href="#dexa_sdk.agent.admin.server.AdminServer.add_webhook_target">add_webhook_target</a></code></li>
-<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler" href="#dexa_sdk.agent.admin.server.AdminServer.connections_webhook_handler">connections_webhook_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.liveliness_handler" href="#dexa_sdk.agent.admin.server.AdminServer.liveliness_handler">liveliness_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.make_application" href="#dexa_sdk.agent.admin.server.AdminServer.make_application">make_application</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error" href="#dexa_sdk.agent.admin.server.AdminServer.notify_fatal_error">notify_fatal_error</a></code></li>
@@ -2357,6 +2324,7 @@ def topic_filter(self) -&gt; Set[str]:
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_handler">status_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.status_reset_handler" href="#dexa_sdk.agent.admin.server.AdminServer.status_reset_handler">status_reset_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.stop" href="#dexa_sdk.agent.admin.server.AdminServer.stop">stop</a></code></li>
+<li><code><a title="dexa_sdk.agent.admin.server.AdminServer.webhook_handler" href="#dexa_sdk.agent.admin.server.AdminServer.webhook_handler">webhook_handler</a></code></li>
 <li><code><a title="dexa_sdk.agent.admin.server.AdminServer.websocket_handler" href="#dexa_sdk.agent.admin.server.AdminServer.websocket_handler">websocket_handler</a></code></li>
 </ul>
 </li>

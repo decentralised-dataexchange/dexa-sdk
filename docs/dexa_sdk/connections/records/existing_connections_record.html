@@ -26,15 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
+<pre><code class="python">from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 
 
 class ExistingConnectionRecord(BaseRecord):
     &#34;&#34;&#34;Existing connection record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;ExistingConnectionRecordSchema&#34;
 
@@ -49,7 +47,7 @@ class ExistingConnectionRecord(BaseRecord):
         &#34;~existing_connection_id&#34;,
         &#34;~my_did&#34;,
         &#34;~connection_status&#34;,
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
     }
 
     def __init__(
@@ -80,7 +78,7 @@ class ExistingConnectionRecord(BaseRecord):
                 &#34;state&#34;,
                 &#34;my_did&#34;,
                 &#34;connection_status&#34;,
-                &#34;connection_id&#34;
+                &#34;connection_id&#34;,
             )
         }
 
@@ -120,6 +118,7 @@ class ExistingConnectionRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class ExistingConnectionRecord(BaseRecord):
     &#34;&#34;&#34;Existing connection record.&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;ExistingConnectionRecordSchema&#34;
 
@@ -134,7 +133,7 @@ class ExistingConnectionRecordSchema(BaseRecordSchema):
         &#34;~existing_connection_id&#34;,
         &#34;~my_did&#34;,
         &#34;~connection_status&#34;,
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
     }
 
     def __init__(
@@ -165,7 +164,7 @@ class ExistingConnectionRecordSchema(BaseRecordSchema):
                 &#34;state&#34;,
                 &#34;my_did&#34;,
                 &#34;connection_status&#34;,
-                &#34;connection_id&#34;
+                &#34;connection_id&#34;,
             )
         }</code></pre>
 </details>
@@ -213,7 +212,7 @@ def record_value(self) -&gt; dict:
             &#34;state&#34;,
             &#34;my_did&#34;,
             &#34;connection_status&#34;,
-            &#34;connection_id&#34;
+            &#34;connection_id&#34;,
         )
     }</code></pre>
 </details>

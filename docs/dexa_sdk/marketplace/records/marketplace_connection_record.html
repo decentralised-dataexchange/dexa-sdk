@@ -27,20 +27,18 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from aries_cloudagent.config.injection_context import InjectionContext
-from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
-from marshmallow import fields
-from ..models.controller_details import ControllerDetailModel
-from ...data_controller.records.connection_controller_details_record import (
-    ConnectionControllerDetailsRecord
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from dexa_sdk.data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord,
 )
+from dexa_sdk.marketplace.models.controller_details import ControllerDetailModel
+from marshmallow import fields
 
 
 class MarketplaceConnectionRecord(BaseRecord):
     &#34;&#34;&#34;Marketplace connection record model&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;MarketplaceConnectionRecordSchema&#34;
 
@@ -54,16 +52,10 @@ class MarketplaceConnectionRecord(BaseRecord):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~connection_id&#34;
-    }
+    TAG_NAMES = {&#34;~connection_id&#34;}
 
     def __init__(
-        self,
-        id: str = None,
-        connection_id: str = None,
-        state: str = None,
-        **kwargs
+        self, id: str = None, connection_id: str = None, state: str = None, **kwargs
     ):
         # Pass the identifier and state to parent class
         super().__init__(id, state, **kwargs)
@@ -73,38 +65,27 @@ class MarketplaceConnectionRecord(BaseRecord):
     @property
     def record_value(self) -&gt; dict:
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-        return {
-            prop: getattr(self, prop)
-            for prop in (
-                &#34;connection_id&#34;,
-                &#34;state&#34;
-            )
-        }
+        return {prop: getattr(self, prop) for prop in (&#34;connection_id&#34;, &#34;state&#34;)}
 
     async def controller_details_model(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; ControllerDetailModel:
         &#34;&#34;&#34;Retreive controller details model.
 
         Returns:
             ControllerDetailModel: Controller details model
         &#34;&#34;&#34;
-        tag_filter = {
-            &#34;connection_id&#34;: self.connection_id
-        }
-        record: ConnectionControllerDetailsRecord = \
+        tag_filter = {&#34;connection_id&#34;: self.connection_id}
+        record: ConnectionControllerDetailsRecord = (
             await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
+        )
         return record.controller_details_model
 
     @classmethod
     async def set_connection_as_marketplace(
-            cls,
-            context: InjectionContext,
-            connection_id: str
+        cls, context: InjectionContext, connection_id: str
     ) -&gt; &#34;MarketplaceConnectionRecord&#34;:
         &#34;&#34;&#34;Set connection as marketplace.
 
@@ -116,18 +97,14 @@ class MarketplaceConnectionRecord(BaseRecord):
             MarketplaceConnectionRecord: Marketplace connection record.
         &#34;&#34;&#34;
 
-        tag_filter = {
-            &#34;connection_id&#34;: connection_id
-        }
+        tag_filter = {&#34;connection_id&#34;: connection_id}
         records = await cls.query(context, tag_filter)
 
         if records:
             record: MarketplaceConnectionRecord = records[0]
         else:
             # Create marketplace connection record.
-            record = cls(
-                connection_id=connection_id
-            )
+            record = cls(connection_id=connection_id)
 
         await record.save(context)
 
@@ -135,9 +112,7 @@ class MarketplaceConnectionRecord(BaseRecord):
 
     @classmethod
     async def retrieve_connection_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str
+        cls, context: InjectionContext, connection_id: str
     ) -&gt; ConnectionRecord:
         &#34;&#34;&#34;Retrieve connection record.
 
@@ -154,7 +129,9 @@ class MarketplaceConnectionRecord(BaseRecord):
 
         record = records[0]
 
-        connection_record = await ConnectionRecord.retrieve_by_id(context, record.connection_id)
+        connection_record = await ConnectionRecord.retrieve_by_id(
+            context, record.connection_id
+        )
         return connection_record
 
 
@@ -189,6 +166,7 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class MarketplaceConnectionRecord(BaseRecord):
     &#34;&#34;&#34;Marketplace connection record model&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;MarketplaceConnectionRecordSchema&#34;
 
@@ -202,16 +180,10 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~connection_id&#34;
-    }
+    TAG_NAMES = {&#34;~connection_id&#34;}
 
     def __init__(
-        self,
-        id: str = None,
-        connection_id: str = None,
-        state: str = None,
-        **kwargs
+        self, id: str = None, connection_id: str = None, state: str = None, **kwargs
     ):
         # Pass the identifier and state to parent class
         super().__init__(id, state, **kwargs)
@@ -221,38 +193,27 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
     @property
     def record_value(self) -&gt; dict:
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-        return {
-            prop: getattr(self, prop)
-            for prop in (
-                &#34;connection_id&#34;,
-                &#34;state&#34;
-            )
-        }
+        return {prop: getattr(self, prop) for prop in (&#34;connection_id&#34;, &#34;state&#34;)}
 
     async def controller_details_model(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; ControllerDetailModel:
         &#34;&#34;&#34;Retreive controller details model.
 
         Returns:
             ControllerDetailModel: Controller details model
         &#34;&#34;&#34;
-        tag_filter = {
-            &#34;connection_id&#34;: self.connection_id
-        }
-        record: ConnectionControllerDetailsRecord = \
+        tag_filter = {&#34;connection_id&#34;: self.connection_id}
+        record: ConnectionControllerDetailsRecord = (
             await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
+        )
         return record.controller_details_model
 
     @classmethod
     async def set_connection_as_marketplace(
-            cls,
-            context: InjectionContext,
-            connection_id: str
+        cls, context: InjectionContext, connection_id: str
     ) -&gt; &#34;MarketplaceConnectionRecord&#34;:
         &#34;&#34;&#34;Set connection as marketplace.
 
@@ -264,18 +225,14 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
             MarketplaceConnectionRecord: Marketplace connection record.
         &#34;&#34;&#34;
 
-        tag_filter = {
-            &#34;connection_id&#34;: connection_id
-        }
+        tag_filter = {&#34;connection_id&#34;: connection_id}
         records = await cls.query(context, tag_filter)
 
         if records:
             record: MarketplaceConnectionRecord = records[0]
         else:
             # Create marketplace connection record.
-            record = cls(
-                connection_id=connection_id
-            )
+            record = cls(connection_id=connection_id)
 
         await record.save(context)
 
@@ -283,9 +240,7 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
 
     @classmethod
     async def retrieve_connection_record(
-        cls,
-        context: InjectionContext,
-        connection_id: str
+        cls, context: InjectionContext, connection_id: str
     ) -&gt; ConnectionRecord:
         &#34;&#34;&#34;Retrieve connection record.
 
@@ -302,7 +257,9 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
 
         record = records[0]
 
-        connection_record = await ConnectionRecord.retrieve_by_id(context, record.connection_id)
+        connection_record = await ConnectionRecord.retrieve_by_id(
+            context, record.connection_id
+        )
         return connection_record</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -359,9 +316,7 @@ class MarketplaceConnectionRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">@classmethod
 async def retrieve_connection_record(
-    cls,
-    context: InjectionContext,
-    connection_id: str
+    cls, context: InjectionContext, connection_id: str
 ) -&gt; ConnectionRecord:
     &#34;&#34;&#34;Retrieve connection record.
 
@@ -378,7 +333,9 @@ async def retrieve_connection_record(
 
     record = records[0]
 
-    connection_record = await ConnectionRecord.retrieve_by_id(context, record.connection_id)
+    connection_record = await ConnectionRecord.retrieve_by_id(
+        context, record.connection_id
+    )
     return connection_record</code></pre>
 </details>
 </dd>
@@ -405,9 +362,7 @@ async def retrieve_connection_record(
 </summary>
 <pre><code class="python">@classmethod
 async def set_connection_as_marketplace(
-        cls,
-        context: InjectionContext,
-        connection_id: str
+    cls, context: InjectionContext, connection_id: str
 ) -&gt; &#34;MarketplaceConnectionRecord&#34;:
     &#34;&#34;&#34;Set connection as marketplace.
 
@@ -419,18 +374,14 @@ async def set_connection_as_marketplace(
         MarketplaceConnectionRecord: Marketplace connection record.
     &#34;&#34;&#34;
 
-    tag_filter = {
-        &#34;connection_id&#34;: connection_id
-    }
+    tag_filter = {&#34;connection_id&#34;: connection_id}
     records = await cls.query(context, tag_filter)
 
     if records:
         record: MarketplaceConnectionRecord = records[0]
     else:
         # Create marketplace connection record.
-        record = cls(
-            connection_id=connection_id
-        )
+        record = cls(connection_id=connection_id)
 
     await record.save(context)
 
@@ -450,13 +401,7 @@ async def set_connection_as_marketplace(
 <pre><code class="python">@property
 def record_value(self) -&gt; dict:
     &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-    return {
-        prop: getattr(self, prop)
-        for prop in (
-            &#34;connection_id&#34;,
-            &#34;state&#34;
-        )
-    }</code></pre>
+    return {prop: getattr(self, prop) for prop in (&#34;connection_id&#34;, &#34;state&#34;)}</code></pre>
 </details>
 </dd>
 </dl>
@@ -477,22 +422,19 @@ def record_value(self) -&gt; dict:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def controller_details_model(
-    self,
-    context: InjectionContext
+    self, context: InjectionContext
 ) -&gt; ControllerDetailModel:
     &#34;&#34;&#34;Retreive controller details model.
 
     Returns:
         ControllerDetailModel: Controller details model
     &#34;&#34;&#34;
-    tag_filter = {
-        &#34;connection_id&#34;: self.connection_id
-    }
-    record: ConnectionControllerDetailsRecord = \
+    tag_filter = {&#34;connection_id&#34;: self.connection_id}
+    record: ConnectionControllerDetailsRecord = (
         await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-            context,
-            tag_filter
+            context, tag_filter
         )
+    )
     return record.controller_details_model</code></pre>
 </details>
 </dd>

@@ -26,35 +26,35 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import uuid
-import typing
-from loguru import logger
-from marshmallow import fields, validate, EXCLUDE
-from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
-from aries_cloudagent.messaging.valid import UUIDFour
+<pre><code class="python">import typing
+import uuid
+
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from aries_cloudagent.messaging.valid import UUIDFour
 from aries_cloudagent.wallet.base import BaseWallet
 from aries_cloudagent.wallet.indy import IndyWallet
+from dexa_protocol.v1_0.messages.negotiation.accept_dda import AcceptDDAMessage
+from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
+from dexa_protocol.v1_0.models.offer_dda_model import CustomerIdentificationModel
+from dexa_sdk.agreements.dda.v1_0.models.dda_instance_models import (
+    DataDisclosureAgreementInstanceModel,
+    DataUsingServiceModel,
+)
+from dexa_sdk.agreements.dda.v1_0.records.dda_template_record import (
+    DataDisclosureAgreementTemplateRecord,
+)
+from dexa_sdk.data_controller.records.connection_controller_details_record import (
+    ConnectionControllerDetailsRecord,
+)
+from dexa_sdk.jsonld.core import sign_agreement, verify_agreement
+from marshmallow import EXCLUDE, fields, validate
 from mydata_did.v1_0.utils.util import (
     bool_to_str,
+    current_datetime_in_iso8601,
     str_to_bool,
-    current_datetime_in_iso8601
 )
-from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
-from dexa_protocol.v1_0.messages.negotiation.accept_dda import AcceptDDAMessage
-from dexa_protocol.v1_0.models.offer_dda_model import (
-    CustomerIdentificationModel
-)
-from .dda_template_record import DataDisclosureAgreementTemplateRecord
-from .....data_controller.records.connection_controller_details_record import (
-    ConnectionControllerDetailsRecord
-)
-from ..models.dda_instance_models import (
-    DataUsingServiceModel,
-    DataDisclosureAgreementInstanceModel
-)
-from .....jsonld.core import sign_agreement, verify_agreement
 
 
 class DataDisclosureAgreementInstanceRecord(BaseRecord):
@@ -82,7 +82,8 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         &#34;~delete_flag&#34;,
         &#34;~mydata_did&#34;,
         &#34;~blink&#34;,
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
+        &#34;~state&#34;,
     }
 
     # States of the data disclosure agreement instance.
@@ -107,7 +108,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         blink: str = None,
         blockchain_receipt: dict = None,
         customer_identification: dict = None,
-        **kwargs
+        **kwargs,
     ):
         &#34;&#34;&#34;Initialise data disclosure agreement instance record.
 
@@ -131,19 +132,13 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         super().__init__(id, state, **kwargs)
 
         if not instance_id:
-            raise TypeError(
-                &#34;Instance identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Instance identifier is not specified.&#34;)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         if not template_version:
-            raise TypeError(
-                &#34;Template version is not specified.&#34;
-            )
+            raise TypeError(&#34;Template version is not specified.&#34;)
 
         # Set the record attributes
         self.instance_id = instance_id
@@ -176,7 +171,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
                 &#34;mydata_did&#34;,
                 &#34;blink&#34;,
                 &#34;blockchain_receipt&#34;,
-                &#34;customer_identification&#34;
+                &#34;customer_identification&#34;,
             )
         }
 
@@ -196,21 +191,14 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         return self._delete_flag
 
     @property
-    def customer_identification_model(
-        self
-    ) -&gt; CustomerIdentificationModel:
-        return CustomerIdentificationModel.deserialize(
-            self.customer_identification
-        )
+    def customer_identification_model(self) -&gt; CustomerIdentificationModel:
+        return CustomerIdentificationModel.deserialize(self.customer_identification)
 
     @staticmethod
     async def build_instance_from_template(
-        context: InjectionContext,
-        template_id: str,
-        connection_record: ConnectionRecord
+        context: InjectionContext, template_id: str, connection_record: ConnectionRecord
     ) -&gt; typing.Tuple[
-        &#34;DataDisclosureAgreementInstanceRecord&#34;,
-        DataDisclosureAgreementInstanceModel
+        &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
     ]:
         &#34;&#34;&#34;Build instance from DDA template.
 
@@ -224,11 +212,11 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         &#34;&#34;&#34;
 
         # Fetch latest template record.
-        template_record = \
+        template_record = (
             await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
-                context,
-                template_id
+                context, template_id
             )
+        )
 
         assert template_record, &#34;DDA template not found.&#34;
 
@@ -265,15 +253,15 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
 
         # Add DUS info.
         # Fetch controller details for the DUS connection
-        tag_filter = {
-            &#34;connection_id&#34;: connection_record.connection_id
-        }
-        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+        tag_filter = {&#34;connection_id&#34;: connection_record.connection_id}
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
             await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
-        data_controller_model = dus_connection_controller_details_record.controller_details_model
+        )
+        data_controller_model = (
+            dus_connection_controller_details_record.controller_details_model
+        )
         dus_model = DataUsingServiceModel(
             did=data_controller_model.organisation_did,
             name=data_controller_model.organisation_name,
@@ -284,7 +272,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
             withdrawal=data_controller_model.policy_url,
             privacy_rights=data_controller_model.policy_url,
-            signature_contact=data_controller_model.organisation_did
+            signature_contact=data_controller_model.organisation_did,
         )
         dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
 
@@ -293,13 +281,12 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             agreement=dda_template_dict,
             verkey=controller_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        dda_instance_model: DataDisclosureAgreementInstanceModel = \
-            DataDisclosureAgreementInstanceModel.deserialize(
-                signed_dda
-            )
+        dda_instance_model: DataDisclosureAgreementInstanceModel = (
+            DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+        )
 
         # Create and save DDA instance record.
         dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -309,7 +296,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
             data_disclosure_agreement=dda_instance_model.serialize(),
             industry_sector=template_record.industry_sector,
-            connection_id=connection_record.connection_id
+            connection_id=connection_record.connection_id,
         )
 
         await dda_instance_record.save(context)
@@ -321,10 +308,9 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         cls,
         context: InjectionContext,
         dda_offer_message: OfferDDAMessage,
-        connection_record: ConnectionRecord
+        connection_record: ConnectionRecord,
     ) -&gt; typing.Tuple[
-        &#34;DataDisclosureAgreementInstanceRecord&#34;,
-        DataDisclosureAgreementInstanceModel
+        &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
     ]:
         &#34;&#34;&#34;Build instance from DDA offer.
 
@@ -347,10 +333,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         dda_offer_dict = dda_offer.serialize()
 
         # Verify the dda offer.
-        valid = await verify_agreement(
-            agreement=dda_offer_dict.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=dda_offer_dict.copy(), wallet=wallet)
 
         assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -368,13 +351,12 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             agreement=dda_offer_dict,
             verkey=dus_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        dda_instance_model: DataDisclosureAgreementInstanceModel = \
-            DataDisclosureAgreementInstanceModel.deserialize(
-                signed_dda
-            )
+        dda_instance_model: DataDisclosureAgreementInstanceModel = (
+            DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+        )
 
         # Create and save DDA instance record.
         dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -385,8 +367,12 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             data_disclosure_agreement=dda_instance_model.serialize(),
             industry_sector=dda_instance_model.data_using_service.industry_sector,
             connection_id=connection_record.connection_id,
-            customer_identification=customer_identification_details.serialize()
         )
+
+        if customer_identification_details:
+            dda_instance_record.customer_identification = (
+                customer_identification_details.serialize()
+            )
 
         await dda_instance_record.save(context)
 
@@ -394,9 +380,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
 
     @classmethod
     async def update_instance_from_dda_accept(
-        cls,
-        context: InjectionContext,
-        dda_accept_message: AcceptDDAMessage
+        cls, context: InjectionContext, dda_accept_message: AcceptDDAMessage
     ) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Update instance from DDA accept.
 
@@ -415,20 +399,15 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         dda_accept_dict = dda_instance_model.serialize()
 
         # Fetch instance record.
-        tag_filter = {
-            &#34;instance_id&#34;: dda_instance_model.id
-        }
-        instance_record: DataDisclosureAgreementInstanceRecord = \
+        tag_filter = {&#34;instance_id&#34;: dda_instance_model.id}
+        instance_record: DataDisclosureAgreementInstanceRecord = (
             await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
+        )
 
         # Verify the dda accept.
-        valid = await verify_agreement(
-            agreement=dda_accept_dict.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=dda_accept_dict.copy(), wallet=wallet)
 
         assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -437,6 +416,27 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         await instance_record.save(context)
 
         return instance_record
+
+    async def fetch_controller_details(
+        self, context: InjectionContext
+    ) -&gt; ConnectionControllerDetailsRecord:
+        &#34;&#34;&#34;Fetch controller details.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            ConnectionControllerDetailsRecord: Connection controller details record.
+        &#34;&#34;&#34;
+
+        tag_filter = {&#34;connection_id&#34;: self.connection_id}
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
+            await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+                context, tag_filter
+            )
+        )
+
+        return dus_connection_controller_details_record
 
 
 class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
@@ -450,20 +450,13 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         unknown = EXCLUDE
 
     # DDA instance identifier
-    instance_id = fields.Str(
-        required=True
-    )
+    instance_id = fields.Str(required=True)
 
     # Data disclosure agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data disclosure agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -474,7 +467,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
                 DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
                 DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Data disclosure agreement
@@ -492,7 +485,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Connection identifier
@@ -582,7 +575,8 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         &#34;~delete_flag&#34;,
         &#34;~mydata_did&#34;,
         &#34;~blink&#34;,
-        &#34;~connection_id&#34;
+        &#34;~connection_id&#34;,
+        &#34;~state&#34;,
     }
 
     # States of the data disclosure agreement instance.
@@ -607,7 +601,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         blink: str = None,
         blockchain_receipt: dict = None,
         customer_identification: dict = None,
-        **kwargs
+        **kwargs,
     ):
         &#34;&#34;&#34;Initialise data disclosure agreement instance record.
 
@@ -631,19 +625,13 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         super().__init__(id, state, **kwargs)
 
         if not instance_id:
-            raise TypeError(
-                &#34;Instance identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Instance identifier is not specified.&#34;)
 
         if not template_id:
-            raise TypeError(
-                &#34;Template identifier is not specified.&#34;
-            )
+            raise TypeError(&#34;Template identifier is not specified.&#34;)
 
         if not template_version:
-            raise TypeError(
-                &#34;Template version is not specified.&#34;
-            )
+            raise TypeError(&#34;Template version is not specified.&#34;)
 
         # Set the record attributes
         self.instance_id = instance_id
@@ -676,7 +664,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
                 &#34;mydata_did&#34;,
                 &#34;blink&#34;,
                 &#34;blockchain_receipt&#34;,
-                &#34;customer_identification&#34;
+                &#34;customer_identification&#34;,
             )
         }
 
@@ -696,21 +684,14 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         return self._delete_flag
 
     @property
-    def customer_identification_model(
-        self
-    ) -&gt; CustomerIdentificationModel:
-        return CustomerIdentificationModel.deserialize(
-            self.customer_identification
-        )
+    def customer_identification_model(self) -&gt; CustomerIdentificationModel:
+        return CustomerIdentificationModel.deserialize(self.customer_identification)
 
     @staticmethod
     async def build_instance_from_template(
-        context: InjectionContext,
-        template_id: str,
-        connection_record: ConnectionRecord
+        context: InjectionContext, template_id: str, connection_record: ConnectionRecord
     ) -&gt; typing.Tuple[
-        &#34;DataDisclosureAgreementInstanceRecord&#34;,
-        DataDisclosureAgreementInstanceModel
+        &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
     ]:
         &#34;&#34;&#34;Build instance from DDA template.
 
@@ -724,11 +705,11 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         &#34;&#34;&#34;
 
         # Fetch latest template record.
-        template_record = \
+        template_record = (
             await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
-                context,
-                template_id
+                context, template_id
             )
+        )
 
         assert template_record, &#34;DDA template not found.&#34;
 
@@ -765,15 +746,15 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
 
         # Add DUS info.
         # Fetch controller details for the DUS connection
-        tag_filter = {
-            &#34;connection_id&#34;: connection_record.connection_id
-        }
-        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+        tag_filter = {&#34;connection_id&#34;: connection_record.connection_id}
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
             await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
-        data_controller_model = dus_connection_controller_details_record.controller_details_model
+        )
+        data_controller_model = (
+            dus_connection_controller_details_record.controller_details_model
+        )
         dus_model = DataUsingServiceModel(
             did=data_controller_model.organisation_did,
             name=data_controller_model.organisation_name,
@@ -784,7 +765,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
             jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
             withdrawal=data_controller_model.policy_url,
             privacy_rights=data_controller_model.policy_url,
-            signature_contact=data_controller_model.organisation_did
+            signature_contact=data_controller_model.organisation_did,
         )
         dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
 
@@ -793,13 +774,12 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
             agreement=dda_template_dict,
             verkey=controller_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        dda_instance_model: DataDisclosureAgreementInstanceModel = \
-            DataDisclosureAgreementInstanceModel.deserialize(
-                signed_dda
-            )
+        dda_instance_model: DataDisclosureAgreementInstanceModel = (
+            DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+        )
 
         # Create and save DDA instance record.
         dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -809,7 +789,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
             state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
             data_disclosure_agreement=dda_instance_model.serialize(),
             industry_sector=template_record.industry_sector,
-            connection_id=connection_record.connection_id
+            connection_id=connection_record.connection_id,
         )
 
         await dda_instance_record.save(context)
@@ -821,10 +801,9 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         cls,
         context: InjectionContext,
         dda_offer_message: OfferDDAMessage,
-        connection_record: ConnectionRecord
+        connection_record: ConnectionRecord,
     ) -&gt; typing.Tuple[
-        &#34;DataDisclosureAgreementInstanceRecord&#34;,
-        DataDisclosureAgreementInstanceModel
+        &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
     ]:
         &#34;&#34;&#34;Build instance from DDA offer.
 
@@ -847,10 +826,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         dda_offer_dict = dda_offer.serialize()
 
         # Verify the dda offer.
-        valid = await verify_agreement(
-            agreement=dda_offer_dict.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=dda_offer_dict.copy(), wallet=wallet)
 
         assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -868,13 +844,12 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
             agreement=dda_offer_dict,
             verkey=dus_did.verkey,
             wallet=wallet,
-            signature_options=signature_options
+            signature_options=signature_options,
         )
 
-        dda_instance_model: DataDisclosureAgreementInstanceModel = \
-            DataDisclosureAgreementInstanceModel.deserialize(
-                signed_dda
-            )
+        dda_instance_model: DataDisclosureAgreementInstanceModel = (
+            DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+        )
 
         # Create and save DDA instance record.
         dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -885,8 +860,12 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
             data_disclosure_agreement=dda_instance_model.serialize(),
             industry_sector=dda_instance_model.data_using_service.industry_sector,
             connection_id=connection_record.connection_id,
-            customer_identification=customer_identification_details.serialize()
         )
+
+        if customer_identification_details:
+            dda_instance_record.customer_identification = (
+                customer_identification_details.serialize()
+            )
 
         await dda_instance_record.save(context)
 
@@ -894,9 +873,7 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
 
     @classmethod
     async def update_instance_from_dda_accept(
-        cls,
-        context: InjectionContext,
-        dda_accept_message: AcceptDDAMessage
+        cls, context: InjectionContext, dda_accept_message: AcceptDDAMessage
     ) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
         &#34;&#34;&#34;Update instance from DDA accept.
 
@@ -915,20 +892,15 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         dda_accept_dict = dda_instance_model.serialize()
 
         # Fetch instance record.
-        tag_filter = {
-            &#34;instance_id&#34;: dda_instance_model.id
-        }
-        instance_record: DataDisclosureAgreementInstanceRecord = \
+        tag_filter = {&#34;instance_id&#34;: dda_instance_model.id}
+        instance_record: DataDisclosureAgreementInstanceRecord = (
             await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
-                context,
-                tag_filter
+                context, tag_filter
             )
+        )
 
         # Verify the dda accept.
-        valid = await verify_agreement(
-            agreement=dda_accept_dict.copy(),
-            wallet=wallet
-        )
+        valid = await verify_agreement(agreement=dda_accept_dict.copy(), wallet=wallet)
 
         assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -936,7 +908,28 @@ class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):
         instance_record.state = DataDisclosureAgreementInstanceRecord.STATE_CAPTURE
         await instance_record.save(context)
 
-        return instance_record</code></pre>
+        return instance_record
+
+    async def fetch_controller_details(
+        self, context: InjectionContext
+    ) -&gt; ConnectionControllerDetailsRecord:
+        &#34;&#34;&#34;Fetch controller details.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            ConnectionControllerDetailsRecord: Connection controller details record.
+        &#34;&#34;&#34;
+
+        tag_filter = {&#34;connection_id&#34;: self.connection_id}
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
+            await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+                context, tag_filter
+            )
+        )
+
+        return dus_connection_controller_details_record</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1011,10 +1004,9 @@ async def build_instance_from_dda_offer(
     cls,
     context: InjectionContext,
     dda_offer_message: OfferDDAMessage,
-    connection_record: ConnectionRecord
+    connection_record: ConnectionRecord,
 ) -&gt; typing.Tuple[
-    &#34;DataDisclosureAgreementInstanceRecord&#34;,
-    DataDisclosureAgreementInstanceModel
+    &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
 ]:
     &#34;&#34;&#34;Build instance from DDA offer.
 
@@ -1037,10 +1029,7 @@ async def build_instance_from_dda_offer(
     dda_offer_dict = dda_offer.serialize()
 
     # Verify the dda offer.
-    valid = await verify_agreement(
-        agreement=dda_offer_dict.copy(),
-        wallet=wallet
-    )
+    valid = await verify_agreement(agreement=dda_offer_dict.copy(), wallet=wallet)
 
     assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -1058,13 +1047,12 @@ async def build_instance_from_dda_offer(
         agreement=dda_offer_dict,
         verkey=dus_did.verkey,
         wallet=wallet,
-        signature_options=signature_options
+        signature_options=signature_options,
     )
 
-    dda_instance_model: DataDisclosureAgreementInstanceModel = \
-        DataDisclosureAgreementInstanceModel.deserialize(
-            signed_dda
-        )
+    dda_instance_model: DataDisclosureAgreementInstanceModel = (
+        DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+    )
 
     # Create and save DDA instance record.
     dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -1075,8 +1063,12 @@ async def build_instance_from_dda_offer(
         data_disclosure_agreement=dda_instance_model.serialize(),
         industry_sector=dda_instance_model.data_using_service.industry_sector,
         connection_id=connection_record.connection_id,
-        customer_identification=customer_identification_details.serialize()
     )
+
+    if customer_identification_details:
+        dda_instance_record.customer_identification = (
+            customer_identification_details.serialize()
+        )
 
     await dda_instance_record.save(context)
 
@@ -1108,12 +1100,9 @@ async def build_instance_from_dda_offer(
 </summary>
 <pre><code class="python">@staticmethod
 async def build_instance_from_template(
-    context: InjectionContext,
-    template_id: str,
-    connection_record: ConnectionRecord
+    context: InjectionContext, template_id: str, connection_record: ConnectionRecord
 ) -&gt; typing.Tuple[
-    &#34;DataDisclosureAgreementInstanceRecord&#34;,
-    DataDisclosureAgreementInstanceModel
+    &#34;DataDisclosureAgreementInstanceRecord&#34;, DataDisclosureAgreementInstanceModel
 ]:
     &#34;&#34;&#34;Build instance from DDA template.
 
@@ -1127,11 +1116,11 @@ async def build_instance_from_template(
     &#34;&#34;&#34;
 
     # Fetch latest template record.
-    template_record = \
+    template_record = (
         await DataDisclosureAgreementTemplateRecord.latest_published_template_by_id(
-            context,
-            template_id
+            context, template_id
         )
+    )
 
     assert template_record, &#34;DDA template not found.&#34;
 
@@ -1168,15 +1157,15 @@ async def build_instance_from_template(
 
     # Add DUS info.
     # Fetch controller details for the DUS connection
-    tag_filter = {
-        &#34;connection_id&#34;: connection_record.connection_id
-    }
-    dus_connection_controller_details_record: ConnectionControllerDetailsRecord = \
+    tag_filter = {&#34;connection_id&#34;: connection_record.connection_id}
+    dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
         await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
-            context,
-            tag_filter
+            context, tag_filter
         )
-    data_controller_model = dus_connection_controller_details_record.controller_details_model
+    )
+    data_controller_model = (
+        dus_connection_controller_details_record.controller_details_model
+    )
     dus_model = DataUsingServiceModel(
         did=data_controller_model.organisation_did,
         name=data_controller_model.organisation_name,
@@ -1187,7 +1176,7 @@ async def build_instance_from_template(
         jurisdiction=dda_template_model.data_sharing_restrictions.jurisdiction,
         withdrawal=data_controller_model.policy_url,
         privacy_rights=data_controller_model.policy_url,
-        signature_contact=data_controller_model.organisation_did
+        signature_contact=data_controller_model.organisation_did,
     )
     dda_template_dict.update({&#34;dataUsingService&#34;: dus_model.serialize()})
 
@@ -1196,13 +1185,12 @@ async def build_instance_from_template(
         agreement=dda_template_dict,
         verkey=controller_did.verkey,
         wallet=wallet,
-        signature_options=signature_options
+        signature_options=signature_options,
     )
 
-    dda_instance_model: DataDisclosureAgreementInstanceModel = \
-        DataDisclosureAgreementInstanceModel.deserialize(
-            signed_dda
-        )
+    dda_instance_model: DataDisclosureAgreementInstanceModel = (
+        DataDisclosureAgreementInstanceModel.deserialize(signed_dda)
+    )
 
     # Create and save DDA instance record.
     dda_instance_record = DataDisclosureAgreementInstanceRecord(
@@ -1212,7 +1200,7 @@ async def build_instance_from_template(
         state=DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
         data_disclosure_agreement=dda_instance_model.serialize(),
         industry_sector=template_record.industry_sector,
-        connection_id=connection_record.connection_id
+        connection_id=connection_record.connection_id,
     )
 
     await dda_instance_record.save(context)
@@ -1245,9 +1233,7 @@ async def build_instance_from_template(
 </summary>
 <pre><code class="python">@classmethod
 async def update_instance_from_dda_accept(
-    cls,
-    context: InjectionContext,
-    dda_accept_message: AcceptDDAMessage
+    cls, context: InjectionContext, dda_accept_message: AcceptDDAMessage
 ) -&gt; &#34;DataDisclosureAgreementInstanceRecord&#34;:
     &#34;&#34;&#34;Update instance from DDA accept.
 
@@ -1266,20 +1252,15 @@ async def update_instance_from_dda_accept(
     dda_accept_dict = dda_instance_model.serialize()
 
     # Fetch instance record.
-    tag_filter = {
-        &#34;instance_id&#34;: dda_instance_model.id
-    }
-    instance_record: DataDisclosureAgreementInstanceRecord = \
+    tag_filter = {&#34;instance_id&#34;: dda_instance_model.id}
+    instance_record: DataDisclosureAgreementInstanceRecord = (
         await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
-            context,
-            tag_filter
+            context, tag_filter
         )
+    )
 
     # Verify the dda accept.
-    valid = await verify_agreement(
-        agreement=dda_accept_dict.copy(),
-        wallet=wallet
-    )
+    valid = await verify_agreement(agreement=dda_accept_dict.copy(), wallet=wallet)
 
     assert valid, &#34;DDA instance verification failed.&#34;
 
@@ -1301,12 +1282,8 @@ async def update_instance_from_dda_accept(
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def customer_identification_model(
-    self
-) -&gt; CustomerIdentificationModel:
-    return CustomerIdentificationModel.deserialize(
-        self.customer_identification
-    )</code></pre>
+def customer_identification_model(self) -&gt; CustomerIdentificationModel:
+    return CustomerIdentificationModel.deserialize(self.customer_identification)</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted"><code class="name">var <span class="ident">is_deleted</span> : bool</code></dt>
@@ -1346,9 +1323,53 @@ def record_value(self) -&gt; dict:
             &#34;mydata_did&#34;,
             &#34;blink&#34;,
             &#34;blockchain_receipt&#34;,
-            &#34;customer_identification&#34;
+            &#34;customer_identification&#34;,
         )
     }</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.fetch_controller_details"><code class="name flex">
+<span>async def <span class="ident">fetch_controller_details</span></span>(<span>self, context: aries_cloudagent.config.injection_context.InjectionContext) ‑> <a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord" href="../../../../data_controller/records/connection_controller_details_record.html#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord">ConnectionControllerDetailsRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch controller details.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ConnectionControllerDetailsRecord</code></dt>
+<dd>Connection controller details record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def fetch_controller_details(
+    self, context: InjectionContext
+) -&gt; ConnectionControllerDetailsRecord:
+    &#34;&#34;&#34;Fetch controller details.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+
+    Returns:
+        ConnectionControllerDetailsRecord: Connection controller details record.
+    &#34;&#34;&#34;
+
+    tag_filter = {&#34;connection_id&#34;: self.connection_id}
+    dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
+        await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+            context, tag_filter
+        )
+    )
+
+    return dus_connection_controller_details_record</code></pre>
 </details>
 </dd>
 </dl>
@@ -1380,20 +1401,13 @@ def record_value(self) -&gt; dict:
         unknown = EXCLUDE
 
     # DDA instance identifier
-    instance_id = fields.Str(
-        required=True
-    )
+    instance_id = fields.Str(required=True)
 
     # Data disclosure agreement template identifier
-    template_id = fields.Str(
-        required=True,
-        example=UUIDFour.EXAMPLE
-    )
+    template_id = fields.Str(required=True, example=UUIDFour.EXAMPLE)
 
     # Data disclosure agreement template version
-    template_version = fields.Str(
-        required=False
-    )
+    template_version = fields.Str(required=False)
 
     # State of the data agreement.
     state = fields.Str(
@@ -1404,7 +1418,7 @@ def record_value(self) -&gt; dict:
                 DataDisclosureAgreementInstanceRecord.STATE_DEFINITION,
                 DataDisclosureAgreementInstanceRecord.STATE_PREPARATION,
             ]
-        )
+        ),
     )
 
     # Data disclosure agreement
@@ -1422,7 +1436,7 @@ def record_value(self) -&gt; dict:
                 &#34;true&#34;,
                 &#34;false&#34;,
             ]
-        )
+        ),
     )
 
     # Connection identifier
@@ -1487,6 +1501,7 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_dda_offer">build_instance_from_dda_offer</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_template" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.build_instance_from_template">build_instance_from_template</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.customer_identification_model" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.customer_identification_model">customer_identification_model</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.fetch_controller_details" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.fetch_controller_details">fetch_controller_details</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.is_deleted">is_deleted</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.record_value" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.record_value">record_value</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_record.DataDisclosureAgreementInstanceRecord.update_instance_from_dda_accept">update_instance_from_dda_accept</a></code></li>

@@ -34,11 +34,10 @@ from collections import OrderedDict
 from types import ModuleType
 from typing import Sequence
 
-from ..config.injection_context import InjectionContext
-
-from aries_cloudagent.utils.classloader import ClassLoader, ModuleLoadError
 from aries_cloudagent.core.error import ProtocolDefinitionValidationError
 from aries_cloudagent.core.protocol_registry import ProtocolRegistry
+from aries_cloudagent.utils.classloader import ClassLoader, ModuleLoadError
+from dexa_sdk.agent.config.injection_context import InjectionContext
 
 LOGGER = logging.getLogger(__name__)
 
@@ -163,8 +162,7 @@ class PluginRegistry:
             # that contain admin routes and for old-style protocol
             # modules without version support
             routes = ClassLoader.load_module(&#34;routes&#34;, module_name)
-            message_types = ClassLoader.load_module(
-                &#34;message_types&#34;, module_name)
+            message_types = ClassLoader.load_module(&#34;message_types&#34;, module_name)
             if routes or message_types:
                 self._plugins[module_name] = mod
                 return mod
@@ -173,8 +171,7 @@ class PluginRegistry:
 
             # definition.py must exist in protocol
             if not definition:
-                LOGGER.error(
-                    f&#34;Protocol does not include definition.py: {module_name}&#34;)
+                LOGGER.error(f&#34;Protocol does not include definition.py: {module_name}&#34;)
                 return None
 
             # definition.py must include versions attribute
@@ -201,10 +198,9 @@ class PluginRegistry:
         #     self._plugins[module_name] = mod
         #     return mod
 
-    def register_package(self,
-                         package_name: str,
-                         disabled_plugins: Sequence[str] = []
-                         ) -&gt; Sequence[ModuleType]:
+    def register_package(
+        self, package_name: str, disabled_plugins: Sequence[str] = []
+    ) -&gt; Sequence[ModuleType]:
         &#34;&#34;&#34;Register all modules (sub-packages) under a given package name.&#34;&#34;&#34;
         try:
             module_names = ClassLoader.scan_subpackages(package_name)
@@ -286,8 +282,7 @@ class PluginRegistry:
             # Otherwise, try check for definition.py for versioned
             # protocol packages
             try:
-                definition = ClassLoader.load_module(
-                    plugin.__name__ + &#34;.definition&#34;)
+                definition = ClassLoader.load_module(plugin.__name__ + &#34;.definition&#34;)
             except ModuleLoadError as e:
                 LOGGER.error(&#34;Error loading plugin definition module: %s&#34;, e)
                 return
@@ -302,8 +297,7 @@ class PluginRegistry:
                         await self.load_protocol_version(context, mod, protocol_version)
 
                     except ModuleLoadError as e:
-                        LOGGER.error(
-                            &#34;Error loading plugin module message types: %s&#34;, e)
+                        LOGGER.error(&#34;Error loading plugin module message types: %s&#34;, e)
                         return
 
     async def register_admin_routes(self, app):
@@ -502,8 +496,7 @@ class PluginRegistry:
             # that contain admin routes and for old-style protocol
             # modules without version support
             routes = ClassLoader.load_module(&#34;routes&#34;, module_name)
-            message_types = ClassLoader.load_module(
-                &#34;message_types&#34;, module_name)
+            message_types = ClassLoader.load_module(&#34;message_types&#34;, module_name)
             if routes or message_types:
                 self._plugins[module_name] = mod
                 return mod
@@ -512,8 +505,7 @@ class PluginRegistry:
 
             # definition.py must exist in protocol
             if not definition:
-                LOGGER.error(
-                    f&#34;Protocol does not include definition.py: {module_name}&#34;)
+                LOGGER.error(f&#34;Protocol does not include definition.py: {module_name}&#34;)
                 return None
 
             # definition.py must include versions attribute
@@ -540,10 +532,9 @@ class PluginRegistry:
         #     self._plugins[module_name] = mod
         #     return mod
 
-    def register_package(self,
-                         package_name: str,
-                         disabled_plugins: Sequence[str] = []
-                         ) -&gt; Sequence[ModuleType]:
+    def register_package(
+        self, package_name: str, disabled_plugins: Sequence[str] = []
+    ) -&gt; Sequence[ModuleType]:
         &#34;&#34;&#34;Register all modules (sub-packages) under a given package name.&#34;&#34;&#34;
         try:
             module_names = ClassLoader.scan_subpackages(package_name)
@@ -625,8 +616,7 @@ class PluginRegistry:
             # Otherwise, try check for definition.py for versioned
             # protocol packages
             try:
-                definition = ClassLoader.load_module(
-                    plugin.__name__ + &#34;.definition&#34;)
+                definition = ClassLoader.load_module(plugin.__name__ + &#34;.definition&#34;)
             except ModuleLoadError as e:
                 LOGGER.error(&#34;Error loading plugin definition module: %s&#34;, e)
                 return
@@ -641,8 +631,7 @@ class PluginRegistry:
                         await self.load_protocol_version(context, mod, protocol_version)
 
                     except ModuleLoadError as e:
-                        LOGGER.error(
-                            &#34;Error loading plugin module message types: %s&#34;, e)
+                        LOGGER.error(&#34;Error loading plugin module message types: %s&#34;, e)
                         return
 
     async def register_admin_routes(self, app):
@@ -811,8 +800,7 @@ def plugins(self) -&gt; Sequence[ModuleType]:
         # Otherwise, try check for definition.py for versioned
         # protocol packages
         try:
-            definition = ClassLoader.load_module(
-                plugin.__name__ + &#34;.definition&#34;)
+            definition = ClassLoader.load_module(plugin.__name__ + &#34;.definition&#34;)
         except ModuleLoadError as e:
             LOGGER.error(&#34;Error loading plugin definition module: %s&#34;, e)
             return
@@ -827,8 +815,7 @@ def plugins(self) -&gt; Sequence[ModuleType]:
                     await self.load_protocol_version(context, mod, protocol_version)
 
                 except ModuleLoadError as e:
-                    LOGGER.error(
-                        &#34;Error loading plugin module message types: %s&#34;, e)
+                    LOGGER.error(&#34;Error loading plugin module message types: %s&#34;, e)
                     return</code></pre>
 </details>
 </dd>
@@ -913,10 +900,9 @@ def plugins(self) -&gt; Sequence[ModuleType]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def register_package(self,
-                     package_name: str,
-                     disabled_plugins: Sequence[str] = []
-                     ) -&gt; Sequence[ModuleType]:
+<pre><code class="python">def register_package(
+    self, package_name: str, disabled_plugins: Sequence[str] = []
+) -&gt; Sequence[ModuleType]:
     &#34;&#34;&#34;Register all modules (sub-packages) under a given package name.&#34;&#34;&#34;
     try:
         module_names = ClassLoader.scan_subpackages(package_name)
@@ -979,8 +965,7 @@ def plugins(self) -&gt; Sequence[ModuleType]:
         # that contain admin routes and for old-style protocol
         # modules without version support
         routes = ClassLoader.load_module(&#34;routes&#34;, module_name)
-        message_types = ClassLoader.load_module(
-            &#34;message_types&#34;, module_name)
+        message_types = ClassLoader.load_module(&#34;message_types&#34;, module_name)
         if routes or message_types:
             self._plugins[module_name] = mod
             return mod
@@ -989,8 +974,7 @@ def plugins(self) -&gt; Sequence[ModuleType]:
 
         # definition.py must exist in protocol
         if not definition:
-            LOGGER.error(
-                f&#34;Protocol does not include definition.py: {module_name}&#34;)
+            LOGGER.error(f&#34;Protocol does not include definition.py: {module_name}&#34;)
             return None
 
         # definition.py must include versions attribute

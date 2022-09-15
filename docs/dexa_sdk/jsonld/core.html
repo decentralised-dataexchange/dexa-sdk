@@ -26,19 +26,24 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import hashlib
+<pre><code class="python">import datetime
+import hashlib
 import uuid
+
 import requests
-import datetime
-from merklelib import utils
-from aries_cloudagent.wallet.base import BaseWallet
 from aries_cloudagent.messaging.jsonld.credential import (
     sign_credential,
     verify_credential,
 )
-from ..utils import jcs_rfc8785, replace_jws, replace_proof_value, replace_proof_chain
-from .exceptions import ProofNotAvailableException
-
+from aries_cloudagent.wallet.base import BaseWallet
+from dexa_sdk.jsonld.exceptions import ProofNotAvailableException
+from dexa_sdk.utils import (
+    jcs_rfc8785,
+    replace_jws,
+    replace_proof_chain,
+    replace_proof_value,
+)
+from merklelib import utils
 
 DEXA_JSONLD_CONTEXT_URL = (
     &#34;https://raw.githubusercontent.com&#34;
@@ -92,11 +97,9 @@ def jsonld_context_fingerprint(
     return hashlib.sha256(value).hexdigest()
 
 
-async def sign_proof(*,
-                     proof,
-                     verkey: str,
-                     wallet: BaseWallet,
-                     signature_options: dict = None) -&gt; dict:
+async def sign_proof(
+    *, proof, verkey: str, wallet: BaseWallet, signature_options: dict = None
+) -&gt; dict:
     &#34;&#34;&#34;Sign embedded proof in agreement to generated counter signatures chain
 
     Create proof algorithm is defined at w3c vc data integrity 1.0 spec.
@@ -137,11 +140,9 @@ async def sign_proof(*,
     return proof
 
 
-async def sign_agreement(*,
-                         agreement: dict,
-                         verkey: str,
-                         wallet: BaseWallet,
-                         signature_options: dict = None) -&gt; None:
+async def sign_agreement(
+    *, agreement: dict, verkey: str, wallet: BaseWallet, signature_options: dict = None
+) -&gt; None:
     &#34;&#34;&#34;Sign agreement.
 
     Create proof algorithm is defined at w3c vc data integrity 1.0 spec.
@@ -167,10 +168,7 @@ async def sign_agreement(*,
         tbs = replace_proof_value(tbs)
 
         signed_proof = await sign_proof(
-            proof=tbs,
-            verkey=verkey,
-            wallet=wallet,
-            signature_options=signature_options
+            proof=tbs, verkey=verkey, wallet=wallet, signature_options=signature_options
         )
         proof.append(signed_proof)
 
@@ -194,9 +192,7 @@ async def sign_agreement(*,
             }
 
         # Sign the agreement
-        agreement = await sign_credential(
-            agreement, signature_options, verkey, wallet
-        )
+        agreement = await sign_credential(agreement, signature_options, verkey, wallet)
 
         # Replace &#39;jws&#39; field with &#39;proofValue&#39; field
         agreement[&#34;proof&#34;] = replace_jws(agreement[&#34;proof&#34;].copy())
@@ -237,13 +233,17 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
             # First proof in the chain
             # Replace &#39;proofValue&#39; field with &#39;jws&#39; field
             tbv[&#34;proof&#34;] = replace_proof_value(proofs[0].copy())
-            valid.append(await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet))
+            valid.append(
+                await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet)
+            )
         else:
             # From second proof onwards, tbv would be the proof before it.
             tbv = {**proofs[index - 1], &#34;@context&#34;: &#34;https://w3id.org/security/v2&#34;}
             tbv = replace_proof_value(tbv.copy())
             tbv[&#34;proof&#34;] = replace_proof_value(proof.copy())
-            valid.append(await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet))
+            valid.append(
+                await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet)
+            )
 
     return all(valid)</code></pre>
 </details>
@@ -355,11 +355,9 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def sign_agreement(*,
-                         agreement: dict,
-                         verkey: str,
-                         wallet: BaseWallet,
-                         signature_options: dict = None) -&gt; None:
+<pre><code class="python">async def sign_agreement(
+    *, agreement: dict, verkey: str, wallet: BaseWallet, signature_options: dict = None
+) -&gt; None:
     &#34;&#34;&#34;Sign agreement.
 
     Create proof algorithm is defined at w3c vc data integrity 1.0 spec.
@@ -385,10 +383,7 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
         tbs = replace_proof_value(tbs)
 
         signed_proof = await sign_proof(
-            proof=tbs,
-            verkey=verkey,
-            wallet=wallet,
-            signature_options=signature_options
+            proof=tbs, verkey=verkey, wallet=wallet, signature_options=signature_options
         )
         proof.append(signed_proof)
 
@@ -412,9 +407,7 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
             }
 
         # Sign the agreement
-        agreement = await sign_credential(
-            agreement, signature_options, verkey, wallet
-        )
+        agreement = await sign_credential(agreement, signature_options, verkey, wallet)
 
         # Replace &#39;jws&#39; field with &#39;proofValue&#39; field
         agreement[&#34;proof&#34;] = replace_jws(agreement[&#34;proof&#34;].copy())
@@ -445,11 +438,9 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def sign_proof(*,
-                     proof,
-                     verkey: str,
-                     wallet: BaseWallet,
-                     signature_options: dict = None) -&gt; dict:
+<pre><code class="python">async def sign_proof(
+    *, proof, verkey: str, wallet: BaseWallet, signature_options: dict = None
+) -&gt; dict:
     &#34;&#34;&#34;Sign embedded proof in agreement to generated counter signatures chain
 
     Create proof algorithm is defined at w3c vc data integrity 1.0 spec.
@@ -543,13 +534,17 @@ async def verify_agreement(*, agreement: dict, wallet: BaseWallet) -&gt; bool:
             # First proof in the chain
             # Replace &#39;proofValue&#39; field with &#39;jws&#39; field
             tbv[&#34;proof&#34;] = replace_proof_value(proofs[0].copy())
-            valid.append(await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet))
+            valid.append(
+                await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet)
+            )
         else:
             # From second proof onwards, tbv would be the proof before it.
             tbv = {**proofs[index - 1], &#34;@context&#34;: &#34;https://w3id.org/security/v2&#34;}
             tbv = replace_proof_value(tbv.copy())
             tbv[&#34;proof&#34;] = replace_proof_value(proof.copy())
-            valid.append(await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet))
+            valid.append(
+                await verify_credential(tbv, tbv[&#34;proof&#34;][&#34;verificationMethod&#34;], wallet)
+            )
 
     return all(valid)</code></pre>
 </details>

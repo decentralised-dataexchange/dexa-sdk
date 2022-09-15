@@ -26,20 +26,16 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aries_cloudagent.messaging.models.base_record import (
-    BaseRecord,
-    BaseRecordSchema
-)
-from aries_cloudagent.connections.models.connection_record import (
-    ConnectionRecord
-)
-from aries_cloudagent.config.injection_context import InjectionContext
+<pre><code class="python">from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.connections.models.connection_record import ConnectionRecord
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import fields
 from mydata_did.v1_0.utils.util import bool_to_str
 
 
 class DataAgreementQRCodeRecord(BaseRecord):
     &#34;&#34;&#34;Data agreement QR code record&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;DataAgreementQRCodeRecordSchema&#34;
 
@@ -58,7 +54,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
         &#34;~multi_use_flag&#34;,
         &#34;~scanned_flag&#34;,
         &#34;~connection_id&#34;,
-        &#34;~data_ex_id&#34;
+        &#34;~data_ex_id&#34;,
     }
 
     def __init__(
@@ -98,7 +94,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
                 &#34;multi_use_flag&#34;,
                 &#34;scanned_flag&#34;,
                 &#34;dynamic_link&#34;,
-                &#34;data_ex_id&#34;
+                &#34;data_ex_id&#34;,
             )
         }
 
@@ -124,10 +120,7 @@ class DataAgreementQRCodeRecord(BaseRecord):
         Returns:
             ConnectionRecord: Connection record.
         &#34;&#34;&#34;
-        return await ConnectionRecord.retrieve_by_id(
-            context,
-            self.connection_id
-        )
+        return await ConnectionRecord.retrieve_by_id(context, self.connection_id)
 
 
 class DataAgreementQRCodeRecordSchema(BaseRecordSchema):
@@ -167,6 +160,7 @@ class DataAgreementQRCodeRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class DataAgreementQRCodeRecord(BaseRecord):
     &#34;&#34;&#34;Data agreement QR code record&#34;&#34;&#34;
+
     class Meta:
         schema_class = &#34;DataAgreementQRCodeRecordSchema&#34;
 
@@ -185,7 +179,7 @@ class DataAgreementQRCodeRecordSchema(BaseRecordSchema):
         &#34;~multi_use_flag&#34;,
         &#34;~scanned_flag&#34;,
         &#34;~connection_id&#34;,
-        &#34;~data_ex_id&#34;
+        &#34;~data_ex_id&#34;,
     }
 
     def __init__(
@@ -225,7 +219,7 @@ class DataAgreementQRCodeRecordSchema(BaseRecordSchema):
                 &#34;multi_use_flag&#34;,
                 &#34;scanned_flag&#34;,
                 &#34;dynamic_link&#34;,
-                &#34;data_ex_id&#34;
+                &#34;data_ex_id&#34;,
             )
         }
 
@@ -251,10 +245,7 @@ class DataAgreementQRCodeRecordSchema(BaseRecordSchema):
         Returns:
             ConnectionRecord: Connection record.
         &#34;&#34;&#34;
-        return await ConnectionRecord.retrieve_by_id(
-            context,
-            self.connection_id
-        )</code></pre>
+        return await ConnectionRecord.retrieve_by_id(context, self.connection_id)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -317,7 +308,7 @@ def record_value(self) -&gt; dict:
             &#34;multi_use_flag&#34;,
             &#34;scanned_flag&#34;,
             &#34;dynamic_link&#34;,
-            &#34;data_ex_id&#34;
+            &#34;data_ex_id&#34;,
         )
     }</code></pre>
 </details>
@@ -345,10 +336,7 @@ def record_value(self) -&gt; dict:
     Returns:
         ConnectionRecord: Connection record.
     &#34;&#34;&#34;
-    return await ConnectionRecord.retrieve_by_id(
-        context,
-        self.connection_id
-    )</code></pre>
+    return await ConnectionRecord.retrieve_by_id(context, self.connection_id)</code></pre>
 </details>
 </dd>
 </dl>

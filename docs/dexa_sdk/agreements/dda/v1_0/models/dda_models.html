@@ -27,9 +27,10 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import typing
-from marshmallow import fields, EXCLUDE
+
 from aries_cloudagent.messaging.models.base import BaseModel, BaseModelSchema
-from .fields.context_field import ContextField
+from dexa_sdk.agreements.dda.v1_0.models.fields.context_field import ContextField
+from marshmallow import EXCLUDE, fields
 
 DDA_DEFAULT_CONTEXT = [
     (
@@ -178,8 +179,8 @@ class PersonalDataModel(BaseModel):
         attribute_id: str = None,
         attribute_name: str = None,
         attribute_description: str = None,
-        attribute_sensitive: str = &#34;true&#34;,
-        attribute_category: str = &#34;personaldata&#34;,
+        attribute_sensitive: str = None,
+        attribute_category: str = None,
         **kwargs
     ):
         # Call the parent constructor
@@ -768,7 +769,7 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
 </dd>
 <dt id="dexa_sdk.agreements.dda.v1_0.models.dda_models.PersonalDataModel"><code class="flex name class">
 <span>class <span class="ident">PersonalDataModel</span></span>
-<span>(</span><span>*, attribute_id: str = None, attribute_name: str = None, attribute_description: str = None, attribute_sensitive: str = 'true', attribute_category: str = 'personaldata', **kwargs)</span>
+<span>(</span><span>*, attribute_id: str = None, attribute_name: str = None, attribute_description: str = None, attribute_sensitive: str = None, attribute_category: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Personal data model class</p>
@@ -794,8 +795,8 @@ class DataDisclosureAgreementSchema(BaseModelSchema):
         attribute_id: str = None,
         attribute_name: str = None,
         attribute_description: str = None,
-        attribute_sensitive: str = &#34;true&#34;,
-        attribute_category: str = &#34;personaldata&#34;,
+        attribute_sensitive: str = None,
+        attribute_category: str = None,
         **kwargs
     ):
         # Call the parent constructor

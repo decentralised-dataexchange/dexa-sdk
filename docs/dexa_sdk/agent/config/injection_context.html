@@ -29,14 +29,14 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Injection context implementation.&#34;&#34;&#34;
 
-from collections import namedtuple
 import copy
 import logging
+from collections import namedtuple
 from typing import Mapping
 
-from ..config.injector import Injector
 from aries_cloudagent.config.base import BaseInjector, InjectorError
 from aries_cloudagent.config.settings import Settings
+from dexa_sdk.agent.config.injector import Injector
 
 Scope = namedtuple(&#34;Scope&#34;, &#34;name injector&#34;)
 LOGGER = logging.getLogger(__name__)
@@ -110,16 +110,14 @@ class InjectionContext(BaseInjector):
         if not scope_name:
             raise InjectionContextError(&#34;Scope name must be non-empty&#34;)
         if self.scope_name == scope_name:
-            raise InjectionContextError(
-                &#34;Cannot re-enter scope: {}&#34;.format(scope_name))
+            raise InjectionContextError(&#34;Cannot re-enter scope: {}&#34;.format(scope_name))
         for scope in self._scopes:
             if scope.name == scope_name:
                 raise InjectionContextError(
                     &#34;Cannot re-enter scope: {}&#34;.format(scope_name)
                 )
         result = self.copy()
-        result._scopes.append(
-            Scope(name=self.scope_name, injector=self.injector))
+        result._scopes.append(Scope(name=self.scope_name, injector=self.injector))
         result.scope_name = scope_name
         if settings:
             result.update_settings(settings)
@@ -250,16 +248,14 @@ class InjectionContext(BaseInjector):
         if not scope_name:
             raise InjectionContextError(&#34;Scope name must be non-empty&#34;)
         if self.scope_name == scope_name:
-            raise InjectionContextError(
-                &#34;Cannot re-enter scope: {}&#34;.format(scope_name))
+            raise InjectionContextError(&#34;Cannot re-enter scope: {}&#34;.format(scope_name))
         for scope in self._scopes:
             if scope.name == scope_name:
                 raise InjectionContextError(
                     &#34;Cannot re-enter scope: {}&#34;.format(scope_name)
                 )
         result = self.copy()
-        result._scopes.append(
-            Scope(name=self.scope_name, injector=self.injector))
+        result._scopes.append(Scope(name=self.scope_name, injector=self.injector))
         result.scope_name = scope_name
         if settings:
             result.update_settings(settings)
@@ -479,16 +475,14 @@ def settings(self) -&gt; Settings:
     if not scope_name:
         raise InjectionContextError(&#34;Scope name must be non-empty&#34;)
     if self.scope_name == scope_name:
-        raise InjectionContextError(
-            &#34;Cannot re-enter scope: {}&#34;.format(scope_name))
+        raise InjectionContextError(&#34;Cannot re-enter scope: {}&#34;.format(scope_name))
     for scope in self._scopes:
         if scope.name == scope_name:
             raise InjectionContextError(
                 &#34;Cannot re-enter scope: {}&#34;.format(scope_name)
             )
     result = self.copy()
-    result._scopes.append(
-        Scope(name=self.scope_name, injector=self.injector))
+    result._scopes.append(Scope(name=self.scope_name, injector=self.injector))
     result.scope_name = scope_name
     if settings:
         result.update_settings(settings)

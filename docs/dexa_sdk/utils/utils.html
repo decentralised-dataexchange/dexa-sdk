@@ -26,16 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import jcs
-import ast
-import typing
-import semver
+<pre><code class="python">import ast
 import math
-import aiohttp
-from urllib.parse import urlparse, parse_qs
+import typing
 from collections import namedtuple
-from aries_cloudagent.messaging.models.base_record import BaseRecord
+from urllib.parse import parse_qs, urlparse
+
+import aiohttp
+import jcs
+import semver
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.models.base_record import BaseRecord
 
 
 def jcs_rfc8785(data: typing.Union[list, dict]) -&gt; bytes:
@@ -99,8 +100,9 @@ def replace_proof_chain(doc: dict) -&gt; dict:
     return doc
 
 
-def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
-                                             sort_order: str = &#34;desc&#34;) -&gt; typing.List[dict]:
+def sort_exchange_record_dicts_by_created_at(
+    records: typing.List[dict], sort_order: str = &#34;desc&#34;
+) -&gt; typing.List[dict]:
     &#34;&#34;&#34;Sort exchange record dicts based on &#39;created at&#39; field
 
     Args:
@@ -112,9 +114,11 @@ def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
     &#34;&#34;&#34;
     assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
 
-    return sorted(records,
-                  key=lambda k: k[&#39;updated_at&#39;],
-                  reverse=True if sort_order == &#34;desc&#34; else False)
+    return sorted(
+        records,
+        key=lambda k: k[&#34;updated_at&#34;],
+        reverse=True if sort_order == &#34;desc&#34; else False,
+    )
 
 
 def bump_major_for_semver_string(version: str) -&gt; str:
@@ -132,23 +136,11 @@ def bump_major_for_semver_string(version: str) -&gt; str:
 
 # Pagination config
 PaginationConfig = namedtuple(
-    &#39;PaginationConfig&#39;,
-    [
-        &#34;total_count&#34;,
-        &#34;page&#34;,
-        &#34;page_size&#34;,
-        &#34;total_pages&#34;
-    ]
+    &#34;PaginationConfig&#34;, [&#34;total_count&#34;, &#34;page&#34;, &#34;page_size&#34;, &#34;total_pages&#34;]
 )
 
 # Pagination result
-PaginationResult = namedtuple(
-    &#39;PaginationResult&#39;,
-    [
-        &#34;results&#34;,
-        &#34;pagination&#34;
-    ]
-)
+PaginationResult = namedtuple(&#34;PaginationResult&#34;, [&#34;results&#34;, &#34;pagination&#34;])
 
 
 def get_slices(page, page_size=10):
@@ -169,7 +161,9 @@ def get_slices(page, page_size=10):
     return start, end
 
 
-def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; PaginationResult:
+def paginate(
+    items_list: typing.List, page: int = 1, page_size: int = 10
+) -&gt; PaginationResult:
     &#34;&#34;&#34;Paginate an items list
 
     Args:
@@ -196,10 +190,7 @@ def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; 
     items_list = items_list[lower:upper]
 
     pconfig = PaginationConfig(
-        total_count=total_count,
-        page=page,
-        page_size=page_size,
-        total_pages=total_pages
+        total_count=total_count, page=page, page_size=page_size, total_pages=total_pages
     )
 
     res = PaginationResult(results=items_list, pagination=pconfig._asdict())
@@ -208,9 +199,7 @@ def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; 
 
 
 def paginate_records(
-    records: typing.List[BaseRecord],
-    page: int = 1,
-    page_size: int = 10
+    records: typing.List[BaseRecord], page: int = 1, page_size: int = 10
 ) -&gt; PaginationResult:
     &#34;&#34;&#34;Paginate records
 
@@ -230,7 +219,9 @@ def paginate_records(
         serialised_item_list.append(item.serialize())
 
     # Sort the serialised records.
-    serialised_item_list = sort_exchange_record_dicts_by_created_at(serialised_item_list)
+    serialised_item_list = sort_exchange_record_dicts_by_created_at(
+        serialised_item_list
+    )
 
     res = PaginationResult(results=serialised_item_list, pagination=presults.pagination)
 
@@ -238,8 +229,7 @@ def paginate_records(
 
 
 def clean_and_get_field_from_dict(
-        input: dict,
-        key: str
+    input: dict, key: str
 ) -&gt; typing.Union[None, typing.Any]:
     &#34;&#34;&#34;Return the value of the field in dict if present.
 
@@ -278,7 +268,9 @@ def drop_none_dict(input: dict) -&gt; dict:
     return input
 
 
-async def generate_firebase_dynamic_link(context: InjectionContext, payload: str) -&gt; str:
+async def generate_firebase_dynamic_link(
+    context: InjectionContext, payload: str
+) -&gt; str:
     &#34;&#34;&#34;Generate firebase dynamic link
 
     Args:
@@ -290,7 +282,9 @@ async def generate_firebase_dynamic_link(context: InjectionContext, payload: str
     &#34;&#34;&#34;
 
     domain_uri_prefix = context.settings.get(&#34;intermediary.firebase_domain_uri_prefix&#34;)
-    android_package_name = context.settings.get(&#34;intermediary.firebase_android_package_name&#34;)
+    android_package_name = context.settings.get(
+        &#34;intermediary.firebase_android_package_name&#34;
+    )
     ios_bundle_id = context.settings.get(&#34;intermediary.firebase_ios_bundle_id&#34;)
     ios_appstore_id = context.settings.get(&#34;intermediary.firebase_ios_appstore_id&#34;)
     firebase_web_api_key = context.settings.get(&#34;intermediary.firebase_web_api_key&#34;)
@@ -305,14 +299,14 @@ async def generate_firebase_dynamic_link(context: InjectionContext, payload: str
             &#34;iosInfo&#34;: {
                 &#34;iosBundleId&#34;: ios_bundle_id,
                 &#34;iosAppStoreId&#34;: ios_appstore_id,
-            }
+            },
         },
-        &#34;suffix&#34;: {
-            &#34;option&#34;: &#34;UNGUESSABLE&#34;
-        }
+        &#34;suffix&#34;: {&#34;option&#34;: &#34;UNGUESSABLE&#34;},
     }
 
-    firebase_dynamic_link_endpoint = &#34;https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=&#34;
+    firebase_dynamic_link_endpoint = (
+        &#34;https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=&#34;
+    )
     firebase_dynamic_link_endpoint += firebase_web_api_key
 
     jresp = {}
@@ -345,9 +339,7 @@ async def fetch_org_details_from_intermediary(context: InjectionContext) -&gt; d
     org_detail_url = f&#34;{endpoint_url}/v1/organizations/{org_id}&#34;
 
     # Construct request headers
-    request_headers = {
-        &#34;Authorization&#34;: f&#34;ApiKey {api_key}&#34;
-    }
+    request_headers = {&#34;Authorization&#34;: f&#34;ApiKey {api_key}&#34;}
 
     # Make request to iGrant.io organisation detail endpoint
     jresp = None
@@ -441,8 +433,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean_and_get_field_from_dict(
-        input: dict,
-        key: str
+    input: dict, key: str
 ) -&gt; typing.Union[None, typing.Any]:
     &#34;&#34;&#34;Return the value of the field in dict if present.
 
@@ -537,9 +528,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     org_detail_url = f&#34;{endpoint_url}/v1/organizations/{org_id}&#34;
 
     # Construct request headers
-    request_headers = {
-        &#34;Authorization&#34;: f&#34;ApiKey {api_key}&#34;
-    }
+    request_headers = {&#34;Authorization&#34;: f&#34;ApiKey {api_key}&#34;}
 
     # Make request to iGrant.io organisation detail endpoint
     jresp = None
@@ -573,7 +562,9 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def generate_firebase_dynamic_link(context: InjectionContext, payload: str) -&gt; str:
+<pre><code class="python">async def generate_firebase_dynamic_link(
+    context: InjectionContext, payload: str
+) -&gt; str:
     &#34;&#34;&#34;Generate firebase dynamic link
 
     Args:
@@ -585,7 +576,9 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     &#34;&#34;&#34;
 
     domain_uri_prefix = context.settings.get(&#34;intermediary.firebase_domain_uri_prefix&#34;)
-    android_package_name = context.settings.get(&#34;intermediary.firebase_android_package_name&#34;)
+    android_package_name = context.settings.get(
+        &#34;intermediary.firebase_android_package_name&#34;
+    )
     ios_bundle_id = context.settings.get(&#34;intermediary.firebase_ios_bundle_id&#34;)
     ios_appstore_id = context.settings.get(&#34;intermediary.firebase_ios_appstore_id&#34;)
     firebase_web_api_key = context.settings.get(&#34;intermediary.firebase_web_api_key&#34;)
@@ -600,14 +593,14 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
             &#34;iosInfo&#34;: {
                 &#34;iosBundleId&#34;: ios_bundle_id,
                 &#34;iosAppStoreId&#34;: ios_appstore_id,
-            }
+            },
         },
-        &#34;suffix&#34;: {
-            &#34;option&#34;: &#34;UNGUESSABLE&#34;
-        }
+        &#34;suffix&#34;: {&#34;option&#34;: &#34;UNGUESSABLE&#34;},
     }
 
-    firebase_dynamic_link_endpoint = &#34;https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=&#34;
+    firebase_dynamic_link_endpoint = (
+        &#34;https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=&#34;
+    )
     firebase_dynamic_link_endpoint += firebase_web_api_key
 
     jresp = {}
@@ -686,7 +679,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 </details>
 </dd>
 <dt id="dexa_sdk.utils.utils.paginate"><code class="name flex">
-<span>def <span class="ident">paginate</span></span>(<span>items_list: List[~T], page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+<span>def <span class="ident">paginate</span></span>(<span>items_list: List, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Paginate an items list</p>
@@ -706,7 +699,9 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paginate(items_list: typing.List, page: int = 1, page_size: int = 10) -&gt; PaginationResult:
+<pre><code class="python">def paginate(
+    items_list: typing.List, page: int = 1, page_size: int = 10
+) -&gt; PaginationResult:
     &#34;&#34;&#34;Paginate an items list
 
     Args:
@@ -733,10 +728,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     items_list = items_list[lower:upper]
 
     pconfig = PaginationConfig(
-        total_count=total_count,
-        page=page,
-        page_size=page_size,
-        total_pages=total_pages
+        total_count=total_count, page=page, page_size=page_size, total_pages=total_pages
     )
 
     res = PaginationResult(results=items_list, pagination=pconfig._asdict())
@@ -768,9 +760,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def paginate_records(
-    records: typing.List[BaseRecord],
-    page: int = 1,
-    page_size: int = 10
+    records: typing.List[BaseRecord], page: int = 1, page_size: int = 10
 ) -&gt; PaginationResult:
     &#34;&#34;&#34;Paginate records
 
@@ -790,7 +780,9 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
         serialised_item_list.append(item.serialize())
 
     # Sort the serialised records.
-    serialised_item_list = sort_exchange_record_dicts_by_created_at(serialised_item_list)
+    serialised_item_list = sort_exchange_record_dicts_by_created_at(
+        serialised_item_list
+    )
 
     res = PaginationResult(results=serialised_item_list, pagination=presults.pagination)
 
@@ -967,8 +959,9 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sort_exchange_record_dicts_by_created_at(records: typing.List[dict],
-                                             sort_order: str = &#34;desc&#34;) -&gt; typing.List[dict]:
+<pre><code class="python">def sort_exchange_record_dicts_by_created_at(
+    records: typing.List[dict], sort_order: str = &#34;desc&#34;
+) -&gt; typing.List[dict]:
     &#34;&#34;&#34;Sort exchange record dicts based on &#39;created at&#39; field
 
     Args:
@@ -980,9 +973,11 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     &#34;&#34;&#34;
     assert sort_order in (&#34;desc&#34;, &#34;asc&#34;)
 
-    return sorted(records,
-                  key=lambda k: k[&#39;updated_at&#39;],
-                  reverse=True if sort_order == &#34;desc&#34; else False)</code></pre>
+    return sorted(
+        records,
+        key=lambda k: k[&#34;updated_at&#34;],
+        reverse=True if sort_order == &#34;desc&#34; else False,
+    )</code></pre>
 </details>
 </dd>
 </dl>

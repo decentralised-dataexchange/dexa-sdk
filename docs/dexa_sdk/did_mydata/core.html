@@ -26,15 +26,16 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import binascii
+<pre><code class="python">import base64
+import binascii
 import typing
-from pyld import jsonld
-import base64
-from multibase import encode
-from merklelib import MerkleTree
+
 from aries_cloudagent.messaging.models.base import BaseModel
-from ..utils import jcs_rfc8785
-from ..jsonld.core import jsonld_context_fingerprint
+from dexa_sdk.jsonld.core import jsonld_context_fingerprint
+from dexa_sdk.utils import jcs_rfc8785
+from merklelib import MerkleTree
+from multibase import encode
+from pyld import jsonld
 
 
 class DIDMyDataBuilder:
@@ -194,10 +195,7 @@ class DIDMyDataBuilder:
 
 
 class DidMyData:
-    def __init__(self,
-                 *,
-                 agreement_type: str,
-                 agreement_merkle_root: str) -&gt; None:
+    def __init__(self, *, agreement_type: str, agreement_merkle_root: str) -&gt; None:
         &#34;&#34;&#34;
         Initialise the DidMydata class
 
@@ -222,14 +220,13 @@ class DidMyData:
         agreement_type_bytes = binascii.unhexlify(self._agreement_type)
 
         # Agreement merkle root sha256 fingerprint to bytes
-        agreement_merkle_root_bytes = binascii.unhexlify(
-            self._agreement_merkle_root)
+        agreement_merkle_root_bytes = binascii.unhexlify(self._agreement_merkle_root)
 
         # 16 + 38 bytes = 48 byte method specific identifier
         identifier = agreement_type_bytes[:16] + agreement_merkle_root_bytes
 
         # Multibase encode
-        identifier = encode(&#39;base58btc&#39;, identifier).decode()
+        identifier = encode(&#34;base58btc&#34;, identifier).decode()
         return f&#34;did:mydata:{identifier}&#34;
 
     @property
@@ -696,10 +693,7 @@ SHA2-256 merkle root for the agreement document</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DidMyData:
-    def __init__(self,
-                 *,
-                 agreement_type: str,
-                 agreement_merkle_root: str) -&gt; None:
+    def __init__(self, *, agreement_type: str, agreement_merkle_root: str) -&gt; None:
         &#34;&#34;&#34;
         Initialise the DidMydata class
 
@@ -724,14 +718,13 @@ SHA2-256 merkle root for the agreement document</p>
         agreement_type_bytes = binascii.unhexlify(self._agreement_type)
 
         # Agreement merkle root sha256 fingerprint to bytes
-        agreement_merkle_root_bytes = binascii.unhexlify(
-            self._agreement_merkle_root)
+        agreement_merkle_root_bytes = binascii.unhexlify(self._agreement_merkle_root)
 
         # 16 + 38 bytes = 48 byte method specific identifier
         identifier = agreement_type_bytes[:16] + agreement_merkle_root_bytes
 
         # Multibase encode
-        identifier = encode(&#39;base58btc&#39;, identifier).decode()
+        identifier = encode(&#34;base58btc&#34;, identifier).decode()
         return f&#34;did:mydata:{identifier}&#34;
 
     @property
@@ -770,14 +763,13 @@ def did(self) -&gt; str:
     agreement_type_bytes = binascii.unhexlify(self._agreement_type)
 
     # Agreement merkle root sha256 fingerprint to bytes
-    agreement_merkle_root_bytes = binascii.unhexlify(
-        self._agreement_merkle_root)
+    agreement_merkle_root_bytes = binascii.unhexlify(self._agreement_merkle_root)
 
     # 16 + 38 bytes = 48 byte method specific identifier
     identifier = agreement_type_bytes[:16] + agreement_merkle_root_bytes
 
     # Multibase encode
-    identifier = encode(&#39;base58btc&#39;, identifier).decode()
+    identifier = encode(&#34;base58btc&#34;, identifier).decode()
     return f&#34;did:mydata:{identifier}&#34;</code></pre>
 </details>
 </dd>

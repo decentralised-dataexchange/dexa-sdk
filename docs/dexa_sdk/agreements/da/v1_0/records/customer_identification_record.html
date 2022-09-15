@@ -26,14 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from marshmallow import fields, EXCLUDE
+<pre><code class="python">from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
-from aries_cloudagent.config.injection_context import InjectionContext
-from .da_template_record import DataAgreementTemplateRecord
+from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
+    DataAgreementTemplateRecord,
+)
+from marshmallow import EXCLUDE, fields
 
 
 class CustomerIdentificationRecord(BaseRecord):
     &#34;&#34;&#34;Customer identification record.&#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;CustomerIdentificationRecordSchema&#34;
@@ -48,17 +51,10 @@ class CustomerIdentificationRecord(BaseRecord):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~da_template_id&#34;
-    }
+    TAG_NAMES = {&#34;~da_template_id&#34;}
 
     def __init__(
-        self,
-        *,
-        id: str = None,
-        state: str = None,
-        da_template_id: str = None,
-        **kwargs
+        self, *, id: str = None, state: str = None, da_template_id: str = None, **kwargs
     ):
         # Pass the identifier and state to the parent class.
         super().__init__(id, state, **kwargs)
@@ -69,19 +65,11 @@ class CustomerIdentificationRecord(BaseRecord):
     @property
     def record_value(self) -&gt; dict:
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-        return {
-            prop: getattr(self, prop)
-            for prop in (
-                &#34;state&#34;,
-                &#34;da_template_id&#34;
-            )
-        }
+        return {prop: getattr(self, prop) for prop in (&#34;state&#34;, &#34;da_template_id&#34;)}
 
     @classmethod
     async def create_or_update_record(
-        cls,
-        context: InjectionContext,
-        template_id: str
+        cls, context: InjectionContext, template_id: str
     ) -&gt; &#34;CustomerIdentificationRecord&#34;:
         &#34;&#34;&#34;Create or update record.
 
@@ -90,15 +78,17 @@ class CustomerIdentificationRecord(BaseRecord):
             template_id (str): Template ID.
         &#34;&#34;&#34;
         # Fetch data agreement template by id.
-        da_template_record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-            context,
-            template_id
+        da_template_record = (
+            await DataAgreementTemplateRecord.latest_published_template_by_id(
+                context, template_id
+            )
         )
 
         # Validate DA method of use is data-source.
-        assert da_template_record.method_of_use == \
-            DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE, \
-            &#34;Method of use must be data-source.&#34;
+        assert (
+            da_template_record.method_of_use
+            == DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE
+        ), &#34;Method of use must be data-source.&#34;
 
         # Search for existing customer identification record.
         records = await cls.query(context, {})
@@ -118,8 +108,7 @@ class CustomerIdentificationRecord(BaseRecord):
         return record
 
     async def data_agreement_template_record(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; DataAgreementTemplateRecord:
         &#34;&#34;&#34;Get data agreement template record.
 
@@ -130,8 +119,7 @@ class CustomerIdentificationRecord(BaseRecord):
             DataAgreementTemplateRecord: Data agreement template record.
         &#34;&#34;&#34;
         record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-            context,
-            self.da_template_id
+            context, self.da_template_id
         )
 
         return record
@@ -172,6 +160,7 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">class CustomerIdentificationRecord(BaseRecord):
     &#34;&#34;&#34;Customer identification record.&#34;&#34;&#34;
+
     class Meta:
         # Schema class
         schema_class = &#34;CustomerIdentificationRecordSchema&#34;
@@ -186,17 +175,10 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
     WEBHOOK_TOPIC = None
 
     # Record tags
-    TAG_NAMES = {
-        &#34;~da_template_id&#34;
-    }
+    TAG_NAMES = {&#34;~da_template_id&#34;}
 
     def __init__(
-        self,
-        *,
-        id: str = None,
-        state: str = None,
-        da_template_id: str = None,
-        **kwargs
+        self, *, id: str = None, state: str = None, da_template_id: str = None, **kwargs
     ):
         # Pass the identifier and state to the parent class.
         super().__init__(id, state, **kwargs)
@@ -207,19 +189,11 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
     @property
     def record_value(self) -&gt; dict:
         &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-        return {
-            prop: getattr(self, prop)
-            for prop in (
-                &#34;state&#34;,
-                &#34;da_template_id&#34;
-            )
-        }
+        return {prop: getattr(self, prop) for prop in (&#34;state&#34;, &#34;da_template_id&#34;)}
 
     @classmethod
     async def create_or_update_record(
-        cls,
-        context: InjectionContext,
-        template_id: str
+        cls, context: InjectionContext, template_id: str
     ) -&gt; &#34;CustomerIdentificationRecord&#34;:
         &#34;&#34;&#34;Create or update record.
 
@@ -228,15 +202,17 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
             template_id (str): Template ID.
         &#34;&#34;&#34;
         # Fetch data agreement template by id.
-        da_template_record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-            context,
-            template_id
+        da_template_record = (
+            await DataAgreementTemplateRecord.latest_published_template_by_id(
+                context, template_id
+            )
         )
 
         # Validate DA method of use is data-source.
-        assert da_template_record.method_of_use == \
-            DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE, \
-            &#34;Method of use must be data-source.&#34;
+        assert (
+            da_template_record.method_of_use
+            == DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE
+        ), &#34;Method of use must be data-source.&#34;
 
         # Search for existing customer identification record.
         records = await cls.query(context, {})
@@ -256,8 +232,7 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
         return record
 
     async def data_agreement_template_record(
-        self,
-        context: InjectionContext
+        self, context: InjectionContext
     ) -&gt; DataAgreementTemplateRecord:
         &#34;&#34;&#34;Get data agreement template record.
 
@@ -268,8 +243,7 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
             DataAgreementTemplateRecord: Data agreement template record.
         &#34;&#34;&#34;
         record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-            context,
-            self.da_template_id
+            context, self.da_template_id
         )
 
         return record</code></pre>
@@ -323,9 +297,7 @@ class CustomerIdentificationRecordSchema(BaseRecordSchema):
 </summary>
 <pre><code class="python">@classmethod
 async def create_or_update_record(
-    cls,
-    context: InjectionContext,
-    template_id: str
+    cls, context: InjectionContext, template_id: str
 ) -&gt; &#34;CustomerIdentificationRecord&#34;:
     &#34;&#34;&#34;Create or update record.
 
@@ -334,15 +306,17 @@ async def create_or_update_record(
         template_id (str): Template ID.
     &#34;&#34;&#34;
     # Fetch data agreement template by id.
-    da_template_record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-        context,
-        template_id
+    da_template_record = (
+        await DataAgreementTemplateRecord.latest_published_template_by_id(
+            context, template_id
+        )
     )
 
     # Validate DA method of use is data-source.
-    assert da_template_record.method_of_use == \
-        DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE, \
-        &#34;Method of use must be data-source.&#34;
+    assert (
+        da_template_record.method_of_use
+        == DataAgreementTemplateRecord.METHOD_OF_USE_DATA_SOURCE
+    ), &#34;Method of use must be data-source.&#34;
 
     # Search for existing customer identification record.
     records = await cls.query(context, {})
@@ -375,13 +349,7 @@ async def create_or_update_record(
 <pre><code class="python">@property
 def record_value(self) -&gt; dict:
     &#34;&#34;&#34;Accessor for JSON record value generated for this transaction record.&#34;&#34;&#34;
-    return {
-        prop: getattr(self, prop)
-        for prop in (
-            &#34;state&#34;,
-            &#34;da_template_id&#34;
-        )
-    }</code></pre>
+    return {prop: getattr(self, prop) for prop in (&#34;state&#34;, &#34;da_template_id&#34;)}</code></pre>
 </details>
 </dd>
 </dl>
@@ -407,8 +375,7 @@ def record_value(self) -&gt; dict:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def data_agreement_template_record(
-    self,
-    context: InjectionContext
+    self, context: InjectionContext
 ) -&gt; DataAgreementTemplateRecord:
     &#34;&#34;&#34;Get data agreement template record.
 
@@ -419,8 +386,7 @@ def record_value(self) -&gt; dict:
         DataAgreementTemplateRecord: Data agreement template record.
     &#34;&#34;&#34;
     record = await DataAgreementTemplateRecord.latest_published_template_by_id(
-        context,
-        self.da_template_id
+        context, self.da_template_id
     )
 
     return record</code></pre>
