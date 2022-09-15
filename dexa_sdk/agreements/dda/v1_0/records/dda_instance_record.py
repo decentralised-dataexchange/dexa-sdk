@@ -55,6 +55,7 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         "~mydata_did",
         "~blink",
         "~connection_id",
+        "~state",
     }
 
     # States of the data disclosure agreement instance.
@@ -338,8 +339,12 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
             data_disclosure_agreement=dda_instance_model.serialize(),
             industry_sector=dda_instance_model.data_using_service.industry_sector,
             connection_id=connection_record.connection_id,
-            customer_identification=customer_identification_details.serialize(),
         )
+
+        if customer_identification_details:
+            dda_instance_record.customer_identification = (
+                customer_identification_details.serialize()
+            )
 
         await dda_instance_record.save(context)
 
@@ -383,6 +388,27 @@ class DataDisclosureAgreementInstanceRecord(BaseRecord):
         await instance_record.save(context)
 
         return instance_record
+
+    async def fetch_controller_details(
+        self, context: InjectionContext
+    ) -> ConnectionControllerDetailsRecord:
+        """Fetch controller details.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            ConnectionControllerDetailsRecord: Connection controller details record.
+        """
+
+        tag_filter = {"connection_id": self.connection_id}
+        dus_connection_controller_details_record: ConnectionControllerDetailsRecord = (
+            await ConnectionControllerDetailsRecord.retrieve_by_tag_filter(
+                context, tag_filter
+            )
+        )
+
+        return dus_connection_controller_details_record
 
 
 class DataDisclosureAgreementInstanceRecordSchema(BaseRecordSchema):

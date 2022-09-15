@@ -54,6 +54,7 @@ class DataAgreementInstanceRecord(BaseRecord):
         "~mydata_did",
         "~blink",
         "~connection_id",
+        "~state",
     }
 
     # States of the data agreement.
@@ -419,6 +420,15 @@ class DataAgreementInstanceRecord(BaseRecord):
         )
 
         return connection_record
+
+    @property
+    def data_agreement_model(self) -> DataAgreementInstanceModel:
+        """Accessor for data agreement instance model.
+
+        Returns:
+            DataAgreementInstanceModel: DA instance model.
+        """
+        return DataAgreementInstanceModel.deserialize(self.data_agreement)
 
 
 class DataAgreementInstanceRecordSchema(BaseRecordSchema):

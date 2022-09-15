@@ -8,7 +8,8 @@ import aiohttp
 from aries_cloudagent.cache.basic import BaseCache
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
-from aries_cloudagent.core.dispatcher import DispatcherResponder
+from aries_cloudagent.connections.models.connection_target import ConnectionTarget
+from aries_cloudagent.core.dispatcher import Dispatcher, DispatcherResponder
 from aries_cloudagent.core.error import BaseError
 from aries_cloudagent.indy.util import generate_pr_nonce
 from aries_cloudagent.messaging.agent_message import AgentMessage
@@ -18,7 +19,10 @@ from aries_cloudagent.messaging.decorators.transport_decorator import TransportD
 from aries_cloudagent.messaging.jsonld.create_verify_data import create_verify_data
 from aries_cloudagent.messaging.models.base_record import match_post_filter
 from aries_cloudagent.messaging.responder import BaseResponder
-from aries_cloudagent.protocols.connections.v1_0.manager import ConnectionManagerError
+from aries_cloudagent.protocols.connections.v1_0.manager import (
+    ConnectionManager,
+    ConnectionManagerError,
+)
 from aries_cloudagent.protocols.connections.v1_0.messages.connection_invitation import (
     ConnectionInvitation,
 )
@@ -63,6 +67,12 @@ from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
     DataAgreementTemplateRecord,
 )
 from dexa_sdk.agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
+from dexa_sdk.agreements.dda.v1_0.records.dda_instance_record import (
+    DataDisclosureAgreementInstanceRecord,
+)
+from dexa_sdk.agreements.dda.v1_0.records.dda_template_record import (
+    DataDisclosureAgreementTemplateRecord,
+)
 from dexa_sdk.connections.records.existing_connections_record import (
     ExistingConnectionRecord,
 )
@@ -124,6 +134,10 @@ from mydata_did.v1_0.messages.data_controller_details_response import (
     DataControllerDetailsResponseMessage,
 )
 from mydata_did.v1_0.messages.existing_connections import ExistingConnectionsMessage
+from mydata_did.v1_0.messages.fetch_preferences import FetchPreferencesMessage
+from mydata_did.v1_0.messages.fetch_preferences_response import (
+    FetchPreferencesResponseMessage,
+)
 from mydata_did.v1_0.messages.json_ld_processed import (
     JSONLDProcessedBody,
     JSONLDProcessedMessage,
@@ -137,6 +151,12 @@ from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
 )
 from mydata_did.v1_0.models.data_controller_model import DataController
 from mydata_did.v1_0.models.existing_connections_model import ExistingConnectionsBody
+from mydata_did.v1_0.models.fetch_preferences_response_model import (
+    FetchPreferencesResponseBody,
+    FPRControllerDetailsModel,
+    FPRDUSModel,
+    FPRPrefsModel,
+)
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 from web3._utils.encoding import to_json
 
@@ -1524,6 +1544,42 @@ class V2ADAManager:
         message = DataControllerDetailsMessage()
         await self.send_reply_message(message, connection_id)
 
+    async def get_controller_details_record(self) -> ControllerDetailsRecord:
+        """Get controller details record.
+
+        Returns:
+            ControllerDetailsRecord: Controller details record.
+        """
+
+        # Query controller records.
+        records = await ControllerDetailsRecord.query(self.context, {})
+
+        if not records:
+            wallet: BaseWallet = await self.context.inject(BaseWallet)
+            controller_did = await wallet.get_public_did()
+            qualified_controller_did = f"did:sov:{controller_did.did}"
+
+            # Fetch details from intermediary.
+            org_details = await fetch_org_details_from_intermediary(self.context)
+
+            record = ControllerDetailsRecord(
+                organisation_did=qualified_controller_did,
+                organisation_name=org_details["Name"],
+                cover_image_url=org_details["CoverImageURL"] + "/web",
+                logo_image_url=org_details["LogoImageURL"] + "/web",
+                location=org_details["Location"],
+                organisation_type=org_details["Type"]["Type"],
+                description=org_details["Description"],
+                policy_url=org_details["PolicyURL"],
+                eula_url=org_details["EulaURL"],
+            )
+
+            await record.save(self.context)
+        else:
+            record = records[0]
+
+        return record
+
     async def process_data_controller_details_message(
         self, message: DataControllerDetailsMessage, receipt: MessageReceipt
     ):
@@ -1876,7 +1932,7 @@ class V2ADAManager:
         )
 
         # Sort the connection records.
-        records = sorted(records, key=lambda k: k.created_at, reverse=True)
+        records = sorted(records, key=lambda k: k.updated_at, reverse=True)
 
         res = []
         for record in records:
@@ -2073,12 +2129,17 @@ class V2ADAManager:
         # Send JSONLD Processed Message
         await self.send_reply_message(message, connection_record.connection_id)
 
-    async def send_da_permissions_message(self, instance_id: str, state: str):
+    async def send_da_permissions_message(
+        self, instance_id: str, state: str
+    ) -> DAInstancePermissionRecord:
         """Send DA permission message.
 
         Args:
             instance_id (str): Instance ID
             state (str): State of the permission.
+
+        Returns:
+            DAInstancePermissionRecord: DA instance permission record.
         """
 
         # Set permissions locally.
@@ -2098,6 +2159,8 @@ class V2ADAManager:
         connection_record = await instance_record.get_connection_record(self.context)
         await mgr.send_reply_message(message, connection_record.connection_id)
 
+        return permission_record
+
     async def process_da_permissions_message(
         self, message: DAPermissionsMessage, message_receipt: MessageReceipt
     ):
@@ -2115,3 +2178,256 @@ class V2ADAManager:
         await DAInstancePermissionRecord.add_permission(
             self.context, instance_id, state
         )
+
+    async def process_fetch_preference_message(
+        self, message: FetchPreferencesMessage, message_receipt: MessageReceipt
+    ):
+        """Process fetch preference message.
+
+        Args:
+            message (FetchPreferencesMessage): Fetch preference message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch all the data agreement instances against this connection.
+        # Only those with third party data sharing enabled.
+        tag_filter = {
+            "connection_id": connection_record.connection_id,
+            "third_party_data_sharing": bool_to_str(True),
+        }
+        instance_records: typing.List[
+            DataAgreementInstanceRecord
+        ] = await DataAgreementInstanceRecord.query(self.context, tag_filter)
+
+        instance_records = sorted(
+            instance_records, key=lambda k: k.updated_at, reverse=True
+        )
+
+        # Industry sectors.
+        sectors = []
+
+        # Preferences.
+        prefs: typing.List[FPRPrefsModel] = []
+        for instance_record in instance_records:
+
+            # DA model
+            da_model = instance_record.data_agreement_model
+
+            # Sector
+            sector = da_model.data_policy.industry_sector.lower()
+
+            # Add to sectors list.
+            sectors.append(sector)
+
+            # Fetch permission record for the DA.
+            da_permission_record = await DAInstancePermissionRecord.get_latest(
+                self.context, instance_record.instance_id
+            )
+
+            if not da_permission_record:
+                # Add default permission for the DA.
+
+                da_permission_record = await self.send_da_permissions_message(
+                    instance_record.instance_id, DAInstancePermissionRecord.STATE_ALLOW
+                )
+
+            # Fetch DDA template by DA template ID
+            dda_template_tag_filter: dict = {
+                "delete_flag": bool_to_str(False),
+                "da_template_id": instance_record.template_id,
+                "latest_version_flag": bool_to_str(True),
+            }
+            dda_template_record: typing.List[
+                DataDisclosureAgreementTemplateRecord
+            ] = await DataDisclosureAgreementTemplateRecord.query(
+                self.context, dda_template_tag_filter
+            )
+
+            # Data using services.
+            dus: typing.List[FPRDUSModel] = []
+
+            if dda_template_record:
+                # Fetch DDA instances by DDA template.
+                dda_instances: typing.List[
+                    DataDisclosureAgreementInstanceRecord
+                ] = await DataDisclosureAgreementInstanceRecord.query(
+                    self.context,
+                    {
+                        "template_id": dda_template_record[0].template_id,
+                        "state": DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+                    },
+                )
+
+                for dda_instance in dda_instances:
+                    connection_controller_details_record: ConnectionControllerDetailsRecord = await dda_instance.fetch_controller_details(
+                        self.context
+                    )
+                    controller_details_model: DataController = (
+                        connection_controller_details_record.controller_details_model
+                    )
+                    dus.append(
+                        FPRDUSModel(
+                            dda_instance_id=dda_instance.instance_id,
+                            controller_details=FPRControllerDetailsModel(
+                                organisation_did=controller_details_model.organisation_did,
+                                organisation_name=controller_details_model.organisation_name,
+                                cover_image_url=controller_details_model.cover_image_url,
+                                logo_image_url=controller_details_model.logo_image_url,
+                                location=controller_details_model.location,
+                                organisation_type=controller_details_model.organisation_type,
+                                description=controller_details_model.description,
+                                policy_url=controller_details_model.policy_url,
+                                eula_url=controller_details_model.eula_url,
+                            ),
+                        )
+                    )
+
+            prefs.append(
+                FPRPrefsModel(
+                    instance_id=instance_record.instance_id,
+                    instance_permission_state=da_permission_record.state,
+                    dus=dus,
+                    sector=sector,
+                )
+            )
+
+        # Filter all the duplicate sectors.
+        sectors = list(set(sectors))
+
+        # Construct response message.
+        res_message = FetchPreferencesResponseMessage(
+            body=FetchPreferencesResponseBody(prefs=prefs, sectors=sectors)
+        )
+
+        # Send the message.
+        await self.send_reply_message(res_message)
+
+    async def send_fetch_preference_message(
+        self, connection_id: str
+    ) -> FetchPreferencesResponseMessage:
+        """Send fetch preference message.
+
+        Args:
+            connection_id (str): Connection ID.
+
+        Returns:
+            FetchPreferencesResponseMessage: Fetch preferences response message.
+        """
+
+        # Construct fetch preference message.
+        message = FetchPreferencesMessage()
+
+        # Fetch connection record
+        connection_record: ConnectionRecord = await ConnectionRecord.retrieve_by_id(
+            self.context, connection_id
+        )
+
+        (
+            sender_verkey,
+            recipient_verkey,
+            message_dict,
+        ) = await self.send_message_with_return_route_all(message, connection_record)
+
+        res_message: FetchPreferencesResponseMessage = (
+            await self.get_message_class_from_dict(message_dict)
+        )
+
+        return res_message
+
+    async def get_message_class_from_dict(self, message_dict: dict) -> AgentMessage:
+        """Get message class from message dict.
+
+        Args:
+            message_dict (dict): Message dict.
+
+        Returns:
+            AgentMessage: Agent message.
+        """
+
+        # Initialise dispatcher
+        dispatcher = Dispatcher(self.context)
+
+        # Get message class.
+        msg_class = await dispatcher.make_message(message_dict)
+
+        return msg_class
+
+    async def send_message_with_return_route_all(
+        self, message: AgentMessage, connection_record: ConnectionRecord
+    ) -> typing.Tuple[str, str, dict]:
+        """Send message with return route all in transport decorator.
+
+        Args:
+            message (AgentMessage): Agent message.
+            connection_record (ConnectionRecord): Connection record.
+
+        Returns:
+            typing.Tuple[str, str, dict]: sender_verkey, recipient_verkey, message_dict
+        """
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Get pack format from context
+        pack_format: PackWireFormat = await self.context.inject(BaseWireFormat)
+
+        # Add transport decorator
+        message._decorators["transport"] = TransportDecorator(return_route="all")
+
+        # Initialise connection manager
+        connection_manager = ConnectionManager(self.context)
+
+        # Fetch connection targets
+        connection_targets = await connection_manager.fetch_connection_targets(
+            connection_record
+        )
+
+        assert len(connection_targets) > 0, "Zero connection targets found."
+
+        connection_target: ConnectionTarget = connection_targets[0]
+
+        # Pack message
+        packed_message = await pack_format.pack(
+            context=self.context,
+            message_json=message.serialize(as_string=True),
+            recipient_keys=connection_target.recipient_keys,
+            routing_keys=None,
+            sender_key=connection_target.sender_key,
+        )
+
+        # Headers
+        headers = {"Content-Type": "application/ssi-agent-wire"}
+
+        # Send request and receive response.
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(
+                connection_target.endpoint, data=packed_message
+            ) as response:
+                # Assert status code is 200
+                assert (
+                    response.status == 200
+                ), f"HTTP request failed with status code {response.status}"
+
+                message_body = await response.read()
+
+                # Unpack message
+                unpacked = await wallet.unpack_message(message_body)
+                (message_json, sender_verkey, recipient_verkey) = unpacked
+
+                # Convert message to dict.
+                message_dict = json.loads(message_json)
+
+                return (sender_verkey, recipient_verkey, message_dict)
+
+    async def process_fetch_preference_response_message(
+        self, message: FetchPreferencesResponseMessage, message_receipt: MessageReceipt
+    ):
+        """Process fetch preference response message.
+
+        Args:
+            message (FetchPreferencesResponseMessage): Fetch preference response message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+        self._logger.info(json.dumps(message.serialize(), indent=4))

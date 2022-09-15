@@ -3,10 +3,19 @@ import typing
 from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from aries_cloudagent.messaging.valid import UUIDFour
+from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
+    DataAgreementTemplateRecord,
+)
 from dexa_sdk.agreements.dda.v1_0.models.dda_models import (
     DDA_DEFAULT_CONTEXT,
     DDA_TYPE,
+    DataControllerModel,
     DataDisclosureAgreementModel,
+    DataSharingRestrictionsModel,
+    PersonalDataModel,
+)
+from dexa_sdk.data_controller.records.controller_details_record import (
+    ControllerDetailsRecord,
 )
 from dexa_sdk.utils import bump_major_for_semver_string
 from marshmallow import EXCLUDE, fields, validate
@@ -37,6 +46,8 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         "~delete_flag",
         "~publish_flag",
         "~latest_version_flag",
+        "~da_template_id",
+        "~da_template_version",
     }
 
     # States of the data agreement.
@@ -60,6 +71,8 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         publish_flag: str = "false",
         delete_flag: str = "false",
         latest_version_flag: str = "false",
+        da_template_id: str = None,
+        da_template_version: str = None,
         **kwargs
     ):
         """Instantiate data disclosure agreement template record.
@@ -71,6 +84,8 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             state (str, optional): State. Defaults to None.
             data_disclosure_agreement (dict, optional): Data disclosure agreement. Defaults to None.
             industry_sector (str, optional): Industry sector. Defaults to None.
+            da_template_id (str, optional): Third party DA template ID. Defaults to None.
+            da_template_version (str, optional): DA template verion. Defaults to None.
         """
 
         # Pass identifier and state to parent class
@@ -91,6 +106,8 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         self.publish_flag = publish_flag
         self.latest_version_flag = latest_version_flag
         self.delete_flag = delete_flag
+        self.da_template_id = da_template_id
+        self.da_template_version = da_template_version
 
     @property
     def record_value(self) -> dict:
@@ -106,6 +123,8 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
                 "publish_flag",
                 "latest_version_flag",
                 "delete_flag",
+                "da_template_id",
+                "da_template_version",
             )
         }
 
@@ -296,42 +315,77 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
         )
 
     async def upgrade(
-        self, context: InjectionContext, dda: dict, publish_flag: str
+        self,
+        context: InjectionContext,
+        controller_details_record: ControllerDetailsRecord,
+        publish_flag: str,
     ) -> "DataDisclosureAgreementTemplateRecord":
         """Upgrade DDA to next version.
 
         Args:
             context (InjectionContext): Injection context to be used.
-            dda (dict): DDA
             publish_flag (str): Publish flag.
 
         Returns:
             DataDisclosureAgreementTemplateRecord: DDA template record.
         """
 
-        # DDA model from existing template.
-        existing_dda_model = self.dda_model
+        # Fetch DA template record.
+        da_template_record = (
+            await DataAgreementTemplateRecord.latest_published_template_by_id(
+                context, self.da_template_id
+            )
+        )
 
-        # Adding the necessary fields to updated dda.
-        # This is necessary for deserialisation.
-        # Bump up the version
+        assert da_template_record, "Data agreement template not found."
+
+        # DA model.
+        data_agreement_model = da_template_record.data_agreement_model
+
+        # Temp hack
         template_version = bump_major_for_semver_string(self.template_version)
-        # Provide defaults in the to be updated template.
-        dda.update({"@context": DDA_DEFAULT_CONTEXT})
-        dda.update({"@type": DDA_TYPE})
-        dda.update({"@id": self.template_id})
-        dda.update({"version": template_version})
-        # Update the controller did.
-        dda["dataController"].update({"did": existing_dda_model.data_controller.did})
+        template_id = self.template_id
 
-        # DDA model from update.
-        dda_model = DataDisclosureAgreementTemplateRecord.to_dda_model(dda)
+        # Create DDA model.
 
-        # Checking restrictions
-        assert (
-            dda_model.data_sharing_restrictions.industry_sector
-            == existing_dda_model.data_sharing_restrictions.industry_sector
-        ), "Industry cannot be updated."
+        personal_datas = []
+        for pd in data_agreement_model.personal_data:
+            personal_datas.append(
+                PersonalDataModel(
+                    attribute_id=pd.attribute_id,
+                    attribute_name=pd.attribute_name,
+                    attribute_description=pd.attribute_description,
+                )
+            )
+
+        dda_model = DataDisclosureAgreementModel(
+            context=DDA_DEFAULT_CONTEXT,
+            id=template_id,
+            type=DDA_TYPE,
+            language=data_agreement_model.language,
+            version=template_version,
+            data_controller=DataControllerModel(
+                did=controller_details_record.organisation_did,
+                name=controller_details_record.organisation_name,
+                legal_id=controller_details_record.organisation_did,
+                url=controller_details_record.policy_url,
+                industry_sector=controller_details_record.organisation_type,
+            ),
+            agreement_period=data_agreement_model.data_policy.data_retention_period,
+            data_sharing_restrictions=DataSharingRestrictionsModel(
+                policy_url=data_agreement_model.data_policy.policy_url,
+                jurisdiction=data_agreement_model.data_policy.jurisdiction,
+                industry_sector=data_agreement_model.data_policy.industry_sector,
+                data_retention_period=data_agreement_model.data_policy.data_retention_period,
+                geographic_restriction=data_agreement_model.data_policy.geographic_restriction,
+                storage_location=data_agreement_model.data_policy.storage_location,
+            ),
+            purpose=data_agreement_model.purpose,
+            purpose_description=data_agreement_model.purpose_description,
+            lawful_basis=data_agreement_model.lawful_basis,
+            code_of_conduct=data_agreement_model.data_policy.policy_url,
+            personal_data=personal_datas,
+        )
 
         # Updating old version template
         self._latest_version_flag = False
@@ -342,11 +396,13 @@ class DataDisclosureAgreementTemplateRecord(BaseRecord):
             template_id=self.template_id,
             template_version=template_version,
             state=self.state,
-            data_disclosure_agreement=dda,
+            data_disclosure_agreement=dda_model.serialize(),
             industry_sector=dda_model.data_sharing_restrictions.industry_sector.lower(),
             publish_flag=publish_flag,
             delete_flag=bool_to_str(False),
             latest_version_flag=bool_to_str(True),
+            da_template_id=da_template_record.template_id,
+            da_template_version=da_template_record.template_version,
         )
 
         await dda_template.save(context)
@@ -433,3 +489,9 @@ class DataDisclosureAgreementTemplateRecordSchema(BaseRecordSchema):
             ]
         ),
     )
+
+    # Third party DA template ID.
+    da_template_id = fields.Str(required=False)
+
+    # Third party DA template version
+    da_template_version = fields.Str(required=False)

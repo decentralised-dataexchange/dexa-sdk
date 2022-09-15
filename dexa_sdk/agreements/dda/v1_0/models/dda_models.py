@@ -151,8 +151,8 @@ class PersonalDataModel(BaseModel):
         attribute_id: str = None,
         attribute_name: str = None,
         attribute_description: str = None,
-        attribute_sensitive: str = "true",
-        attribute_category: str = "personaldata",
+        attribute_sensitive: str = None,
+        attribute_category: str = None,
         **kwargs
     ):
         # Call the parent constructor

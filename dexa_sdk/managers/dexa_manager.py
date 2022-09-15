@@ -59,7 +59,10 @@ from dexa_sdk.agreements.dda.v1_0.models.dda_instance_models import (
 from dexa_sdk.agreements.dda.v1_0.models.dda_models import (
     DDA_DEFAULT_CONTEXT,
     DDA_TYPE,
+    DataControllerModel,
     DataDisclosureAgreementModel,
+    DataSharingRestrictionsModel,
+    PersonalDataModel,
 )
 from dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record import (
     DDAInstancePermissionRecord,
@@ -127,53 +130,102 @@ class DexaManager:
         return self._logger
 
     async def create_and_store_dda_template_in_wallet(
-        self, dda: dict, *, publish_flag: bool = True
+        self, da_template_id: str, *, publish_flag: bool = True
     ) -> DataDisclosureAgreementTemplateRecord:
         """Create and store dda template in wallet
 
         Args:
-            dda (dict): DDA template.
+            da_template_id (str): DA template ID.
             publish_flag (bool): Publish flag
             schema_id (str): Schema identifier
         """
 
+        # Fetch DA template record.
+        da_template_record = (
+            await DataAgreementTemplateRecord.latest_published_template_by_id(
+                self.context, da_template_id
+            )
+        )
+
+        assert da_template_record, "Data agreement template not found."
+
+        existing_dda_template_records = (
+            await DataDisclosureAgreementTemplateRecord.query(
+                self.context, {"da_template_id": da_template_record.template_id}
+            )
+        )
+
+        assert (
+            len(existing_dda_template_records) == 0
+        ), "Existing DDA template associated with the DA found."
+
+        # DA model.
+        data_agreement_model = da_template_record.data_agreement_model
+
+        assert (
+            data_agreement_model.data_policy.third_party_data_sharing
+        ), "Third party data sharing not enabled."
+
         # Temp hack
         template_version = "1.0.0"
         template_id = str(uuid.uuid4())
-        dda.update({"@context": DDA_DEFAULT_CONTEXT})
-        dda.update({"@id": template_id})
-        dda.update({"@type": DDA_TYPE})
-        dda.update({"version": template_version})
 
-        # Fetch wallet from context
-        wallet: IndyWallet = await self.context.inject(BaseWallet)
-        controller_did = await wallet.get_public_did()
+        # Fetch controller details.
+        mgr = V2ADAManager(self.context)
+        controller_details_record = await mgr.get_controller_details_record()
 
-        dda["dataController"].update({"did": f"did:sov:{controller_did.did}"})
+        # Create DDA model.
 
-        # Validate the data agreement.
-        dda: DataDisclosureAgreementModel = DataDisclosureAgreementModel.deserialize(
-            dda
+        personal_datas = []
+        for pd in data_agreement_model.personal_data:
+            personal_datas.append(
+                PersonalDataModel(
+                    attribute_id=pd.attribute_id,
+                    attribute_name=pd.attribute_name,
+                    attribute_description=pd.attribute_description,
+                )
+            )
+
+        dda_model = DataDisclosureAgreementModel(
+            context=DDA_DEFAULT_CONTEXT,
+            id=template_id,
+            type=DDA_TYPE,
+            language=data_agreement_model.language,
+            version=template_version,
+            data_controller=DataControllerModel(
+                did=controller_details_record.organisation_did,
+                name=controller_details_record.organisation_name,
+                legal_id=controller_details_record.organisation_did,
+                url=controller_details_record.policy_url,
+                industry_sector=controller_details_record.organisation_type,
+            ),
+            agreement_period=data_agreement_model.data_policy.data_retention_period,
+            data_sharing_restrictions=DataSharingRestrictionsModel(
+                policy_url=data_agreement_model.data_policy.policy_url,
+                jurisdiction=data_agreement_model.data_policy.jurisdiction,
+                industry_sector=data_agreement_model.data_policy.industry_sector,
+                data_retention_period=data_agreement_model.data_policy.data_retention_period,
+                geographic_restriction=data_agreement_model.data_policy.geographic_restriction,
+                storage_location=data_agreement_model.data_policy.storage_location,
+            ),
+            purpose=data_agreement_model.purpose,
+            purpose_description=data_agreement_model.purpose_description,
+            lawful_basis=data_agreement_model.lawful_basis,
+            code_of_conduct=data_agreement_model.data_policy.policy_url,
+            personal_data=personal_datas,
         )
-
-        # Hack: Iterate through personal data records and add a unique identifier
-        # Todo: Correlating personal data across agreements needs to be done.
-        pds = dda.personal_data
-        for pd in pds:
-            pd.attribute_id = str(uuid.uuid4())
-
-        # Update the personal data with attribute identifiers to the agreement
-        dda.personal_data = pds
 
         # Create template record
         record = DataDisclosureAgreementTemplateRecord(
             template_id=template_id,
             template_version=template_version,
             state=DataDisclosureAgreementTemplateRecord.STATE_DEFINITION,
-            data_disclosure_agreement=dda.serialize(),
-            industry_sector=dda.data_sharing_restrictions.industry_sector.lower(),
+            data_disclosure_agreement=dda_model.serialize(),
+            industry_sector=dda_model.data_sharing_restrictions.industry_sector.lower(),
             publish_flag=bool_to_str(publish_flag),
             latest_version_flag=bool_to_str(True),
+            da_template_id=da_template_id,
+            da_template_version=da_template_record.template_version,
         )
 
         await record.save(self.context)
@@ -239,7 +291,6 @@ class DexaManager:
         self,
         template_id: str,
         *,
-        dda: dict,
         publish_flag: bool = True,
     ) -> DataDisclosureAgreementTemplateRecord:
         """Update DDA template in wallet.
@@ -259,9 +310,15 @@ class DexaManager:
             )
         )
 
+        assert existing_template, "DDA template not found."
+
+        # Fetch controller details.
+        mgr = V2ADAManager(self.context)
+        controller_details_record = await mgr.get_controller_details_record()
+
         # Upgrade the existing template to next version.
         upgraded = await existing_template.upgrade(
-            self.context, dda, bool_to_str(publish_flag)
+            self.context, controller_details_record, bool_to_str(publish_flag)
         )
 
         # Post update actions

@@ -285,9 +285,7 @@ class AdminServer(BaseAdminServer):
                 web.get("/status/ready", self.readiness_handler, allow_head=False),
                 web.get("/shutdown", self.shutdown_handler, allow_head=False),
                 web.get("/ws", self.websocket_handler, allow_head=False),
-                web.post(
-                    "/webhooks/topic/connections/", self.connections_webhook_handler
-                ),
+                web.post("/webhooks/topic/{topic}/", self.webhook_handler),
             ]
         )
 
@@ -453,7 +451,7 @@ class AdminServer(BaseAdminServer):
         return web.json_response({})
 
     @docs(tags=["server"], summary="Webhooks handler")
-    async def connections_webhook_handler(self, request: web.BaseRequest):
+    async def webhook_handler(self, request: web.BaseRequest):
         """
         Request handler for webhooks
 
@@ -465,14 +463,18 @@ class AdminServer(BaseAdminServer):
 
         """
 
+        webhook_topic = request.match_info["topic"]
+
         # Request body
         body = await request.json()
 
-        # Initialise manager
-        mgr = DexaManager(self.context)
+        if webhook_topic == "connections":
 
-        # Handle webhook.
-        await mgr.handle_connections_webhook(body)
+            # Initialise manager
+            mgr = DexaManager(self.context)
+
+            # Handle webhook.
+            await mgr.handle_connections_webhook(body)
 
         return web.json_response({})
 
