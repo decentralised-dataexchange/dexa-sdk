@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 import typing
 import uuid
 
@@ -8,6 +9,7 @@ from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.connections.models.connection_target import ConnectionTarget
 from aries_cloudagent.core.dispatcher import Dispatcher
+from aries_cloudagent.indy.util import generate_pr_nonce
 from aries_cloudagent.messaging.agent_message import AgentMessage
 from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
 from aries_cloudagent.protocols.connections.v1_0.manager import ConnectionManager
@@ -31,6 +33,10 @@ from dexa_protocol.v1_0.messages.negotiation.dda_negotiation_receipt import (
 )
 from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
 from dexa_protocol.v1_0.messages.negotiation.request_dda import RequestDDAMessage
+from dexa_protocol.v1_0.messages.pulldata_request_message import PullDataRequestMessage
+from dexa_protocol.v1_0.messages.pulldata_response_message import (
+    PullDataResponseMessage,
+)
 from dexa_protocol.v1_0.models.accept_dda_model import AcceptDDAMessageBodyModel
 from dexa_protocol.v1_0.models.dda_negotiation_receipt_model import (
     DDANegotiationReceiptBodyModel,
@@ -73,6 +79,7 @@ from dexa_sdk.agreements.dda.v1_0.records.dda_instance_record import (
 from dexa_sdk.agreements.dda.v1_0.records.dda_template_record import (
     DataDisclosureAgreementTemplateRecord,
 )
+from dexa_sdk.agreements.dda.v1_0.records.pull_data_record import PullDataRecord
 from dexa_sdk.data_controller.records.connection_controller_details_record import (
     ConnectionControllerDetailsRecord,
 )
@@ -86,7 +93,12 @@ from dexa_sdk.marketplace.records.publish_dda_record import PublishDDARecord
 from dexa_sdk.marketplace.records.published_dda_template_record import (
     PublishedDDATemplateRecord,
 )
-from dexa_sdk.utils import PaginationResult, drop_none_dict, paginate_records
+from dexa_sdk.utils import (
+    PaginationResult,
+    create_jwt,
+    drop_none_dict,
+    paginate_records,
+)
 from dexa_sdk.utils.utils import paginate
 from loguru import logger
 from mydata_did.v1_0.messages.data_controller_details import (
@@ -1285,3 +1297,321 @@ class DexaManager:
 
         # Deactivate DDA locally.
         await DDAInstancePermissionRecord.deactivate(self.context, instance_id)
+
+    async def process_pulldata_request_message(
+        self, message: PullDataRequestMessage, message_receipt: MessageReceipt
+    ):
+        """Process pull data request message.
+
+        Args:
+            message (PullDataRequestMessage): Pull data request message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
+
+        dda_instance_id = message.dda_instance_id
+        nonce = message.nonce
+
+        # Fetch DDA instance.
+        tag_filter = {"instance_id": dda_instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, "DDA instance not found."
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            # Create a jwt token with dda_instance_id, nonce in the claims.
+            data = {
+                "iat": int(time.time()),
+                "exp": int(time.time()) + 7200,
+                "dda_instance_id": dda_instance_id,
+                "nonce": nonce,
+            }
+            jwt = await create_jwt(data, controller_did.verkey, wallet)
+            # valid = await verify_jwt(jwt, controller_did.verkey, wallet)
+
+            # Initialise connection manager
+            connection_manager = ConnectionManager(self.context)
+
+            # Fetch connection targets
+            connection_targets = await connection_manager.fetch_connection_targets(
+                connection_record
+            )
+
+            assert len(connection_targets) > 0, "Zero connection targets found."
+
+            connection_target: ConnectionTarget = connection_targets[0]
+
+            # Pack the token.
+            packed = await wallet.pack_message(
+                jwt, connection_target.recipient_keys, connection_target.sender_key
+            )
+
+            # Create pull data record.
+            pull_data_record = PullDataRecord(
+                dda_instance_id=dda_instance_id,
+                dda_template_id=dda_instance_record.template_id,
+                nonce=nonce,
+                state=PullDataRecord.STATE_REQUEST,
+                token_packed=json.loads(packed.decode()),
+                token=jwt,
+            )
+
+            # Save the record.
+            await pull_data_record.save(self.context)
+
+            # Add token to blockchain
+            await self.add_token_to_blockchain_async_task(
+                connection_record, packed.decode(), nonce
+            )
+
+    async def add_token_to_blockchain_async_task(
+        self,
+        connection_record: ConnectionRecord,
+        jwt: str,
+        nonce: str,
+    ):
+        """Add token to blockchain async task"""
+
+        pending_task = await self.add_task(
+            self.context,
+            self.add_token_to_blockchain(connection_record, jwt, nonce),
+            self.add_token_to_blockchain_async_task_callback,
+        )
+        self._logger.info(pending_task)
+
+    async def add_token_to_blockchain(
+        self, connection_record: ConnectionRecord, jwt: str, nonce: str
+    ) -> None:
+        """Add token to blockchain"""
+
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        (tx_hash, tx_receipt) = await eth_client.add_access_token(nonce, jwt)
+
+        return (
+            connection_record,
+            nonce,
+            tx_hash,
+            tx_receipt,
+        )
+
+    async def add_token_to_blockchain_async_task_callback(self, *args, **kwargs):
+        """Add token to blockchain async task callback function"""
+
+        # Obtain the completed task.
+        completed_task: CompletedTask = args[0]
+
+        # Obtain the results from the task.
+        (connection_record, nonce, tx_hash, tx_receipt) = completed_task.task.result()
+
+        transaction_receipt = json.loads(to_json(tx_receipt))
+        transaction_hash = transaction_receipt.get("transactionHash")
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {"nonce": nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.blink = f"blink:ethereum:rinkeby:{transaction_hash}"
+            pulldata_record.blockchain_receipt = transaction_receipt
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            await pulldata_record.save(self.context)
+
+        # Initialise manager
+        mgr = V2ADAManager(self.context)
+
+        # TODO: Send pull data notification to the Individual
+
+        # Send pull data response message to DUS connection.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        pulldata_response_message = PullDataResponseMessage(
+            ds_eth_address=eth_client.org_account.address, nonce=nonce
+        )
+        await mgr.send_reply_message(
+            pulldata_response_message, connection_record.connection_id
+        )
+
+    async def send_pulldata_request_message(
+        self, instance_id: str, da_template_id: str = None, connection_id: str = None
+    ):
+        """Send pull data request message.
+
+        Args:
+            instance_id (str): Instance ID.
+        """
+
+        # Fetch DDA instance.
+        tag_filter = {"instance_id": instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, "DDA instance not found."
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            if not da_template_id:
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+                # Send the pull data request message.
+                mgr = V2ADAManager(self.context)
+                await mgr.send_reply_message(message, dda_instance_record.connection_id)
+
+            else:
+
+                # Fetch DA template record.
+                # Validate if published.
+                # Validate method of use is data-using-service.
+                # Send presentation request to individual.
+                # Once the presentation request is verified.
+                # Pull data request is send to DS.
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+    async def query_pull_data_records(
+        self,
+        *,
+        dda_instance_id: str = None,
+        dda_template_id: str = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> PaginationResult:
+        """Query pull data records.
+
+        Args:
+            dda_instance_id (str, optional): DDA instance ID. Defaults to None.
+            dda_template_id (str, optional): DDA template ID. Defaults to None.
+            da_template_id (str, optional): DA template ID. Defaults to None.
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result.
+        """
+
+        # Tag filter
+        tag_filter = {
+            "dda_instance_id": dda_instance_id,
+            "dda_template_id": dda_template_id,
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await PullDataRecord.query(
+            context=self.context, tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.updated_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def process_pull_data_response_message(
+        self, message: PullDataResponseMessage, message_receipt: MessageReceipt
+    ):
+        """Process pull data response message.
+
+        Args:
+            message (PullDataResponseMessage): Pull data response message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+
+        ds_eth_address = message.ds_eth_address
+        nonce = message.nonce
+
+        # Fetch data from ethereum.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        packed_token = await eth_client.release_access_token(ds_eth_address, nonce)
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Pack the token.
+        (token, from_verkey, to_verkey) = await wallet.unpack_message(
+            packed_token.encode()
+        )
+
+        # Update pull data record.
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {"nonce": nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            pulldata_record.token_packed = json.loads(packed_token)
+            pulldata_record.token = token
+            await pulldata_record.save(self.context)

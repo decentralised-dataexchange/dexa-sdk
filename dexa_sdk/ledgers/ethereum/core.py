@@ -181,7 +181,7 @@ class EthereumClient:
             if tx_receipt.get("status") == 1:
                 self.logger.info(f"Status (emitDADID): Succesfully emitted {did}")
             else:
-                self.logger.info("Status (emitDADID): Failed to emit {did}")
+                self.logger.info(f"Status (emitDADID): Failed to emit {did}")
 
             return (tx_hash, tx_receipt)
         except ContractLogicError as err:
@@ -221,11 +221,84 @@ class EthereumClient:
             if tx_receipt.get("status") == 1:
                 self.logger.info(f"Status (emitDDADID): Succesfully emitted {did}")
             else:
-                self.logger.info("Status (emitDDADID): Failed to emit {did}")
+                self.logger.info(f"Status (emitDDADID): Failed to emit {did}")
 
             return (tx_hash, tx_receipt)
         except ContractLogicError as err:
             self.logger.info(f"Status (emitDDADID): {err}")
+
+    async def add_access_token(
+        self, nonce: str, accesstoken: str
+    ) -> typing.Tuple[typing.Any, typing.Any]:
+        """Add access token."""
+        org_account = self.org_account
+        org_balance = self.client.eth.get_balance(org_account.address)
+
+        self.logger.info(f"Organisation account address: {org_account.address}")
+        self.logger.info(f"Organisation account balance: {org_balance}")
+
+        try:
+            contract = self.contract
+            contract_function = contract.functions.addAccessToken(nonce, accesstoken)
+            contract_function_txn = contract_function.buildTransaction(
+                {
+                    "from": org_account.address,
+                    "nonce": self.client.eth.get_transaction_count(org_account.address),
+                    "maxFeePerGas": 2000000000,
+                    "maxPriorityFeePerGas": 1000000000,
+                }
+            )
+
+            tx_create = self.client.eth.account.sign_transaction(
+                contract_function_txn, org_account.privateKey
+            )
+
+            tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
+
+            # Suspend execution and let other task run.
+            await asyncio.sleep(1)
+
+            tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
+
+            if tx_receipt.get("status") == 1:
+                self.logger.info(
+                    f"Status (addAccessToken): Succesfully added accesstoken with nonce: {nonce}"
+                )
+            else:
+                self.logger.info(
+                    f"Status (addAccessToken): Failed to add accesstoken with nonce: {nonce}"
+                )
+
+            return (tx_hash, tx_receipt)
+        except ContractLogicError as err:
+            self.logger.info(f"Status (addAccessToken): {err}")
+
+    async def release_access_token(self, eth_address: str, nonce: str) -> str:
+        """Release access token"""
+
+        org_account = self.org_account
+        org_balance = self.client.eth.get_balance(org_account.address)
+
+        self.logger.info(f"Organisation account address: {org_account.address}")
+        self.logger.info(f"Organisation account balance: {org_balance}")
+
+        try:
+            contract = self.contract
+            token = contract.functions.releaseAccessToken(nonce, eth_address).call(
+                {
+                    "from": org_account.address,
+                    "nonce": self.client.eth.get_transaction_count(org_account.address),
+                    "maxFeePerGas": 2000000000,
+                    "maxPriorityFeePerGas": 1000000000,
+                }
+            )
+
+            # Suspend execution and let other task run.
+            await asyncio.sleep(1)
+
+            return token
+        except ContractLogicError as err:
+            self.logger.info(f"Status (addAccessToken): {err}")
 
     async def add_organisation(self) -> None:
         """Add organisation to the whitelist"""

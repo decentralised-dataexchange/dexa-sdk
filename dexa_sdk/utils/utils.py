@@ -1,4 +1,5 @@
 import ast
+import json
 import math
 import typing
 from collections import namedtuple
@@ -8,6 +9,11 @@ import aiohttp
 import jcs
 import semver
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.jsonld.credential import (
+    b64_to_bytes,
+    b64encode,
+    bytes_to_b64,
+)
 from aries_cloudagent.messaging.models.base_record import BaseRecord
 
 
@@ -342,3 +348,39 @@ async def parse_query_params(url: str, query_param: str) -> str:
     parsed_qs = parse_qs(parsed_url.query)
 
     return parsed_qs.get(query_param)[0]
+
+
+async def create_jwt(data: dict, verkey, wallet) -> str:
+    """Create and sign jwt"""
+
+    # payload
+    encoded_payload = b64encode(json.dumps(data))
+
+    # header
+    header = {"alg": "EdDSA", "type": "JWT"}
+    encoded_header = b64encode(json.dumps(header))
+
+    # to be signed payload.
+    tbs = (encoded_header + ".").encode("utf-8") + encoded_payload.encode("utf-8")
+
+    # signature.
+    signature = await wallet.sign_message(tbs, verkey)
+
+    encoded_signature = bytes_to_b64(signature, urlsafe=True, pad=False)
+
+    return encoded_header + "." + encoded_payload + "." + encoded_signature
+
+
+async def verify_jwt(token: str, public_key, wallet) -> bool:
+    """Verify JWT"""
+
+    encoded_header, encoded_payload, encoded_signature = token.split(".")
+
+    decoded_signature = b64_to_bytes(encoded_signature, urlsafe=True)
+
+    # to be verified
+    tbv = (encoded_header + ".").encode("utf-8") + encoded_payload.encode("utf-8")
+
+    verified = await wallet.verify_message(tbv, decoded_signature, public_key)
+
+    return verified
