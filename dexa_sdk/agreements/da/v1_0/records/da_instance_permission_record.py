@@ -123,12 +123,12 @@ class DAInstancePermissionRecord(BaseRecord):
             await record.save(context)
 
             # Create a new record.
-            new_record = cls(
+            record = cls(
                 instance_id=da_instance_record.instance_id,
                 state=state,
                 latest_flag=bool_to_str(True),
             )
-            await new_record.save(context)
+            await record.save(context)
 
         return da_instance_record, record
 

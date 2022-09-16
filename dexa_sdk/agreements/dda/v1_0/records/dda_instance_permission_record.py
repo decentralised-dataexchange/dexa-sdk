@@ -76,6 +76,29 @@ class DDAInstancePermissionRecord(BaseRecord):
 
         return dda_instance_record, record
 
+    @classmethod
+    async def get_permission(
+        cls, context: InjectionContext, instance_id: str
+    ) -> typing.Union["DDAInstancePermissionRecord", None]:
+        """Get permission.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            typing.Union[DDAInstancePermissionRecord, None]: DDA instance permission record.
+        """
+        # Fetch DDA instance permission record.
+        instance_permission_records: typing.List[
+            DDAInstancePermissionRecord
+        ] = await DDAInstancePermissionRecord.query(
+            context, {"instance_id": instance_id}
+        )
+
+        return (
+            None if not instance_permission_records else instance_permission_records[0]
+        )
+
 
 class DDAInstancePermissionRecordSchema(BaseRecordSchema):
     class Meta:
