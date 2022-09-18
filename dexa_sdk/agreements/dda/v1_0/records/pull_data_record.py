@@ -1,4 +1,5 @@
-from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+from aries_cloudagent.messaging.models.base_record import (BaseRecord,
+                                                           BaseRecordSchema)
 from marshmallow import EXCLUDE, fields
 
 

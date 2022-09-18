@@ -33,6 +33,10 @@ from dexa_protocol.v1_0.messages.negotiation.dda_negotiation_receipt import (
 )
 from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
 from dexa_protocol.v1_0.messages.negotiation.request_dda import RequestDDAMessage
+from dexa_protocol.v1_0.messages.pulldata_notification_message import (
+    PDNControllerDetailsModel,
+    PullDataNotificationMessage,
+)
 from dexa_protocol.v1_0.messages.pulldata_request_message import PullDataRequestMessage
 from dexa_protocol.v1_0.messages.pulldata_response_message import (
     PullDataResponseMessage,
@@ -56,8 +60,17 @@ from dexa_protocol.v1_0.models.request_dda_model import RequestDDAModel
 from dexa_sdk.agreements.da.v1_0.records.customer_identification_record import (
     CustomerIdentificationRecord,
 )
+from dexa_sdk.agreements.da.v1_0.records.da_instance_permission_record import (
+    DAInstancePermissionRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_instance_record import (
+    DataAgreementInstanceRecord,
+)
 from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
     DataAgreementTemplateRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record import (
+    ThirdParyDAPreferenceRecord,
 )
 from dexa_sdk.agreements.dda.v1_0.models.dda_instance_models import (
     DataDisclosureAgreementInstanceModel,
@@ -1442,10 +1455,11 @@ class DexaManager:
             pulldata_record.state = PullDataRecord.STATE_RESPONSE
             await pulldata_record.save(self.context)
 
+            # Send pull data notification to the Individual
+            await self.notify_data_subject_on_pulldata(pulldata_record)
+
         # Initialise manager
         mgr = V2ADAManager(self.context)
-
-        # TODO: Send pull data notification to the Individual
 
         # Send pull data response message to DUS connection.
         eth_client: EthereumClient = await self.context.inject(EthereumClient)
@@ -1615,3 +1629,141 @@ class DexaManager:
             pulldata_record.token_packed = json.loads(packed_token)
             pulldata_record.token = token
             await pulldata_record.save(self.context)
+
+    async def notify_data_subject_on_pulldata(self, pulldata_record: PullDataRecord):
+        """Notify Data Subjects on pull data.
+
+        Args:
+            pulldata_record (PullDataRecord): pull data records.
+        """
+
+        dda_instance_id = pulldata_record.dda_instance_id
+        dda_template_id = pulldata_record.dda_template_id
+
+        # Find the DDA instance.
+        tag_filter = {"instance_id": dda_instance_id}
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context, tag_filter
+        )
+
+        if dda_instance_records:
+            dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+                dda_instance_records[0]
+            )
+
+            dus_connection_id = dda_instance_record.connection_id
+            dus_controller_details_records = (
+                await ConnectionControllerDetailsRecord.query(
+                    self.context, {"connection_id": dus_connection_id}
+                )
+            )
+
+            if dus_controller_details_records:
+                dus_controller_details_record: ConnectionControllerDetailsRecord = (
+                    dus_controller_details_records[0]
+                )
+
+                # Find the DDA template.
+                dda_template_records = (
+                    await DataDisclosureAgreementTemplateRecord.query(
+                        self.context, {"template_id": dda_template_id}
+                    )
+                )
+
+                if dda_template_records:
+                    dda_template_record: DataDisclosureAgreementTemplateRecord = (
+                        dda_template_records[0]
+                    )
+
+                    da_template_id = dda_template_record.da_template_id
+
+                    # Fetch the DA instances for the template.
+                    da_instances: typing.List[
+                        DataAgreementInstanceRecord
+                    ] = await DataAgreementInstanceRecord.query(
+                        self.context, {"template_id": da_template_id}
+                    )
+
+                    for da_instance in da_instances:
+
+                        # Fetch DA instance permission.
+                        da_instance_permission = (
+                            await DAInstancePermissionRecord.get_latest(
+                                self.context, da_instance.instance_id
+                            )
+                        )
+
+                        if (
+                            da_instance_permission
+                            and da_instance_permission.state
+                            == DAInstancePermissionRecord.STATE_ALLOW
+                            or (not da_instance_permission)
+                        ):
+
+                            # Fetch Org preferences for DA instance.
+                            org_preference = (
+                                await ThirdParyDAPreferenceRecord.get_preference(
+                                    self.context,
+                                    dda_instance_id,
+                                    da_instance.instance_id,
+                                )
+                            )
+
+                            if (
+                                org_preference
+                                and org_preference.state
+                                == ThirdParyDAPreferenceRecord.STATE_ALLOW
+                                or (not org_preference)
+                            ):
+                                # Send pull data notification message.
+                                await self.send_pulldata_notification_message(
+                                    da_instance.instance_id,
+                                    dus_controller_details_record,
+                                    da_instance.connection_id,
+                                )
+
+    async def send_pulldata_notification_message(
+        self,
+        da_instance_id: str,
+        dus_controller_details_record: ConnectionControllerDetailsRecord,
+        connection_id: str,
+    ):
+        """Send pull data notification message.
+
+        Args:
+            da_instance_id (str): DA instance ID
+            dus_controller_details_record (ConnectionControllerDetailsRecord): DUS connection controller details record.
+            connection_id (str): Connection ID.
+        """
+
+        dus_controller_model = dus_controller_details_record.controller_details_model
+
+        message = PullDataNotificationMessage(
+            da_instance_id=da_instance_id,
+            controller_details=PDNControllerDetailsModel(
+                organisation_did=dus_controller_model.organisation_did,
+                organisation_name=dus_controller_model.organisation_name,
+                cover_image_url=dus_controller_model.cover_image_url,
+                logo_image_url=dus_controller_model.logo_image_url,
+                location=dus_controller_model.location,
+                organisation_type=dus_controller_model.organisation_type,
+                description=dus_controller_model.description,
+                policy_url=dus_controller_model.policy_url,
+                eula_url=dus_controller_model.eula_url,
+            ),
+        )
+
+        mgr = V2ADAManager(self.context)
+        await mgr.send_reply_message(message, connection_id)
+
+    async def process_pulldata_notification_message(
+        self, message: PullDataNotificationMessage, message_receipt: MessageReceipt
+    ):
+        """Process pull data notification message.
+
+        Args:
+            message (PullDataNotificationMessage): Pull data notification message.
+            message_receipt (MessageReceipt): Message receipt.
+        """
+
+        self._logger.info(json.dumps(message.serialize(), indent=4))
