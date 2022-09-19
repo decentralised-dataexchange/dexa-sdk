@@ -22,14 +22,83 @@ This repository hosts the source code for DEXA SDKs and is part of the deliverab
 
 Not released, work in progress.
 
-## Compile, deploy and run
+## Installation
 
-Follow the instructions as given below:
+Requirements:
+- Python 3.8.9 or higher
 
-1. Run `git clone git@github.com:decentralised-dataexchange/dexa-sdk.git` to clone the repository.
-2. `cd` in to the cloned folder.
+### Plugin Installation
 
-TBD
+Install this plugin into the virtual environment:
+
+```sh
+$ pip install dexa-sdk
+```
+
+### Usage
+
+Hyperledger aries agents with DEXA protocols enabled can be created using DEXA SDK. Sample script is given below:
+
+In `agent.py`, copy the following.
+
+```python
+from dexa_sdk.agent.commands.start import execute
+
+args = [
+    "-it",
+    "http",
+    "0.0.0.0",
+    "8006",
+    "-ot",
+    "http",
+    "-e",
+    "http://localhost:8006/",
+    "--label",
+    "Data Source",
+    "--admin",
+    "0.0.0.0",
+    "8005",
+    "--admin-insecure-mode",
+    "--auto-accept-requests",
+    "--auto-ping-connection",
+    "--auto-respond-credential-proposal",
+    "--auto-respond-credential-offer",
+    "--auto-respond-credential-request",
+    "--auto-store-credential",
+    "--auto-respond-presentation-proposal",
+    "--auto-respond-presentation-request",
+    "--auto-verify-presentation",
+    "--genesis-url",
+    "https://indy.igrant.io/genesis",
+    "--wallet-type",
+    "indy",
+    "--wallet-name",
+    "Data Source",
+    "--log-level",
+    "info",
+    "--wallet-key",
+    "Data Source",
+    "--webhook-url",
+    "http://localhost:8005/webhooks",
+    "--public-invites",
+    "--plugin",
+    "mydata_did",
+    "--plugin",
+    "dexa_protocol",
+    "--eth-node-rpc",
+    "<ethereum node rpc endpoint>",
+    "--intermediary-eth-private-key",
+    "<data intermediary ethereum private key>",
+    "--org-eth-private-key",
+    "<org ethereum private key>",
+    "--contract-address",
+    "<contract address>"
+]
+
+execute(args)
+```
+
+and run by executing `python agent.py`.
 
 ## Contributing
 
