@@ -26,7 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
+<pre><code class="python">import typing
+
+from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.models.base_record import BaseRecord, BaseRecordSchema
 from marshmallow import EXCLUDE, fields
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 
@@ -84,6 +87,87 @@ class ThirdParyDAPreferenceRecord(BaseRecord):
             val (bool): Latest flag
         &#34;&#34;&#34;
         self.latest_flag = bool_to_str(val)
+
+    @classmethod
+    async def get_preference(
+        cls,
+        context: InjectionContext,
+        dda_instance_id: str,
+        da_instance_id: str,
+    ) -&gt; typing.Union[&#34;ThirdParyDAPreferenceRecord&#34;, None]:
+        &#34;&#34;&#34;Get preference.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+
+        Returns:
+            ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+        &#34;&#34;&#34;
+
+        preference_records: typing.List[
+            ThirdParyDAPreferenceRecord
+        ] = await ThirdParyDAPreferenceRecord.query(
+            context,
+            {
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;da_instance_id&#34;: da_instance_id,
+                &#34;latest_flag&#34;: bool_to_str(True),
+            },
+        )
+
+        return preference_records[0] if preference_records else None
+
+    @classmethod
+    async def add_preference(
+        cls,
+        context: InjectionContext,
+        dda_instance_id: str,
+        da_instance_id: str,
+        state: str,
+    ) -&gt; &#34;ThirdParyDAPreferenceRecord&#34;:
+        &#34;&#34;&#34;Add preference.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+            state (str): State.
+
+        Returns:
+            ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+        &#34;&#34;&#34;
+
+        preference_records: typing.List[
+            ThirdParyDAPreferenceRecord
+        ] = await ThirdParyDAPreferenceRecord.query(
+            context,
+            {
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;da_instance_id&#34;: da_instance_id,
+                &#34;latest_flag&#34;: bool_to_str(True),
+            },
+        )
+
+        # Create preference record.
+        new_preference_record = ThirdParyDAPreferenceRecord(
+            dda_instance_id=dda_instance_id,
+            da_instance_id=da_instance_id,
+            latest_flag=bool_to_str(True),
+            state=state,
+        )
+
+        if preference_records:
+            # Update existing preference record.
+            # and mark as not the latest.
+            preference_record = preference_records[0]
+            preference_record.latest_flag = bool_to_str(False)
+            await preference_record.save(context)
+
+        await new_preference_record.save(context)
+
+        return new_preference_record
 
 
 class ThirdParyDAPreferenceRecordSchema(BaseRecordSchema):
@@ -169,7 +253,88 @@ class ThirdParyDAPreferenceRecordSchema(BaseRecordSchema):
         Args:
             val (bool): Latest flag
         &#34;&#34;&#34;
-        self.latest_flag = bool_to_str(val)</code></pre>
+        self.latest_flag = bool_to_str(val)
+
+    @classmethod
+    async def get_preference(
+        cls,
+        context: InjectionContext,
+        dda_instance_id: str,
+        da_instance_id: str,
+    ) -&gt; typing.Union[&#34;ThirdParyDAPreferenceRecord&#34;, None]:
+        &#34;&#34;&#34;Get preference.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+
+        Returns:
+            ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+        &#34;&#34;&#34;
+
+        preference_records: typing.List[
+            ThirdParyDAPreferenceRecord
+        ] = await ThirdParyDAPreferenceRecord.query(
+            context,
+            {
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;da_instance_id&#34;: da_instance_id,
+                &#34;latest_flag&#34;: bool_to_str(True),
+            },
+        )
+
+        return preference_records[0] if preference_records else None
+
+    @classmethod
+    async def add_preference(
+        cls,
+        context: InjectionContext,
+        dda_instance_id: str,
+        da_instance_id: str,
+        state: str,
+    ) -&gt; &#34;ThirdParyDAPreferenceRecord&#34;:
+        &#34;&#34;&#34;Add preference.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+            state (str): State.
+
+        Returns:
+            ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+        &#34;&#34;&#34;
+
+        preference_records: typing.List[
+            ThirdParyDAPreferenceRecord
+        ] = await ThirdParyDAPreferenceRecord.query(
+            context,
+            {
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;da_instance_id&#34;: da_instance_id,
+                &#34;latest_flag&#34;: bool_to_str(True),
+            },
+        )
+
+        # Create preference record.
+        new_preference_record = ThirdParyDAPreferenceRecord(
+            dda_instance_id=dda_instance_id,
+            da_instance_id=da_instance_id,
+            latest_flag=bool_to_str(True),
+            state=state,
+        )
+
+        if preference_records:
+            # Update existing preference record.
+            # and mark as not the latest.
+            preference_record = preference_records[0]
+            preference_record.latest_flag = bool_to_str(False)
+            await preference_record.save(context)
+
+        await new_preference_record.save(context)
+
+        return new_preference_record</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -206,6 +371,140 @@ class ThirdParyDAPreferenceRecordSchema(BaseRecordSchema):
 <dt id="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.WEBHOOK_TOPIC"><code class="name">var <span class="ident">WEBHOOK_TOPIC</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.add_preference"><code class="name flex">
+<span>async def <span class="ident">add_preference</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, dda_instance_id: str, da_instance_id: str, state: str) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord">ThirdParyDAPreferenceRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add preference.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+<dt><strong><code>dda_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DDA instance ID.</dd>
+<dt><strong><code>da_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DA instance ID.</dd>
+<dt><strong><code>state</code></strong> :&ensp;<code>str</code></dt>
+<dd>State.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord">ThirdParyDAPreferenceRecord</a></code></dt>
+<dd>Thirdparty DA preference record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def add_preference(
+    cls,
+    context: InjectionContext,
+    dda_instance_id: str,
+    da_instance_id: str,
+    state: str,
+) -&gt; &#34;ThirdParyDAPreferenceRecord&#34;:
+    &#34;&#34;&#34;Add preference.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+        dda_instance_id (str): DDA instance ID.
+        da_instance_id (str): DA instance ID.
+        state (str): State.
+
+    Returns:
+        ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+    &#34;&#34;&#34;
+
+    preference_records: typing.List[
+        ThirdParyDAPreferenceRecord
+    ] = await ThirdParyDAPreferenceRecord.query(
+        context,
+        {
+            &#34;dda_instance_id&#34;: dda_instance_id,
+            &#34;da_instance_id&#34;: da_instance_id,
+            &#34;latest_flag&#34;: bool_to_str(True),
+        },
+    )
+
+    # Create preference record.
+    new_preference_record = ThirdParyDAPreferenceRecord(
+        dda_instance_id=dda_instance_id,
+        da_instance_id=da_instance_id,
+        latest_flag=bool_to_str(True),
+        state=state,
+    )
+
+    if preference_records:
+        # Update existing preference record.
+        # and mark as not the latest.
+        preference_record = preference_records[0]
+        preference_record.latest_flag = bool_to_str(False)
+        await preference_record.save(context)
+
+    await new_preference_record.save(context)
+
+    return new_preference_record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.get_preference"><code class="name flex">
+<span>async def <span class="ident">get_preference</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, dda_instance_id: str, da_instance_id: str) ‑> Optional[<a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord">ThirdParyDAPreferenceRecord</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get preference.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+<dt><strong><code>dda_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DDA instance ID.</dd>
+<dt><strong><code>da_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DA instance ID.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord">ThirdParyDAPreferenceRecord</a></code></dt>
+<dd>Thirdparty DA preference record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def get_preference(
+    cls,
+    context: InjectionContext,
+    dda_instance_id: str,
+    da_instance_id: str,
+) -&gt; typing.Union[&#34;ThirdParyDAPreferenceRecord&#34;, None]:
+    &#34;&#34;&#34;Get preference.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+        dda_instance_id (str): DDA instance ID.
+        da_instance_id (str): DA instance ID.
+
+    Returns:
+        ThirdParyDAPreferenceRecord: Thirdparty DA preference record.
+    &#34;&#34;&#34;
+
+    preference_records: typing.List[
+        ThirdParyDAPreferenceRecord
+    ] = await ThirdParyDAPreferenceRecord.query(
+        context,
+        {
+            &#34;dda_instance_id&#34;: dda_instance_id,
+            &#34;da_instance_id&#34;: da_instance_id,
+            &#34;latest_flag&#34;: bool_to_str(True),
+        },
+    )
+
+    return preference_records[0] if preference_records else None</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
@@ -298,6 +597,8 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.STATE_DISALLOW" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.STATE_DISALLOW">STATE_DISALLOW</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.TAG_NAMES" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.TAG_NAMES">TAG_NAMES</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.WEBHOOK_TOPIC" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.add_preference" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.add_preference">add_preference</a></code></li>
+<li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.get_preference" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.get_preference">get_preference</a></code></li>
 <li><code><a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.record_value" href="#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord.record_value">record_value</a></code></li>
 </ul>
 </li>

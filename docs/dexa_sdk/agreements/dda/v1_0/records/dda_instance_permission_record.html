@@ -104,6 +104,29 @@ class DDAInstancePermissionRecord(BaseRecord):
 
         return dda_instance_record, record
 
+    @classmethod
+    async def get_permission(
+        cls, context: InjectionContext, instance_id: str
+    ) -&gt; typing.Union[&#34;DDAInstancePermissionRecord&#34;, None]:
+        &#34;&#34;&#34;Get permission.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            typing.Union[DDAInstancePermissionRecord, None]: DDA instance permission record.
+        &#34;&#34;&#34;
+        # Fetch DDA instance permission record.
+        instance_permission_records: typing.List[
+            DDAInstancePermissionRecord
+        ] = await DDAInstancePermissionRecord.query(
+            context, {&#34;instance_id&#34;: instance_id}
+        )
+
+        return (
+            None if not instance_permission_records else instance_permission_records[0]
+        )
+
 
 class DDAInstancePermissionRecordSchema(BaseRecordSchema):
     class Meta:
@@ -200,7 +223,30 @@ class DDAInstancePermissionRecordSchema(BaseRecordSchema):
         else:
             record = records[0]
 
-        return dda_instance_record, record</code></pre>
+        return dda_instance_record, record
+
+    @classmethod
+    async def get_permission(
+        cls, context: InjectionContext, instance_id: str
+    ) -&gt; typing.Union[&#34;DDAInstancePermissionRecord&#34;, None]:
+        &#34;&#34;&#34;Get permission.
+
+        Args:
+            context (InjectionContext): Injection context to be used.
+
+        Returns:
+            typing.Union[DDAInstancePermissionRecord, None]: DDA instance permission record.
+        &#34;&#34;&#34;
+        # Fetch DDA instance permission record.
+        instance_permission_records: typing.List[
+            DDAInstancePermissionRecord
+        ] = await DDAInstancePermissionRecord.query(
+            context, {&#34;instance_id&#34;: instance_id}
+        )
+
+        return (
+            None if not instance_permission_records else instance_permission_records[0]
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -288,6 +334,49 @@ async def deactivate(
         record = records[0]
 
     return dda_instance_record, record</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.get_permission"><code class="name flex">
+<span>async def <span class="ident">get_permission</span></span>(<span>context: aries_cloudagent.config.injection_context.InjectionContext, instance_id: str) ‑> Optional[<a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord">DDAInstancePermissionRecord</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get permission.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>InjectionContext</code></dt>
+<dd>Injection context to be used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Union[<a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord">DDAInstancePermissionRecord</a>, None]</code></dt>
+<dd>DDA instance permission record.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+async def get_permission(
+    cls, context: InjectionContext, instance_id: str
+) -&gt; typing.Union[&#34;DDAInstancePermissionRecord&#34;, None]:
+    &#34;&#34;&#34;Get permission.
+
+    Args:
+        context (InjectionContext): Injection context to be used.
+
+    Returns:
+        typing.Union[DDAInstancePermissionRecord, None]: DDA instance permission record.
+    &#34;&#34;&#34;
+    # Fetch DDA instance permission record.
+    instance_permission_records: typing.List[
+        DDAInstancePermissionRecord
+    ] = await DDAInstancePermissionRecord.query(
+        context, {&#34;instance_id&#34;: instance_id}
+    )
+
+    return (
+        None if not instance_permission_records else instance_permission_records[0]
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -382,6 +471,7 @@ def record_value(self) -&gt; dict:
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.TAG_NAMES" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.TAG_NAMES">TAG_NAMES</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.WEBHOOK_TOPIC" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.WEBHOOK_TOPIC">WEBHOOK_TOPIC</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.deactivate" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.deactivate">deactivate</a></code></li>
+<li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.get_permission" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.get_permission">get_permission</a></code></li>
 <li><code><a title="dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.record_value" href="#dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record.DDAInstancePermissionRecord.record_value">record_value</a></code></li>
 </ul>
 </li>

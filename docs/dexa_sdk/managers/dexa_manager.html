@@ -28,6 +28,7 @@
 </summary>
 <pre><code class="python">import asyncio
 import json
+import time
 import typing
 import uuid
 
@@ -36,6 +37,7 @@ from aries_cloudagent.config.injection_context import InjectionContext
 from aries_cloudagent.connections.models.connection_record import ConnectionRecord
 from aries_cloudagent.connections.models.connection_target import ConnectionTarget
 from aries_cloudagent.core.dispatcher import Dispatcher
+from aries_cloudagent.indy.util import generate_pr_nonce
 from aries_cloudagent.messaging.agent_message import AgentMessage
 from aries_cloudagent.messaging.decorators.transport_decorator import TransportDecorator
 from aries_cloudagent.protocols.connections.v1_0.manager import ConnectionManager
@@ -59,6 +61,14 @@ from dexa_protocol.v1_0.messages.negotiation.dda_negotiation_receipt import (
 )
 from dexa_protocol.v1_0.messages.negotiation.offer_dda import OfferDDAMessage
 from dexa_protocol.v1_0.messages.negotiation.request_dda import RequestDDAMessage
+from dexa_protocol.v1_0.messages.pulldata_notification_message import (
+    PDNControllerDetailsModel,
+    PullDataNotificationMessage,
+)
+from dexa_protocol.v1_0.messages.pulldata_request_message import PullDataRequestMessage
+from dexa_protocol.v1_0.messages.pulldata_response_message import (
+    PullDataResponseMessage,
+)
 from dexa_protocol.v1_0.models.accept_dda_model import AcceptDDAMessageBodyModel
 from dexa_protocol.v1_0.models.dda_negotiation_receipt_model import (
     DDANegotiationReceiptBodyModel,
@@ -78,8 +88,17 @@ from dexa_protocol.v1_0.models.request_dda_model import RequestDDAModel
 from dexa_sdk.agreements.da.v1_0.records.customer_identification_record import (
     CustomerIdentificationRecord,
 )
+from dexa_sdk.agreements.da.v1_0.records.da_instance_permission_record import (
+    DAInstancePermissionRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.da_instance_record import (
+    DataAgreementInstanceRecord,
+)
 from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
     DataAgreementTemplateRecord,
+)
+from dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record import (
+    ThirdParyDAPreferenceRecord,
 )
 from dexa_sdk.agreements.dda.v1_0.models.dda_instance_models import (
     DataDisclosureAgreementInstanceModel,
@@ -101,6 +120,7 @@ from dexa_sdk.agreements.dda.v1_0.records.dda_instance_record import (
 from dexa_sdk.agreements.dda.v1_0.records.dda_template_record import (
     DataDisclosureAgreementTemplateRecord,
 )
+from dexa_sdk.agreements.dda.v1_0.records.pull_data_record import PullDataRecord
 from dexa_sdk.data_controller.records.connection_controller_details_record import (
     ConnectionControllerDetailsRecord,
 )
@@ -114,7 +134,12 @@ from dexa_sdk.marketplace.records.publish_dda_record import PublishDDARecord
 from dexa_sdk.marketplace.records.published_dda_template_record import (
     PublishedDDATemplateRecord,
 )
-from dexa_sdk.utils import PaginationResult, drop_none_dict, paginate_records
+from dexa_sdk.utils import (
+    PaginationResult,
+    create_jwt,
+    drop_none_dict,
+    paginate_records,
+)
 from dexa_sdk.utils.utils import paginate
 from loguru import logger
 from mydata_did.v1_0.messages.data_controller_details import (
@@ -1312,7 +1337,464 @@ class DexaManager:
         instance_id = message.body.instance_id
 
         # Deactivate DDA locally.
-        await DDAInstancePermissionRecord.deactivate(self.context, instance_id)</code></pre>
+        await DDAInstancePermissionRecord.deactivate(self.context, instance_id)
+
+    async def process_pulldata_request_message(
+        self, message: PullDataRequestMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data request message.
+
+        Args:
+            message (PullDataRequestMessage): Pull data request message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
+
+        dda_instance_id = message.dda_instance_id
+        nonce = message.nonce
+
+        # Fetch DDA instance.
+        tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            # Create a jwt token with dda_instance_id, nonce in the claims.
+            data = {
+                &#34;iat&#34;: int(time.time()),
+                &#34;exp&#34;: int(time.time()) + 7200,
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;nonce&#34;: nonce,
+            }
+            jwt = await create_jwt(data, controller_did.verkey, wallet)
+            # valid = await verify_jwt(jwt, controller_did.verkey, wallet)
+
+            # Initialise connection manager
+            connection_manager = ConnectionManager(self.context)
+
+            # Fetch connection targets
+            connection_targets = await connection_manager.fetch_connection_targets(
+                connection_record
+            )
+
+            assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+            connection_target: ConnectionTarget = connection_targets[0]
+
+            # Pack the token.
+            packed = await wallet.pack_message(
+                jwt, connection_target.recipient_keys, connection_target.sender_key
+            )
+
+            # Create pull data record.
+            pull_data_record = PullDataRecord(
+                dda_instance_id=dda_instance_id,
+                dda_template_id=dda_instance_record.template_id,
+                nonce=nonce,
+                state=PullDataRecord.STATE_REQUEST,
+                token_packed=json.loads(packed.decode()),
+                token=jwt,
+            )
+
+            # Save the record.
+            await pull_data_record.save(self.context)
+
+            # Add token to blockchain
+            await self.add_token_to_blockchain_async_task(
+                connection_record, packed.decode(), nonce
+            )
+
+    async def add_token_to_blockchain_async_task(
+        self,
+        connection_record: ConnectionRecord,
+        jwt: str,
+        nonce: str,
+    ):
+        &#34;&#34;&#34;Add token to blockchain async task&#34;&#34;&#34;
+
+        pending_task = await self.add_task(
+            self.context,
+            self.add_token_to_blockchain(connection_record, jwt, nonce),
+            self.add_token_to_blockchain_async_task_callback,
+        )
+        self._logger.info(pending_task)
+
+    async def add_token_to_blockchain(
+        self, connection_record: ConnectionRecord, jwt: str, nonce: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Add token to blockchain&#34;&#34;&#34;
+
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        (tx_hash, tx_receipt) = await eth_client.add_access_token(nonce, jwt)
+
+        return (
+            connection_record,
+            nonce,
+            tx_hash,
+            tx_receipt,
+        )
+
+    async def add_token_to_blockchain_async_task_callback(self, *args, **kwargs):
+        &#34;&#34;&#34;Add token to blockchain async task callback function&#34;&#34;&#34;
+
+        # Obtain the completed task.
+        completed_task: CompletedTask = args[0]
+
+        # Obtain the results from the task.
+        (connection_record, nonce, tx_hash, tx_receipt) = completed_task.task.result()
+
+        transaction_receipt = json.loads(to_json(tx_receipt))
+        transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+            pulldata_record.blockchain_receipt = transaction_receipt
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            await pulldata_record.save(self.context)
+
+            # Send pull data notification to the Individual
+            await self.notify_data_subject_on_pulldata(pulldata_record)
+
+        # Initialise manager
+        mgr = V2ADAManager(self.context)
+
+        # Send pull data response message to DUS connection.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        pulldata_response_message = PullDataResponseMessage(
+            ds_eth_address=eth_client.org_account.address, nonce=nonce
+        )
+        await mgr.send_reply_message(
+            pulldata_response_message, connection_record.connection_id
+        )
+
+    async def send_pulldata_request_message(
+        self, instance_id: str, da_template_id: str = None, connection_id: str = None
+    ):
+        &#34;&#34;&#34;Send pull data request message.
+
+        Args:
+            instance_id (str): Instance ID.
+        &#34;&#34;&#34;
+
+        # Fetch DDA instance.
+        tag_filter = {&#34;instance_id&#34;: instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            if not da_template_id:
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+                # Send the pull data request message.
+                mgr = V2ADAManager(self.context)
+                await mgr.send_reply_message(message, dda_instance_record.connection_id)
+
+            else:
+
+                # Fetch DA template record.
+                # Validate if published.
+                # Validate method of use is data-using-service.
+                # Send presentation request to individual.
+                # Once the presentation request is verified.
+                # Pull data request is send to DS.
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+    async def query_pull_data_records(
+        self,
+        *,
+        dda_instance_id: str = None,
+        dda_template_id: str = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query pull data records.
+
+        Args:
+            dda_instance_id (str, optional): DDA instance ID. Defaults to None.
+            dda_template_id (str, optional): DDA template ID. Defaults to None.
+            da_template_id (str, optional): DA template ID. Defaults to None.
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;dda_instance_id&#34;: dda_instance_id,
+            &#34;dda_template_id&#34;: dda_template_id,
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await PullDataRecord.query(
+            context=self.context, tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.updated_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def process_pull_data_response_message(
+        self, message: PullDataResponseMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data response message.
+
+        Args:
+            message (PullDataResponseMessage): Pull data response message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        ds_eth_address = message.ds_eth_address
+        nonce = message.nonce
+
+        # Fetch data from ethereum.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        packed_token = await eth_client.release_access_token(ds_eth_address, nonce)
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Pack the token.
+        (token, from_verkey, to_verkey) = await wallet.unpack_message(
+            packed_token.encode()
+        )
+
+        # Update pull data record.
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            pulldata_record.token_packed = json.loads(packed_token)
+            pulldata_record.token = token
+            await pulldata_record.save(self.context)
+
+    async def notify_data_subject_on_pulldata(self, pulldata_record: PullDataRecord):
+        &#34;&#34;&#34;Notify Data Subjects on pull data.
+
+        Args:
+            pulldata_record (PullDataRecord): pull data records.
+        &#34;&#34;&#34;
+
+        dda_instance_id = pulldata_record.dda_instance_id
+        dda_template_id = pulldata_record.dda_template_id
+
+        # Find the DDA instance.
+        tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context, tag_filter
+        )
+
+        if dda_instance_records:
+            dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+                dda_instance_records[0]
+            )
+
+            dus_connection_id = dda_instance_record.connection_id
+            dus_controller_details_records = (
+                await ConnectionControllerDetailsRecord.query(
+                    self.context, {&#34;connection_id&#34;: dus_connection_id}
+                )
+            )
+
+            if dus_controller_details_records:
+                dus_controller_details_record: ConnectionControllerDetailsRecord = (
+                    dus_controller_details_records[0]
+                )
+
+                # Find the DDA template.
+                dda_template_records = (
+                    await DataDisclosureAgreementTemplateRecord.query(
+                        self.context, {&#34;template_id&#34;: dda_template_id}
+                    )
+                )
+
+                if dda_template_records:
+                    dda_template_record: DataDisclosureAgreementTemplateRecord = (
+                        dda_template_records[0]
+                    )
+
+                    da_template_id = dda_template_record.da_template_id
+
+                    # Fetch the DA instances for the template.
+                    da_instances: typing.List[
+                        DataAgreementInstanceRecord
+                    ] = await DataAgreementInstanceRecord.query(
+                        self.context, {&#34;template_id&#34;: da_template_id}
+                    )
+
+                    for da_instance in da_instances:
+
+                        # Fetch DA instance permission.
+                        da_instance_permission = (
+                            await DAInstancePermissionRecord.get_latest(
+                                self.context, da_instance.instance_id
+                            )
+                        )
+
+                        if (
+                            da_instance_permission
+                            and da_instance_permission.state
+                            == DAInstancePermissionRecord.STATE_ALLOW
+                            or (not da_instance_permission)
+                        ):
+
+                            # Fetch Org preferences for DA instance.
+                            org_preference = (
+                                await ThirdParyDAPreferenceRecord.get_preference(
+                                    self.context,
+                                    dda_instance_id,
+                                    da_instance.instance_id,
+                                )
+                            )
+
+                            if (
+                                org_preference
+                                and org_preference.state
+                                == ThirdParyDAPreferenceRecord.STATE_ALLOW
+                                or (not org_preference)
+                            ):
+                                # Send pull data notification message.
+                                await self.send_pulldata_notification_message(
+                                    da_instance.instance_id,
+                                    dus_controller_details_record,
+                                    da_instance.connection_id,
+                                )
+
+    async def send_pulldata_notification_message(
+        self,
+        da_instance_id: str,
+        dus_controller_details_record: ConnectionControllerDetailsRecord,
+        connection_id: str,
+    ):
+        &#34;&#34;&#34;Send pull data notification message.
+
+        Args:
+            da_instance_id (str): DA instance ID
+            dus_controller_details_record (ConnectionControllerDetailsRecord): DUS connection controller details record.
+            connection_id (str): Connection ID.
+        &#34;&#34;&#34;
+
+        dus_controller_model = dus_controller_details_record.controller_details_model
+
+        message = PullDataNotificationMessage(
+            da_instance_id=da_instance_id,
+            controller_details=PDNControllerDetailsModel(
+                organisation_did=dus_controller_model.organisation_did,
+                organisation_name=dus_controller_model.organisation_name,
+                cover_image_url=dus_controller_model.cover_image_url,
+                logo_image_url=dus_controller_model.logo_image_url,
+                location=dus_controller_model.location,
+                organisation_type=dus_controller_model.organisation_type,
+                description=dus_controller_model.description,
+                policy_url=dus_controller_model.policy_url,
+                eula_url=dus_controller_model.eula_url,
+            ),
+        )
+
+        mgr = V2ADAManager(self.context)
+        await mgr.send_reply_message(message, connection_id)
+
+    async def process_pulldata_notification_message(
+        self, message: PullDataNotificationMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data notification message.
+
+        Args:
+            message (PullDataNotificationMessage): Pull data notification message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        self._logger.info(json.dumps(message.serialize(), indent=4))</code></pre>
 </details>
 </section>
 <section>
@@ -2525,7 +3007,464 @@ class DexaManager:
         instance_id = message.body.instance_id
 
         # Deactivate DDA locally.
-        await DDAInstancePermissionRecord.deactivate(self.context, instance_id)</code></pre>
+        await DDAInstancePermissionRecord.deactivate(self.context, instance_id)
+
+    async def process_pulldata_request_message(
+        self, message: PullDataRequestMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data request message.
+
+        Args:
+            message (PullDataRequestMessage): Pull data request message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        # Connection record.
+        connection_record: ConnectionRecord = self.context.connection_record
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Controller did (Public did)
+        controller_did = await wallet.get_public_did()
+
+        dda_instance_id = message.dda_instance_id
+        nonce = message.nonce
+
+        # Fetch DDA instance.
+        tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            # Create a jwt token with dda_instance_id, nonce in the claims.
+            data = {
+                &#34;iat&#34;: int(time.time()),
+                &#34;exp&#34;: int(time.time()) + 7200,
+                &#34;dda_instance_id&#34;: dda_instance_id,
+                &#34;nonce&#34;: nonce,
+            }
+            jwt = await create_jwt(data, controller_did.verkey, wallet)
+            # valid = await verify_jwt(jwt, controller_did.verkey, wallet)
+
+            # Initialise connection manager
+            connection_manager = ConnectionManager(self.context)
+
+            # Fetch connection targets
+            connection_targets = await connection_manager.fetch_connection_targets(
+                connection_record
+            )
+
+            assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+            connection_target: ConnectionTarget = connection_targets[0]
+
+            # Pack the token.
+            packed = await wallet.pack_message(
+                jwt, connection_target.recipient_keys, connection_target.sender_key
+            )
+
+            # Create pull data record.
+            pull_data_record = PullDataRecord(
+                dda_instance_id=dda_instance_id,
+                dda_template_id=dda_instance_record.template_id,
+                nonce=nonce,
+                state=PullDataRecord.STATE_REQUEST,
+                token_packed=json.loads(packed.decode()),
+                token=jwt,
+            )
+
+            # Save the record.
+            await pull_data_record.save(self.context)
+
+            # Add token to blockchain
+            await self.add_token_to_blockchain_async_task(
+                connection_record, packed.decode(), nonce
+            )
+
+    async def add_token_to_blockchain_async_task(
+        self,
+        connection_record: ConnectionRecord,
+        jwt: str,
+        nonce: str,
+    ):
+        &#34;&#34;&#34;Add token to blockchain async task&#34;&#34;&#34;
+
+        pending_task = await self.add_task(
+            self.context,
+            self.add_token_to_blockchain(connection_record, jwt, nonce),
+            self.add_token_to_blockchain_async_task_callback,
+        )
+        self._logger.info(pending_task)
+
+    async def add_token_to_blockchain(
+        self, connection_record: ConnectionRecord, jwt: str, nonce: str
+    ) -&gt; None:
+        &#34;&#34;&#34;Add token to blockchain&#34;&#34;&#34;
+
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        (tx_hash, tx_receipt) = await eth_client.add_access_token(nonce, jwt)
+
+        return (
+            connection_record,
+            nonce,
+            tx_hash,
+            tx_receipt,
+        )
+
+    async def add_token_to_blockchain_async_task_callback(self, *args, **kwargs):
+        &#34;&#34;&#34;Add token to blockchain async task callback function&#34;&#34;&#34;
+
+        # Obtain the completed task.
+        completed_task: CompletedTask = args[0]
+
+        # Obtain the results from the task.
+        (connection_record, nonce, tx_hash, tx_receipt) = completed_task.task.result()
+
+        transaction_receipt = json.loads(to_json(tx_receipt))
+        transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+            pulldata_record.blockchain_receipt = transaction_receipt
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            await pulldata_record.save(self.context)
+
+            # Send pull data notification to the Individual
+            await self.notify_data_subject_on_pulldata(pulldata_record)
+
+        # Initialise manager
+        mgr = V2ADAManager(self.context)
+
+        # Send pull data response message to DUS connection.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        pulldata_response_message = PullDataResponseMessage(
+            ds_eth_address=eth_client.org_account.address, nonce=nonce
+        )
+        await mgr.send_reply_message(
+            pulldata_response_message, connection_record.connection_id
+        )
+
+    async def send_pulldata_request_message(
+        self, instance_id: str, da_template_id: str = None, connection_id: str = None
+    ):
+        &#34;&#34;&#34;Send pull data request message.
+
+        Args:
+            instance_id (str): Instance ID.
+        &#34;&#34;&#34;
+
+        # Fetch DDA instance.
+        tag_filter = {&#34;instance_id&#34;: instance_id}
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, tag_filter
+            )
+        )
+
+        assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+        # Get permission
+        dda_instance_permission_record = (
+            await DDAInstancePermissionRecord.get_permission(
+                self.context, dda_instance_record.instance_id
+            )
+        )
+
+        # Check DDA instance is active.
+        if (
+            dda_instance_permission_record
+            and dda_instance_permission_record.state
+            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+        ) or (not dda_instance_permission_record):
+
+            if not da_template_id:
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+                # Send the pull data request message.
+                mgr = V2ADAManager(self.context)
+                await mgr.send_reply_message(message, dda_instance_record.connection_id)
+
+            else:
+
+                # Fetch DA template record.
+                # Validate if published.
+                # Validate method of use is data-using-service.
+                # Send presentation request to individual.
+                # Once the presentation request is verified.
+                # Pull data request is send to DS.
+
+                # Construct pull data request message.
+                nonce = await generate_pr_nonce()
+                message = PullDataRequestMessage(
+                    dda_instance_id=instance_id, nonce=nonce
+                )
+
+                # Create pull data record.
+                pull_data_record = PullDataRecord(
+                    dda_instance_id=instance_id,
+                    dda_template_id=dda_instance_record.template_id,
+                    nonce=nonce,
+                    state=PullDataRecord.STATE_REQUEST,
+                )
+
+                # Save the record.
+                await pull_data_record.save(self.context)
+
+    async def query_pull_data_records(
+        self,
+        *,
+        dda_instance_id: str = None,
+        dda_template_id: str = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -&gt; PaginationResult:
+        &#34;&#34;&#34;Query pull data records.
+
+        Args:
+            dda_instance_id (str, optional): DDA instance ID. Defaults to None.
+            dda_template_id (str, optional): DDA template ID. Defaults to None.
+            da_template_id (str, optional): DA template ID. Defaults to None.
+            page (int, optional): Page. Defaults to 1.
+            page_size (int, optional): Page size. Defaults to 10.
+
+        Returns:
+            PaginationResult: Pagination result.
+        &#34;&#34;&#34;
+
+        # Tag filter
+        tag_filter = {
+            &#34;dda_instance_id&#34;: dda_instance_id,
+            &#34;dda_template_id&#34;: dda_template_id,
+        }
+
+        tag_filter = drop_none_dict(tag_filter)
+
+        records = await PullDataRecord.query(
+            context=self.context, tag_filter=tag_filter
+        )
+
+        records = sorted(records, key=lambda k: k.updated_at, reverse=True)
+
+        paginate_result = paginate_records(records, page, page_size)
+
+        return paginate_result
+
+    async def process_pull_data_response_message(
+        self, message: PullDataResponseMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data response message.
+
+        Args:
+            message (PullDataResponseMessage): Pull data response message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        ds_eth_address = message.ds_eth_address
+        nonce = message.nonce
+
+        # Fetch data from ethereum.
+        eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+        packed_token = await eth_client.release_access_token(ds_eth_address, nonce)
+
+        # Fetch wallet from context
+        wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+        # Pack the token.
+        (token, from_verkey, to_verkey) = await wallet.unpack_message(
+            packed_token.encode()
+        )
+
+        # Update pull data record.
+
+        # Fetch pull data record by nonce
+        pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+        if pulldata_records:
+            # Update pull data record.
+            pulldata_record: PullDataRecord = pulldata_records[0]
+            pulldata_record.state = PullDataRecord.STATE_RESPONSE
+            pulldata_record.token_packed = json.loads(packed_token)
+            pulldata_record.token = token
+            await pulldata_record.save(self.context)
+
+    async def notify_data_subject_on_pulldata(self, pulldata_record: PullDataRecord):
+        &#34;&#34;&#34;Notify Data Subjects on pull data.
+
+        Args:
+            pulldata_record (PullDataRecord): pull data records.
+        &#34;&#34;&#34;
+
+        dda_instance_id = pulldata_record.dda_instance_id
+        dda_template_id = pulldata_record.dda_template_id
+
+        # Find the DDA instance.
+        tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+        dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+            self.context, tag_filter
+        )
+
+        if dda_instance_records:
+            dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+                dda_instance_records[0]
+            )
+
+            dus_connection_id = dda_instance_record.connection_id
+            dus_controller_details_records = (
+                await ConnectionControllerDetailsRecord.query(
+                    self.context, {&#34;connection_id&#34;: dus_connection_id}
+                )
+            )
+
+            if dus_controller_details_records:
+                dus_controller_details_record: ConnectionControllerDetailsRecord = (
+                    dus_controller_details_records[0]
+                )
+
+                # Find the DDA template.
+                dda_template_records = (
+                    await DataDisclosureAgreementTemplateRecord.query(
+                        self.context, {&#34;template_id&#34;: dda_template_id}
+                    )
+                )
+
+                if dda_template_records:
+                    dda_template_record: DataDisclosureAgreementTemplateRecord = (
+                        dda_template_records[0]
+                    )
+
+                    da_template_id = dda_template_record.da_template_id
+
+                    # Fetch the DA instances for the template.
+                    da_instances: typing.List[
+                        DataAgreementInstanceRecord
+                    ] = await DataAgreementInstanceRecord.query(
+                        self.context, {&#34;template_id&#34;: da_template_id}
+                    )
+
+                    for da_instance in da_instances:
+
+                        # Fetch DA instance permission.
+                        da_instance_permission = (
+                            await DAInstancePermissionRecord.get_latest(
+                                self.context, da_instance.instance_id
+                            )
+                        )
+
+                        if (
+                            da_instance_permission
+                            and da_instance_permission.state
+                            == DAInstancePermissionRecord.STATE_ALLOW
+                            or (not da_instance_permission)
+                        ):
+
+                            # Fetch Org preferences for DA instance.
+                            org_preference = (
+                                await ThirdParyDAPreferenceRecord.get_preference(
+                                    self.context,
+                                    dda_instance_id,
+                                    da_instance.instance_id,
+                                )
+                            )
+
+                            if (
+                                org_preference
+                                and org_preference.state
+                                == ThirdParyDAPreferenceRecord.STATE_ALLOW
+                                or (not org_preference)
+                            ):
+                                # Send pull data notification message.
+                                await self.send_pulldata_notification_message(
+                                    da_instance.instance_id,
+                                    dus_controller_details_record,
+                                    da_instance.connection_id,
+                                )
+
+    async def send_pulldata_notification_message(
+        self,
+        da_instance_id: str,
+        dus_controller_details_record: ConnectionControllerDetailsRecord,
+        connection_id: str,
+    ):
+        &#34;&#34;&#34;Send pull data notification message.
+
+        Args:
+            da_instance_id (str): DA instance ID
+            dus_controller_details_record (ConnectionControllerDetailsRecord): DUS connection controller details record.
+            connection_id (str): Connection ID.
+        &#34;&#34;&#34;
+
+        dus_controller_model = dus_controller_details_record.controller_details_model
+
+        message = PullDataNotificationMessage(
+            da_instance_id=da_instance_id,
+            controller_details=PDNControllerDetailsModel(
+                organisation_did=dus_controller_model.organisation_did,
+                organisation_name=dus_controller_model.organisation_name,
+                cover_image_url=dus_controller_model.cover_image_url,
+                logo_image_url=dus_controller_model.logo_image_url,
+                location=dus_controller_model.location,
+                organisation_type=dus_controller_model.organisation_type,
+                description=dus_controller_model.description,
+                policy_url=dus_controller_model.policy_url,
+                eula_url=dus_controller_model.eula_url,
+            ),
+        )
+
+        mgr = V2ADAManager(self.context)
+        await mgr.send_reply_message(message, connection_id)
+
+    async def process_pulldata_notification_message(
+        self, message: PullDataNotificationMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process pull data notification message.
+
+        Args:
+            message (PullDataNotificationMessage): Pull data notification message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        self._logger.info(json.dumps(message.serialize(), indent=4))</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -2655,6 +3594,105 @@ def logger(self):
     )
     return pack_format.task_queue.put(
         coro, lambda x: loop.create_task(task_complete(x)), ident
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain"><code class="name flex">
+<span>async def <span class="ident">add_token_to_blockchain</span></span>(<span>self, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord, jwt: str, nonce: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add token to blockchain</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def add_token_to_blockchain(
+    self, connection_record: ConnectionRecord, jwt: str, nonce: str
+) -&gt; None:
+    &#34;&#34;&#34;Add token to blockchain&#34;&#34;&#34;
+
+    eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+    (tx_hash, tx_receipt) = await eth_client.add_access_token(nonce, jwt)
+
+    return (
+        connection_record,
+        nonce,
+        tx_hash,
+        tx_receipt,
+    )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task"><code class="name flex">
+<span>async def <span class="ident">add_token_to_blockchain_async_task</span></span>(<span>self, connection_record: aries_cloudagent.connections.models.connection_record.ConnectionRecord, jwt: str, nonce: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add token to blockchain async task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def add_token_to_blockchain_async_task(
+    self,
+    connection_record: ConnectionRecord,
+    jwt: str,
+    nonce: str,
+):
+    &#34;&#34;&#34;Add token to blockchain async task&#34;&#34;&#34;
+
+    pending_task = await self.add_task(
+        self.context,
+        self.add_token_to_blockchain(connection_record, jwt, nonce),
+        self.add_token_to_blockchain_async_task_callback,
+    )
+    self._logger.info(pending_task)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task_callback"><code class="name flex">
+<span>async def <span class="ident">add_token_to_blockchain_async_task_callback</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add token to blockchain async task callback function</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def add_token_to_blockchain_async_task_callback(self, *args, **kwargs):
+    &#34;&#34;&#34;Add token to blockchain async task callback function&#34;&#34;&#34;
+
+    # Obtain the completed task.
+    completed_task: CompletedTask = args[0]
+
+    # Obtain the results from the task.
+    (connection_record, nonce, tx_hash, tx_receipt) = completed_task.task.result()
+
+    transaction_receipt = json.loads(to_json(tx_receipt))
+    transaction_hash = transaction_receipt.get(&#34;transactionHash&#34;)
+
+    # Fetch pull data record by nonce
+    pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+    if pulldata_records:
+        # Update pull data record.
+        pulldata_record: PullDataRecord = pulldata_records[0]
+        pulldata_record.blink = f&#34;blink:ethereum:rinkeby:{transaction_hash}&#34;
+        pulldata_record.blockchain_receipt = transaction_receipt
+        pulldata_record.state = PullDataRecord.STATE_RESPONSE
+        await pulldata_record.save(self.context)
+
+        # Send pull data notification to the Individual
+        await self.notify_data_subject_on_pulldata(pulldata_record)
+
+    # Initialise manager
+    mgr = V2ADAManager(self.context)
+
+    # Send pull data response message to DUS connection.
+    eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+    pulldata_response_message = PullDataResponseMessage(
+        ds_eth_address=eth_client.org_account.address, nonce=nonce
+    )
+    await mgr.send_reply_message(
+        pulldata_response_message, connection_record.connection_id
     )</code></pre>
 </details>
 </dd>
@@ -3178,6 +4216,113 @@ def logger(self):
     return pagination_result</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.notify_data_subject_on_pulldata"><code class="name flex">
+<span>async def <span class="ident">notify_data_subject_on_pulldata</span></span>(<span>self, pulldata_record: <a title="dexa_sdk.agreements.dda.v1_0.records.pull_data_record.PullDataRecord" href="../agreements/dda/v1_0/records/pull_data_record.html#dexa_sdk.agreements.dda.v1_0.records.pull_data_record.PullDataRecord">PullDataRecord</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notify Data Subjects on pull data.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pulldata_record</code></strong> :&ensp;<code>PullDataRecord</code></dt>
+<dd>pull data records.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def notify_data_subject_on_pulldata(self, pulldata_record: PullDataRecord):
+    &#34;&#34;&#34;Notify Data Subjects on pull data.
+
+    Args:
+        pulldata_record (PullDataRecord): pull data records.
+    &#34;&#34;&#34;
+
+    dda_instance_id = pulldata_record.dda_instance_id
+    dda_template_id = pulldata_record.dda_template_id
+
+    # Find the DDA instance.
+    tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+    dda_instance_records = await DataDisclosureAgreementInstanceRecord.query(
+        self.context, tag_filter
+    )
+
+    if dda_instance_records:
+        dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+            dda_instance_records[0]
+        )
+
+        dus_connection_id = dda_instance_record.connection_id
+        dus_controller_details_records = (
+            await ConnectionControllerDetailsRecord.query(
+                self.context, {&#34;connection_id&#34;: dus_connection_id}
+            )
+        )
+
+        if dus_controller_details_records:
+            dus_controller_details_record: ConnectionControllerDetailsRecord = (
+                dus_controller_details_records[0]
+            )
+
+            # Find the DDA template.
+            dda_template_records = (
+                await DataDisclosureAgreementTemplateRecord.query(
+                    self.context, {&#34;template_id&#34;: dda_template_id}
+                )
+            )
+
+            if dda_template_records:
+                dda_template_record: DataDisclosureAgreementTemplateRecord = (
+                    dda_template_records[0]
+                )
+
+                da_template_id = dda_template_record.da_template_id
+
+                # Fetch the DA instances for the template.
+                da_instances: typing.List[
+                    DataAgreementInstanceRecord
+                ] = await DataAgreementInstanceRecord.query(
+                    self.context, {&#34;template_id&#34;: da_template_id}
+                )
+
+                for da_instance in da_instances:
+
+                    # Fetch DA instance permission.
+                    da_instance_permission = (
+                        await DAInstancePermissionRecord.get_latest(
+                            self.context, da_instance.instance_id
+                        )
+                    )
+
+                    if (
+                        da_instance_permission
+                        and da_instance_permission.state
+                        == DAInstancePermissionRecord.STATE_ALLOW
+                        or (not da_instance_permission)
+                    ):
+
+                        # Fetch Org preferences for DA instance.
+                        org_preference = (
+                            await ThirdParyDAPreferenceRecord.get_preference(
+                                self.context,
+                                dda_instance_id,
+                                da_instance.instance_id,
+                            )
+                        )
+
+                        if (
+                            org_preference
+                            and org_preference.state
+                            == ThirdParyDAPreferenceRecord.STATE_ALLOW
+                            or (not org_preference)
+                        ):
+                            # Send pull data notification message.
+                            await self.send_pulldata_notification_message(
+                                da_instance.instance_id,
+                                dus_controller_details_record,
+                                da_instance.connection_id,
+                            )</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions"><code class="name flex">
 <span>async def <span class="ident">post_connection_delete_actions</span></span>(<span>self, connection_id: str)</span>
 </code></dt>
@@ -3591,6 +4736,198 @@ def logger(self):
         message.body.dda,
         message.body.connection_url,
     )</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_pull_data_response_message"><code class="name flex">
+<span>async def <span class="ident">process_pull_data_response_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.pulldata_response_message.PullDataResponseMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process pull data response message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>PullDataResponseMessage</code></dt>
+<dd>Pull data response message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_pull_data_response_message(
+    self, message: PullDataResponseMessage, message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process pull data response message.
+
+    Args:
+        message (PullDataResponseMessage): Pull data response message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    ds_eth_address = message.ds_eth_address
+    nonce = message.nonce
+
+    # Fetch data from ethereum.
+    eth_client: EthereumClient = await self.context.inject(EthereumClient)
+
+    packed_token = await eth_client.release_access_token(ds_eth_address, nonce)
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+    # Pack the token.
+    (token, from_verkey, to_verkey) = await wallet.unpack_message(
+        packed_token.encode()
+    )
+
+    # Update pull data record.
+
+    # Fetch pull data record by nonce
+    pulldata_records = await PullDataRecord.query(self.context, {&#34;nonce&#34;: nonce})
+    if pulldata_records:
+        # Update pull data record.
+        pulldata_record: PullDataRecord = pulldata_records[0]
+        pulldata_record.state = PullDataRecord.STATE_RESPONSE
+        pulldata_record.token_packed = json.loads(packed_token)
+        pulldata_record.token = token
+        await pulldata_record.save(self.context)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_notification_message"><code class="name flex">
+<span>async def <span class="ident">process_pulldata_notification_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.pulldata_notification_message.PullDataNotificationMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process pull data notification message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>PullDataNotificationMessage</code></dt>
+<dd>Pull data notification message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_pulldata_notification_message(
+    self, message: PullDataNotificationMessage, message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process pull data notification message.
+
+    Args:
+        message (PullDataNotificationMessage): Pull data notification message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    self._logger.info(json.dumps(message.serialize(), indent=4))</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_request_message"><code class="name flex">
+<span>async def <span class="ident">process_pulldata_request_message</span></span>(<span>self, message: dexa_protocol.v1_0.messages.pulldata_request_message.PullDataRequestMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process pull data request message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>PullDataRequestMessage</code></dt>
+<dd>Pull data request message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_pulldata_request_message(
+    self, message: PullDataRequestMessage, message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process pull data request message.
+
+    Args:
+        message (PullDataRequestMessage): Pull data request message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    # Connection record.
+    connection_record: ConnectionRecord = self.context.connection_record
+
+    # Fetch wallet from context
+    wallet: IndyWallet = await self.context.inject(BaseWallet)
+
+    # Controller did (Public did)
+    controller_did = await wallet.get_public_did()
+
+    dda_instance_id = message.dda_instance_id
+    nonce = message.nonce
+
+    # Fetch DDA instance.
+    tag_filter = {&#34;instance_id&#34;: dda_instance_id}
+    dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+        await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+            self.context, tag_filter
+        )
+    )
+
+    assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+    # Get permission
+    dda_instance_permission_record = (
+        await DDAInstancePermissionRecord.get_permission(
+            self.context, dda_instance_record.instance_id
+        )
+    )
+
+    # Check DDA instance is active.
+    if (
+        dda_instance_permission_record
+        and dda_instance_permission_record.state
+        != DDAInstancePermissionRecord.STATE_DEACTIVATE
+    ) or (not dda_instance_permission_record):
+
+        # Create a jwt token with dda_instance_id, nonce in the claims.
+        data = {
+            &#34;iat&#34;: int(time.time()),
+            &#34;exp&#34;: int(time.time()) + 7200,
+            &#34;dda_instance_id&#34;: dda_instance_id,
+            &#34;nonce&#34;: nonce,
+        }
+        jwt = await create_jwt(data, controller_did.verkey, wallet)
+        # valid = await verify_jwt(jwt, controller_did.verkey, wallet)
+
+        # Initialise connection manager
+        connection_manager = ConnectionManager(self.context)
+
+        # Fetch connection targets
+        connection_targets = await connection_manager.fetch_connection_targets(
+            connection_record
+        )
+
+        assert len(connection_targets) &gt; 0, &#34;Zero connection targets found.&#34;
+
+        connection_target: ConnectionTarget = connection_targets[0]
+
+        # Pack the token.
+        packed = await wallet.pack_message(
+            jwt, connection_target.recipient_keys, connection_target.sender_key
+        )
+
+        # Create pull data record.
+        pull_data_record = PullDataRecord(
+            dda_instance_id=dda_instance_id,
+            dda_template_id=dda_instance_record.template_id,
+            nonce=nonce,
+            state=PullDataRecord.STATE_REQUEST,
+            token_packed=json.loads(packed.decode()),
+            token=jwt,
+        )
+
+        # Save the record.
+        await pull_data_record.save(self.context)
+
+        # Add token to blockchain
+        await self.add_token_to_blockchain_async_task(
+            connection_record, packed.decode(), nonce
+        )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message"><code class="name flex">
@@ -4039,6 +5376,73 @@ def logger(self):
     return pagination_result</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.query_pull_data_records"><code class="name flex">
+<span>async def <span class="ident">query_pull_data_records</span></span>(<span>self, *, dda_instance_id: str = None, dda_template_id: str = None, page: int = 1, page_size: int = 10) ‑> <a title="dexa_sdk.utils.utils.PaginationResult" href="../utils/utils.html#dexa_sdk.utils.utils.PaginationResult">PaginationResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query pull data records.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dda_instance_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>DDA instance ID. Defaults to None.</dd>
+<dt><strong><code>dda_template_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>DDA template ID. Defaults to None.</dd>
+<dt><strong><code>da_template_id</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>DA template ID. Defaults to None.</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page. Defaults to 1.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Page size. Defaults to 10.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>PaginationResult</code></dt>
+<dd>Pagination result.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def query_pull_data_records(
+    self,
+    *,
+    dda_instance_id: str = None,
+    dda_template_id: str = None,
+    page: int = 1,
+    page_size: int = 10,
+) -&gt; PaginationResult:
+    &#34;&#34;&#34;Query pull data records.
+
+    Args:
+        dda_instance_id (str, optional): DDA instance ID. Defaults to None.
+        dda_template_id (str, optional): DDA template ID. Defaults to None.
+        da_template_id (str, optional): DA template ID. Defaults to None.
+        page (int, optional): Page. Defaults to 1.
+        page_size (int, optional): Page size. Defaults to 10.
+
+    Returns:
+        PaginationResult: Pagination result.
+    &#34;&#34;&#34;
+
+    # Tag filter
+    tag_filter = {
+        &#34;dda_instance_id&#34;: dda_instance_id,
+        &#34;dda_template_id&#34;: dda_template_id,
+    }
+
+    tag_filter = drop_none_dict(tag_filter)
+
+    records = await PullDataRecord.query(
+        context=self.context, tag_filter=tag_filter
+    )
+
+    records = sorted(records, key=lambda k: k.updated_at, reverse=True)
+
+    paginate_result = paginate_records(records, page, page_size)
+
+    return paginate_result</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds"><code class="name flex">
 <span>async def <span class="ident">request_dda_offer_from_ds</span></span>(<span>self, connection_id: str, template_id: str)</span>
 </code></dt>
@@ -4310,6 +5714,156 @@ def logger(self):
     )</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_notification_message"><code class="name flex">
+<span>async def <span class="ident">send_pulldata_notification_message</span></span>(<span>self, da_instance_id: str, dus_controller_details_record: <a title="dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord" href="../data_controller/records/connection_controller_details_record.html#dexa_sdk.data_controller.records.connection_controller_details_record.ConnectionControllerDetailsRecord">ConnectionControllerDetailsRecord</a>, connection_id: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send pull data notification message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>da_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DA instance ID</dd>
+<dt><strong><code>dus_controller_details_record</code></strong> :&ensp;<code>ConnectionControllerDetailsRecord</code></dt>
+<dd>DUS connection controller details record.</dd>
+<dt><strong><code>connection_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Connection ID.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_pulldata_notification_message(
+    self,
+    da_instance_id: str,
+    dus_controller_details_record: ConnectionControllerDetailsRecord,
+    connection_id: str,
+):
+    &#34;&#34;&#34;Send pull data notification message.
+
+    Args:
+        da_instance_id (str): DA instance ID
+        dus_controller_details_record (ConnectionControllerDetailsRecord): DUS connection controller details record.
+        connection_id (str): Connection ID.
+    &#34;&#34;&#34;
+
+    dus_controller_model = dus_controller_details_record.controller_details_model
+
+    message = PullDataNotificationMessage(
+        da_instance_id=da_instance_id,
+        controller_details=PDNControllerDetailsModel(
+            organisation_did=dus_controller_model.organisation_did,
+            organisation_name=dus_controller_model.organisation_name,
+            cover_image_url=dus_controller_model.cover_image_url,
+            logo_image_url=dus_controller_model.logo_image_url,
+            location=dus_controller_model.location,
+            organisation_type=dus_controller_model.organisation_type,
+            description=dus_controller_model.description,
+            policy_url=dus_controller_model.policy_url,
+            eula_url=dus_controller_model.eula_url,
+        ),
+    )
+
+    mgr = V2ADAManager(self.context)
+    await mgr.send_reply_message(message, connection_id)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_request_message"><code class="name flex">
+<span>async def <span class="ident">send_pulldata_request_message</span></span>(<span>self, instance_id: str, da_template_id: str = None, connection_id: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send pull data request message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Instance ID.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_pulldata_request_message(
+    self, instance_id: str, da_template_id: str = None, connection_id: str = None
+):
+    &#34;&#34;&#34;Send pull data request message.
+
+    Args:
+        instance_id (str): Instance ID.
+    &#34;&#34;&#34;
+
+    # Fetch DDA instance.
+    tag_filter = {&#34;instance_id&#34;: instance_id}
+    dda_instance_record: DataDisclosureAgreementInstanceRecord = (
+        await DataDisclosureAgreementInstanceRecord.retrieve_by_tag_filter(
+            self.context, tag_filter
+        )
+    )
+
+    assert dda_instance_record, &#34;DDA instance not found.&#34;
+
+    # Get permission
+    dda_instance_permission_record = (
+        await DDAInstancePermissionRecord.get_permission(
+            self.context, dda_instance_record.instance_id
+        )
+    )
+
+    # Check DDA instance is active.
+    if (
+        dda_instance_permission_record
+        and dda_instance_permission_record.state
+        != DDAInstancePermissionRecord.STATE_DEACTIVATE
+    ) or (not dda_instance_permission_record):
+
+        if not da_template_id:
+
+            # Construct pull data request message.
+            nonce = await generate_pr_nonce()
+            message = PullDataRequestMessage(
+                dda_instance_id=instance_id, nonce=nonce
+            )
+
+            # Create pull data record.
+            pull_data_record = PullDataRecord(
+                dda_instance_id=instance_id,
+                dda_template_id=dda_instance_record.template_id,
+                nonce=nonce,
+                state=PullDataRecord.STATE_REQUEST,
+            )
+
+            # Save the record.
+            await pull_data_record.save(self.context)
+
+            # Send the pull data request message.
+            mgr = V2ADAManager(self.context)
+            await mgr.send_reply_message(message, dda_instance_record.connection_id)
+
+        else:
+
+            # Fetch DA template record.
+            # Validate if published.
+            # Validate method of use is data-using-service.
+            # Send presentation request to individual.
+            # Once the presentation request is verified.
+            # Pull data request is send to DS.
+
+            # Construct pull data request message.
+            nonce = await generate_pr_nonce()
+            message = PullDataRequestMessage(
+                dda_instance_id=instance_id, nonce=nonce
+            )
+
+            # Create pull data record.
+            pull_data_record = PullDataRecord(
+                dda_instance_id=instance_id,
+                dda_template_id=dda_instance_record.template_id,
+                nonce=nonce,
+                state=PullDataRecord.STATE_REQUEST,
+            )
+
+            # Save the record.
+            await pull_data_record.save(self.context)</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet"><code class="name flex">
 <span>async def <span class="ident">update_dda_template_in_wallet</span></span>(<span>self, template_id: str, *, publish_flag: bool = True) ‑> <a title="dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord" href="../agreements/dda/v1_0/records/dda_template_record.html#dexa_sdk.agreements.dda.v1_0.records.dda_template_record.DataDisclosureAgreementTemplateRecord">DataDisclosureAgreementTemplateRecord</a></span>
 </code></dt>
@@ -4395,6 +5949,9 @@ def logger(self):
 <ul class="">
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_marketplace_connection" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_marketplace_connection">add_marketplace_connection</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_task" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_task">add_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain">add_token_to_blockchain</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task">add_token_to_blockchain_async_task</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task_callback" href="#dexa_sdk.managers.dexa_manager.DexaManager.add_token_to_blockchain_async_task_callback">add_token_to_blockchain_async_task_callback</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain">anchor_dda_instance_to_blockchain</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task">anchor_dda_instance_to_blockchain_async_task</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task_callback" href="#dexa_sdk.managers.dexa_manager.DexaManager.anchor_dda_instance_to_blockchain_async_task_callback">anchor_dda_instance_to_blockchain_async_task_callback</a></code></li>
@@ -4408,6 +5965,7 @@ def logger(self):
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.handle_connections_webhook" href="#dexa_sdk.managers.dexa_manager.DexaManager.handle_connections_webhook">handle_connections_webhook</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.list_dda_published_in_marketplace" href="#dexa_sdk.managers.dexa_manager.DexaManager.list_dda_published_in_marketplace">list_dda_published_in_marketplace</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.logger" href="#dexa_sdk.managers.dexa_manager.DexaManager.logger">logger</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.notify_data_subject_on_pulldata" href="#dexa_sdk.managers.dexa_manager.DexaManager.notify_data_subject_on_pulldata">notify_data_subject_on_pulldata</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_connection_delete_actions">post_connection_delete_actions</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_delete_dda_template" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_delete_dda_template">post_delete_dda_template</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.post_update_dda_template" href="#dexa_sdk.managers.dexa_manager.DexaManager.post_update_dda_template">post_update_dda_template</a></code></li>
@@ -4418,6 +5976,9 @@ def logger(self):
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_list_marketplace_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_list_marketplace_dda_message">process_list_marketplace_dda_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_offer_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_offer_dda_message">process_offer_dda_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_publish_dda_request_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_publish_dda_request_message">process_publish_dda_request_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_pull_data_response_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_pull_data_response_message">process_pull_data_response_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_notification_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_notification_message">process_pulldata_notification_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_request_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_pulldata_request_message">process_pulldata_request_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.process_request_dda_message">process_request_dda_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_to_marketplace" href="#dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_to_marketplace">publish_dda_template_to_marketplace</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.publish_dda_template_wallet">publish_dda_template_wallet</a></code></li>
@@ -4425,11 +5986,14 @@ def logger(self):
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_dda_templates_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_dda_templates_in_wallet">query_dda_templates_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_marketplace_connections" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_marketplace_connections">query_marketplace_connections</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_publish_dda_template_records" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_publish_dda_template_records">query_publish_dda_template_records</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.query_pull_data_records" href="#dexa_sdk.managers.dexa_manager.DexaManager.query_pull_data_records">query_pull_data_records</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds" href="#dexa_sdk.managers.dexa_manager.DexaManager.request_dda_offer_from_ds">request_dda_offer_from_ds</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_deactivate_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_deactivate_dda_message">send_deactivate_dda_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_list_marketplace_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_list_marketplace_dda_message">send_list_marketplace_dda_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_message_with_return_route_all" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_message_with_return_route_all">send_message_with_return_route_all</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_publish_dda_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_publish_dda_message">send_publish_dda_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_notification_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_notification_message">send_pulldata_notification_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_request_message" href="#dexa_sdk.managers.dexa_manager.DexaManager.send_pulldata_request_message">send_pulldata_request_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet" href="#dexa_sdk.managers.dexa_manager.DexaManager.update_dda_template_in_wallet">update_dda_template_in_wallet</a></code></li>
 </ul>
 </li>

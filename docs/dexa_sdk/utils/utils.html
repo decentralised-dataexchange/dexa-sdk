@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import ast
+import json
 import math
 import typing
 from collections import namedtuple
@@ -36,6 +37,11 @@ import aiohttp
 import jcs
 import semver
 from aries_cloudagent.config.injection_context import InjectionContext
+from aries_cloudagent.messaging.jsonld.credential import (
+    b64_to_bytes,
+    b64encode,
+    bytes_to_b64,
+)
 from aries_cloudagent.messaging.models.base_record import BaseRecord
 
 
@@ -369,7 +375,43 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     # Parse query string params.
     parsed_qs = parse_qs(parsed_url.query)
 
-    return parsed_qs.get(query_param)[0]</code></pre>
+    return parsed_qs.get(query_param)[0]
+
+
+async def create_jwt(data: dict, verkey, wallet) -&gt; str:
+    &#34;&#34;&#34;Create and sign jwt&#34;&#34;&#34;
+
+    # payload
+    encoded_payload = b64encode(json.dumps(data))
+
+    # header
+    header = {&#34;alg&#34;: &#34;EdDSA&#34;, &#34;type&#34;: &#34;JWT&#34;}
+    encoded_header = b64encode(json.dumps(header))
+
+    # to be signed payload.
+    tbs = (encoded_header + &#34;.&#34;).encode(&#34;utf-8&#34;) + encoded_payload.encode(&#34;utf-8&#34;)
+
+    # signature.
+    signature = await wallet.sign_message(tbs, verkey)
+
+    encoded_signature = bytes_to_b64(signature, urlsafe=True, pad=False)
+
+    return encoded_header + &#34;.&#34; + encoded_payload + &#34;.&#34; + encoded_signature
+
+
+async def verify_jwt(token: str, public_key, wallet) -&gt; bool:
+    &#34;&#34;&#34;Verify JWT&#34;&#34;&#34;
+
+    encoded_header, encoded_payload, encoded_signature = token.split(&#34;.&#34;)
+
+    decoded_signature = b64_to_bytes(encoded_signature, urlsafe=True)
+
+    # to be verified
+    tbv = (encoded_header + &#34;.&#34;).encode(&#34;utf-8&#34;) + encoded_payload.encode(&#34;utf-8&#34;)
+
+    verified = await wallet.verify_message(tbv, decoded_signature, public_key)
+
+    return verified</code></pre>
 </details>
 </section>
 <section>
@@ -453,6 +495,36 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
         field_value = None
 
     return field_value</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.utils.utils.create_jwt"><code class="name flex">
+<span>async def <span class="ident">create_jwt</span></span>(<span>data: dict, verkey, wallet) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create and sign jwt</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def create_jwt(data: dict, verkey, wallet) -&gt; str:
+    &#34;&#34;&#34;Create and sign jwt&#34;&#34;&#34;
+
+    # payload
+    encoded_payload = b64encode(json.dumps(data))
+
+    # header
+    header = {&#34;alg&#34;: &#34;EdDSA&#34;, &#34;type&#34;: &#34;JWT&#34;}
+    encoded_header = b64encode(json.dumps(header))
+
+    # to be signed payload.
+    tbs = (encoded_header + &#34;.&#34;).encode(&#34;utf-8&#34;) + encoded_payload.encode(&#34;utf-8&#34;)
+
+    # signature.
+    signature = await wallet.sign_message(tbs, verkey)
+
+    encoded_signature = bytes_to_b64(signature, urlsafe=True, pad=False)
+
+    return encoded_header + &#34;.&#34; + encoded_payload + &#34;.&#34; + encoded_signature</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.utils.utils.drop_none_dict"><code class="name flex">
@@ -980,6 +1052,30 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
     )</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.utils.utils.verify_jwt"><code class="name flex">
+<span>async def <span class="ident">verify_jwt</span></span>(<span>token: str, public_key, wallet) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Verify JWT</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def verify_jwt(token: str, public_key, wallet) -&gt; bool:
+    &#34;&#34;&#34;Verify JWT&#34;&#34;&#34;
+
+    encoded_header, encoded_payload, encoded_signature = token.split(&#34;.&#34;)
+
+    decoded_signature = b64_to_bytes(encoded_signature, urlsafe=True)
+
+    # to be verified
+    tbv = (encoded_header + &#34;.&#34;).encode(&#34;utf-8&#34;) + encoded_payload.encode(&#34;utf-8&#34;)
+
+    verified = await wallet.verify_message(tbv, decoded_signature, public_key)
+
+    return verified</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -1055,6 +1151,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <ul class="">
 <li><code><a title="dexa_sdk.utils.utils.bump_major_for_semver_string" href="#dexa_sdk.utils.utils.bump_major_for_semver_string">bump_major_for_semver_string</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.clean_and_get_field_from_dict" href="#dexa_sdk.utils.utils.clean_and_get_field_from_dict">clean_and_get_field_from_dict</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.create_jwt" href="#dexa_sdk.utils.utils.create_jwt">create_jwt</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.drop_none_dict" href="#dexa_sdk.utils.utils.drop_none_dict">drop_none_dict</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.fetch_org_details_from_intermediary" href="#dexa_sdk.utils.utils.fetch_org_details_from_intermediary">fetch_org_details_from_intermediary</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.generate_firebase_dynamic_link" href="#dexa_sdk.utils.utils.generate_firebase_dynamic_link">generate_firebase_dynamic_link</a></code></li>
@@ -1068,6 +1165,7 @@ async def parse_query_params(url: str, query_param: str) -&gt; str:
 <li><code><a title="dexa_sdk.utils.utils.replace_proof_chain" href="#dexa_sdk.utils.utils.replace_proof_chain">replace_proof_chain</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.replace_proof_value" href="#dexa_sdk.utils.utils.replace_proof_value">replace_proof_value</a></code></li>
 <li><code><a title="dexa_sdk.utils.utils.sort_exchange_record_dicts_by_created_at" href="#dexa_sdk.utils.utils.sort_exchange_record_dicts_by_created_at">sort_exchange_record_dicts_by_created_at</a></code></li>
+<li><code><a title="dexa_sdk.utils.utils.verify_jwt" href="#dexa_sdk.utils.utils.verify_jwt">verify_jwt</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

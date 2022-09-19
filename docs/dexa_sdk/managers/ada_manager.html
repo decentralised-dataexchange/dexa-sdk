@@ -95,6 +95,12 @@ from dexa_sdk.agreements.da.v1_0.records.da_template_record import (
     DataAgreementTemplateRecord,
 )
 from dexa_sdk.agreements.da.v1_0.records.personal_data_record import PersonalDataRecord
+from dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record import (
+    ThirdParyDAPreferenceRecord,
+)
+from dexa_sdk.agreements.dda.v1_0.records.dda_instance_permission_record import (
+    DDAInstancePermissionRecord,
+)
 from dexa_sdk.agreements.dda.v1_0.records.dda_instance_record import (
     DataDisclosureAgreementInstanceRecord,
 )
@@ -174,6 +180,7 @@ from mydata_did.v1_0.messages.json_ld_processed_response import (
     JSONLDProcessedResponseBody,
     JSONLDProcessedResponseMessage,
 )
+from mydata_did.v1_0.messages.update_preferences_message import UpdatePreferencesMessage
 from mydata_did.v1_0.models.data_agreement_qr_code_initiate_model import (
     DataAgreementQrCodeInitiateBody,
 )
@@ -185,6 +192,7 @@ from mydata_did.v1_0.models.fetch_preferences_response_model import (
     FPRDUSModel,
     FPRPrefsModel,
 )
+from mydata_did.v1_0.models.update_preferences_model import UpdatePreferencesBodyModel
 from mydata_did.v1_0.utils.util import bool_to_str, str_to_bool
 from web3._utils.encoding import to_json
 
@@ -1197,6 +1205,7 @@ class V2ADAManager:
         for record in records:
             record_dict = record.serialize()
             record_dict.update({&#34;permissions&#34;: []})
+            record_dict.update({&#34;org_prefs&#34;: []})
 
             # Fetch permissions for the DA instance.
             permissions: typing.List[
@@ -1212,6 +1221,64 @@ class V2ADAManager:
                 record_dict[&#34;permissions&#34;].append(permission.serialize())
 
             da_instances_with_permissions.append(record_dict)
+
+            if record.third_party_data_sharing == bool_to_str(True):
+                # DA tempate ID
+                da_template_id = record.template_id
+
+                # Fetch DDA template ID matching DA template ID
+                dda_template_tag_filter: dict = {
+                    &#34;delete_flag&#34;: bool_to_str(False),
+                    &#34;da_template_id&#34;: da_template_id,
+                    &#34;latest_version_flag&#34;: bool_to_str(True),
+                }
+                dda_template_record: typing.List[
+                    DataDisclosureAgreementTemplateRecord
+                ] = await DataDisclosureAgreementTemplateRecord.query(
+                    self.context, dda_template_tag_filter
+                )
+
+                if dda_template_record:
+                    # Fetch DDA instances by DDA template.
+                    dda_instances: typing.List[
+                        DataDisclosureAgreementInstanceRecord
+                    ] = await DataDisclosureAgreementInstanceRecord.query(
+                        self.context,
+                        {
+                            &#34;template_id&#34;: dda_template_record[0].template_id,
+                            &#34;state&#34;: DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+                        },
+                    )
+
+                    for dda_instance in dda_instances:
+
+                        dda_instance_permission_record = (
+                            await DDAInstancePermissionRecord.get_permission(
+                                self.context, dda_instance.instance_id
+                            )
+                        )
+
+                        # Check DDA instance is active.
+                        if (
+                            dda_instance_permission_record
+                            and dda_instance_permission_record.state
+                            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                            or (not dda_instance_permission_record)
+                        ):
+
+                            # Fetch Individual preferences for this DDA instance.
+                            third_party_da_preference_record = (
+                                await ThirdParyDAPreferenceRecord.get_preference(
+                                    self.context,
+                                    dda_instance.instance_id,
+                                    record.instance_id,
+                                )
+                            )
+
+                            if third_party_da_preference_record:
+                                record_dict[&#34;org_prefs&#34;].append(
+                                    third_party_da_preference_record.serialize()
+                                )
 
         paginate_result = paginate(da_instances_with_permissions, page, page_size)
 
@@ -2295,22 +2362,55 @@ class V2ADAManager:
                     controller_details_model: DataController = (
                         connection_controller_details_record.controller_details_model
                     )
-                    dus.append(
-                        FPRDUSModel(
-                            dda_instance_id=dda_instance.instance_id,
-                            controller_details=FPRControllerDetailsModel(
-                                organisation_did=controller_details_model.organisation_did,
-                                organisation_name=controller_details_model.organisation_name,
-                                cover_image_url=controller_details_model.cover_image_url,
-                                logo_image_url=controller_details_model.logo_image_url,
-                                location=controller_details_model.location,
-                                organisation_type=controller_details_model.organisation_type,
-                                description=controller_details_model.description,
-                                policy_url=controller_details_model.policy_url,
-                                eula_url=controller_details_model.eula_url,
-                            ),
+
+                    dda_instance_permission_record = (
+                        await DDAInstancePermissionRecord.get_permission(
+                            self.context, dda_instance.instance_id
                         )
                     )
+
+                    # Check DDA instance is active.
+                    if (
+                        dda_instance_permission_record
+                        and dda_instance_permission_record.state
+                        != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                    ) or (not dda_instance_permission_record):
+
+                        # Fetch Individual preferences for this DDA instance.
+                        third_party_da_preference_record = (
+                            await ThirdParyDAPreferenceRecord.get_preference(
+                                self.context,
+                                dda_instance.instance_id,
+                                instance_record.instance_id,
+                            )
+                        )
+
+                        if not third_party_da_preference_record:
+                            third_party_da_preference_record = (
+                                await self.send_update_preferences_message(
+                                    dda_instance.instance_id,
+                                    instance_record.instance_id,
+                                    ThirdParyDAPreferenceRecord.STATE_ALLOW,
+                                )
+                            )
+
+                        dus.append(
+                            FPRDUSModel(
+                                dda_instance_permission_state=third_party_da_preference_record.state,
+                                dda_instance_id=dda_instance.instance_id,
+                                controller_details=FPRControllerDetailsModel(
+                                    organisation_did=controller_details_model.organisation_did,
+                                    organisation_name=controller_details_model.organisation_name,
+                                    cover_image_url=controller_details_model.cover_image_url,
+                                    logo_image_url=controller_details_model.logo_image_url,
+                                    location=controller_details_model.location,
+                                    organisation_type=controller_details_model.organisation_type,
+                                    description=controller_details_model.description,
+                                    policy_url=controller_details_model.policy_url,
+                                    eula_url=controller_details_model.eula_url,
+                                ),
+                            )
+                        )
 
             prefs.append(
                 FPRPrefsModel(
@@ -2362,7 +2462,7 @@ class V2ADAManager:
             await self.get_message_class_from_dict(message_dict)
         )
 
-        return res_message
+        return res_message.body
 
     async def get_message_class_from_dict(self, message_dict: dict) -&gt; AgentMessage:
         &#34;&#34;&#34;Get message class from message dict.
@@ -2458,7 +2558,64 @@ class V2ADAManager:
             message (FetchPreferencesResponseMessage): Fetch preference response message.
             message_receipt (MessageReceipt): Message receipt.
         &#34;&#34;&#34;
-        self._logger.info(json.dumps(message.serialize(), indent=4))</code></pre>
+        self._logger.info(json.dumps(message.serialize(), indent=4))
+
+    async def send_update_preferences_message(
+        self, dda_instance_id: str, da_instance_id: str, state: str
+    ) -&gt; ThirdParyDAPreferenceRecord:
+        &#34;&#34;&#34;Send update preferences message.
+
+        Args:
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+            state (str): State.
+        &#34;&#34;&#34;
+
+        third_party_da_preference_record = (
+            await ThirdParyDAPreferenceRecord.add_preference(
+                self.context, dda_instance_id, da_instance_id, state
+            )
+        )
+
+        # Fetch data agreement instance.
+        da_instance_record: DataAgreementInstanceRecord = (
+            await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, {&#34;instance_id&#34;: da_instance_id}
+            )
+        )
+        connection_id = da_instance_record.connection_id
+
+        # Construct update preference message.
+        message = UpdatePreferencesMessage(
+            body=UpdatePreferencesBodyModel(
+                dda_instance_id=dda_instance_id,
+                da_instance_id=da_instance_id,
+                state=state,
+            )
+        )
+
+        # Send message.
+        await self.send_reply_message(message, connection_id)
+
+        return third_party_da_preference_record
+
+    async def process_update_preferences_message(
+        self, message: UpdatePreferencesMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process update preferences message.
+
+        Args:
+            message (UpdatePreferencesMessage): Update preferences message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        dda_instance_id = message.body.dda_instance_id
+        da_instance_id = message.body.da_instance_id
+        state = message.body.state
+
+        await ThirdParyDAPreferenceRecord.add_preference(
+            self.context, dda_instance_id, da_instance_id, state
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -3490,6 +3647,7 @@ class V2ADAManager:
         for record in records:
             record_dict = record.serialize()
             record_dict.update({&#34;permissions&#34;: []})
+            record_dict.update({&#34;org_prefs&#34;: []})
 
             # Fetch permissions for the DA instance.
             permissions: typing.List[
@@ -3505,6 +3663,64 @@ class V2ADAManager:
                 record_dict[&#34;permissions&#34;].append(permission.serialize())
 
             da_instances_with_permissions.append(record_dict)
+
+            if record.third_party_data_sharing == bool_to_str(True):
+                # DA tempate ID
+                da_template_id = record.template_id
+
+                # Fetch DDA template ID matching DA template ID
+                dda_template_tag_filter: dict = {
+                    &#34;delete_flag&#34;: bool_to_str(False),
+                    &#34;da_template_id&#34;: da_template_id,
+                    &#34;latest_version_flag&#34;: bool_to_str(True),
+                }
+                dda_template_record: typing.List[
+                    DataDisclosureAgreementTemplateRecord
+                ] = await DataDisclosureAgreementTemplateRecord.query(
+                    self.context, dda_template_tag_filter
+                )
+
+                if dda_template_record:
+                    # Fetch DDA instances by DDA template.
+                    dda_instances: typing.List[
+                        DataDisclosureAgreementInstanceRecord
+                    ] = await DataDisclosureAgreementInstanceRecord.query(
+                        self.context,
+                        {
+                            &#34;template_id&#34;: dda_template_record[0].template_id,
+                            &#34;state&#34;: DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+                        },
+                    )
+
+                    for dda_instance in dda_instances:
+
+                        dda_instance_permission_record = (
+                            await DDAInstancePermissionRecord.get_permission(
+                                self.context, dda_instance.instance_id
+                            )
+                        )
+
+                        # Check DDA instance is active.
+                        if (
+                            dda_instance_permission_record
+                            and dda_instance_permission_record.state
+                            != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                            or (not dda_instance_permission_record)
+                        ):
+
+                            # Fetch Individual preferences for this DDA instance.
+                            third_party_da_preference_record = (
+                                await ThirdParyDAPreferenceRecord.get_preference(
+                                    self.context,
+                                    dda_instance.instance_id,
+                                    record.instance_id,
+                                )
+                            )
+
+                            if third_party_da_preference_record:
+                                record_dict[&#34;org_prefs&#34;].append(
+                                    third_party_da_preference_record.serialize()
+                                )
 
         paginate_result = paginate(da_instances_with_permissions, page, page_size)
 
@@ -4588,22 +4804,55 @@ class V2ADAManager:
                     controller_details_model: DataController = (
                         connection_controller_details_record.controller_details_model
                     )
-                    dus.append(
-                        FPRDUSModel(
-                            dda_instance_id=dda_instance.instance_id,
-                            controller_details=FPRControllerDetailsModel(
-                                organisation_did=controller_details_model.organisation_did,
-                                organisation_name=controller_details_model.organisation_name,
-                                cover_image_url=controller_details_model.cover_image_url,
-                                logo_image_url=controller_details_model.logo_image_url,
-                                location=controller_details_model.location,
-                                organisation_type=controller_details_model.organisation_type,
-                                description=controller_details_model.description,
-                                policy_url=controller_details_model.policy_url,
-                                eula_url=controller_details_model.eula_url,
-                            ),
+
+                    dda_instance_permission_record = (
+                        await DDAInstancePermissionRecord.get_permission(
+                            self.context, dda_instance.instance_id
                         )
                     )
+
+                    # Check DDA instance is active.
+                    if (
+                        dda_instance_permission_record
+                        and dda_instance_permission_record.state
+                        != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                    ) or (not dda_instance_permission_record):
+
+                        # Fetch Individual preferences for this DDA instance.
+                        third_party_da_preference_record = (
+                            await ThirdParyDAPreferenceRecord.get_preference(
+                                self.context,
+                                dda_instance.instance_id,
+                                instance_record.instance_id,
+                            )
+                        )
+
+                        if not third_party_da_preference_record:
+                            third_party_da_preference_record = (
+                                await self.send_update_preferences_message(
+                                    dda_instance.instance_id,
+                                    instance_record.instance_id,
+                                    ThirdParyDAPreferenceRecord.STATE_ALLOW,
+                                )
+                            )
+
+                        dus.append(
+                            FPRDUSModel(
+                                dda_instance_permission_state=third_party_da_preference_record.state,
+                                dda_instance_id=dda_instance.instance_id,
+                                controller_details=FPRControllerDetailsModel(
+                                    organisation_did=controller_details_model.organisation_did,
+                                    organisation_name=controller_details_model.organisation_name,
+                                    cover_image_url=controller_details_model.cover_image_url,
+                                    logo_image_url=controller_details_model.logo_image_url,
+                                    location=controller_details_model.location,
+                                    organisation_type=controller_details_model.organisation_type,
+                                    description=controller_details_model.description,
+                                    policy_url=controller_details_model.policy_url,
+                                    eula_url=controller_details_model.eula_url,
+                                ),
+                            )
+                        )
 
             prefs.append(
                 FPRPrefsModel(
@@ -4655,7 +4904,7 @@ class V2ADAManager:
             await self.get_message_class_from_dict(message_dict)
         )
 
-        return res_message
+        return res_message.body
 
     async def get_message_class_from_dict(self, message_dict: dict) -&gt; AgentMessage:
         &#34;&#34;&#34;Get message class from message dict.
@@ -4751,7 +5000,64 @@ class V2ADAManager:
             message (FetchPreferencesResponseMessage): Fetch preference response message.
             message_receipt (MessageReceipt): Message receipt.
         &#34;&#34;&#34;
-        self._logger.info(json.dumps(message.serialize(), indent=4))</code></pre>
+        self._logger.info(json.dumps(message.serialize(), indent=4))
+
+    async def send_update_preferences_message(
+        self, dda_instance_id: str, da_instance_id: str, state: str
+    ) -&gt; ThirdParyDAPreferenceRecord:
+        &#34;&#34;&#34;Send update preferences message.
+
+        Args:
+            dda_instance_id (str): DDA instance ID.
+            da_instance_id (str): DA instance ID.
+            state (str): State.
+        &#34;&#34;&#34;
+
+        third_party_da_preference_record = (
+            await ThirdParyDAPreferenceRecord.add_preference(
+                self.context, dda_instance_id, da_instance_id, state
+            )
+        )
+
+        # Fetch data agreement instance.
+        da_instance_record: DataAgreementInstanceRecord = (
+            await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+                self.context, {&#34;instance_id&#34;: da_instance_id}
+            )
+        )
+        connection_id = da_instance_record.connection_id
+
+        # Construct update preference message.
+        message = UpdatePreferencesMessage(
+            body=UpdatePreferencesBodyModel(
+                dda_instance_id=dda_instance_id,
+                da_instance_id=da_instance_id,
+                state=state,
+            )
+        )
+
+        # Send message.
+        await self.send_reply_message(message, connection_id)
+
+        return third_party_da_preference_record
+
+    async def process_update_preferences_message(
+        self, message: UpdatePreferencesMessage, message_receipt: MessageReceipt
+    ):
+        &#34;&#34;&#34;Process update preferences message.
+
+        Args:
+            message (UpdatePreferencesMessage): Update preferences message.
+            message_receipt (MessageReceipt): Message receipt.
+        &#34;&#34;&#34;
+
+        dda_instance_id = message.body.dda_instance_id
+        da_instance_id = message.body.da_instance_id
+        state = message.body.state
+
+        await ThirdParyDAPreferenceRecord.add_preference(
+            self.context, dda_instance_id, da_instance_id, state
+        )</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -6606,22 +6912,55 @@ proceed to delete the template record.</p>
                 controller_details_model: DataController = (
                     connection_controller_details_record.controller_details_model
                 )
-                dus.append(
-                    FPRDUSModel(
-                        dda_instance_id=dda_instance.instance_id,
-                        controller_details=FPRControllerDetailsModel(
-                            organisation_did=controller_details_model.organisation_did,
-                            organisation_name=controller_details_model.organisation_name,
-                            cover_image_url=controller_details_model.cover_image_url,
-                            logo_image_url=controller_details_model.logo_image_url,
-                            location=controller_details_model.location,
-                            organisation_type=controller_details_model.organisation_type,
-                            description=controller_details_model.description,
-                            policy_url=controller_details_model.policy_url,
-                            eula_url=controller_details_model.eula_url,
-                        ),
+
+                dda_instance_permission_record = (
+                    await DDAInstancePermissionRecord.get_permission(
+                        self.context, dda_instance.instance_id
                     )
                 )
+
+                # Check DDA instance is active.
+                if (
+                    dda_instance_permission_record
+                    and dda_instance_permission_record.state
+                    != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                ) or (not dda_instance_permission_record):
+
+                    # Fetch Individual preferences for this DDA instance.
+                    third_party_da_preference_record = (
+                        await ThirdParyDAPreferenceRecord.get_preference(
+                            self.context,
+                            dda_instance.instance_id,
+                            instance_record.instance_id,
+                        )
+                    )
+
+                    if not third_party_da_preference_record:
+                        third_party_da_preference_record = (
+                            await self.send_update_preferences_message(
+                                dda_instance.instance_id,
+                                instance_record.instance_id,
+                                ThirdParyDAPreferenceRecord.STATE_ALLOW,
+                            )
+                        )
+
+                    dus.append(
+                        FPRDUSModel(
+                            dda_instance_permission_state=third_party_da_preference_record.state,
+                            dda_instance_id=dda_instance.instance_id,
+                            controller_details=FPRControllerDetailsModel(
+                                organisation_did=controller_details_model.organisation_did,
+                                organisation_name=controller_details_model.organisation_name,
+                                cover_image_url=controller_details_model.cover_image_url,
+                                logo_image_url=controller_details_model.logo_image_url,
+                                location=controller_details_model.location,
+                                organisation_type=controller_details_model.organisation_type,
+                                description=controller_details_model.description,
+                                policy_url=controller_details_model.policy_url,
+                                eula_url=controller_details_model.eula_url,
+                            ),
+                        )
+                    )
 
         prefs.append(
             FPRPrefsModel(
@@ -6736,6 +7075,41 @@ proceed to delete the template record.</p>
 
     if responder:
         await responder.send_reply(json_ld_processed_response_message)</code></pre>
+</details>
+</dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.process_update_preferences_message"><code class="name flex">
+<span>async def <span class="ident">process_update_preferences_message</span></span>(<span>self, message: mydata_did.v1_0.messages.update_preferences_message.UpdatePreferencesMessage, message_receipt: aries_cloudagent.transport.inbound.receipt.MessageReceipt)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process update preferences message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>UpdatePreferencesMessage</code></dt>
+<dd>Update preferences message.</dd>
+<dt><strong><code>message_receipt</code></strong> :&ensp;<code>MessageReceipt</code></dt>
+<dd>Message receipt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def process_update_preferences_message(
+    self, message: UpdatePreferencesMessage, message_receipt: MessageReceipt
+):
+    &#34;&#34;&#34;Process update preferences message.
+
+    Args:
+        message (UpdatePreferencesMessage): Update preferences message.
+        message_receipt (MessageReceipt): Message receipt.
+    &#34;&#34;&#34;
+
+    dda_instance_id = message.body.dda_instance_id
+    da_instance_id = message.body.da_instance_id
+    state = message.body.state
+
+    await ThirdParyDAPreferenceRecord.add_preference(
+        self.context, dda_instance_id, da_instance_id, state
+    )</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet"><code class="name flex">
@@ -7057,6 +7431,7 @@ Defaults to false.</dd>
     for record in records:
         record_dict = record.serialize()
         record_dict.update({&#34;permissions&#34;: []})
+        record_dict.update({&#34;org_prefs&#34;: []})
 
         # Fetch permissions for the DA instance.
         permissions: typing.List[
@@ -7072,6 +7447,64 @@ Defaults to false.</dd>
             record_dict[&#34;permissions&#34;].append(permission.serialize())
 
         da_instances_with_permissions.append(record_dict)
+
+        if record.third_party_data_sharing == bool_to_str(True):
+            # DA tempate ID
+            da_template_id = record.template_id
+
+            # Fetch DDA template ID matching DA template ID
+            dda_template_tag_filter: dict = {
+                &#34;delete_flag&#34;: bool_to_str(False),
+                &#34;da_template_id&#34;: da_template_id,
+                &#34;latest_version_flag&#34;: bool_to_str(True),
+            }
+            dda_template_record: typing.List[
+                DataDisclosureAgreementTemplateRecord
+            ] = await DataDisclosureAgreementTemplateRecord.query(
+                self.context, dda_template_tag_filter
+            )
+
+            if dda_template_record:
+                # Fetch DDA instances by DDA template.
+                dda_instances: typing.List[
+                    DataDisclosureAgreementInstanceRecord
+                ] = await DataDisclosureAgreementInstanceRecord.query(
+                    self.context,
+                    {
+                        &#34;template_id&#34;: dda_template_record[0].template_id,
+                        &#34;state&#34;: DataDisclosureAgreementInstanceRecord.STATE_CAPTURE,
+                    },
+                )
+
+                for dda_instance in dda_instances:
+
+                    dda_instance_permission_record = (
+                        await DDAInstancePermissionRecord.get_permission(
+                            self.context, dda_instance.instance_id
+                        )
+                    )
+
+                    # Check DDA instance is active.
+                    if (
+                        dda_instance_permission_record
+                        and dda_instance_permission_record.state
+                        != DDAInstancePermissionRecord.STATE_DEACTIVATE
+                        or (not dda_instance_permission_record)
+                    ):
+
+                        # Fetch Individual preferences for this DDA instance.
+                        third_party_da_preference_record = (
+                            await ThirdParyDAPreferenceRecord.get_preference(
+                                self.context,
+                                dda_instance.instance_id,
+                                record.instance_id,
+                            )
+                        )
+
+                        if third_party_da_preference_record:
+                            record_dict[&#34;org_prefs&#34;].append(
+                                third_party_da_preference_record.serialize()
+                            )
 
     paginate_result = paginate(da_instances_with_permissions, page, page_size)
 
@@ -7341,7 +7774,7 @@ Defaults to false.</dd>
         await self.get_message_class_from_dict(message_dict)
     )
 
-    return res_message</code></pre>
+    return res_message.body</code></pre>
 </details>
 </dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_json_ld_processed_message"><code class="name flex">
@@ -7727,6 +8160,64 @@ Defaults to false.</dd>
         await responder.send_reply(message, connection_id=connection_id)</code></pre>
 </details>
 </dd>
+<dt id="dexa_sdk.managers.ada_manager.V2ADAManager.send_update_preferences_message"><code class="name flex">
+<span>async def <span class="ident">send_update_preferences_message</span></span>(<span>self, dda_instance_id: str, da_instance_id: str, state: str) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord" href="../agreements/da/v1_0/records/third_party_data_sharing_preferences_record.html#dexa_sdk.agreements.da.v1_0.records.third_party_data_sharing_preferences_record.ThirdParyDAPreferenceRecord">ThirdParyDAPreferenceRecord</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send update preferences message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dda_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DDA instance ID.</dd>
+<dt><strong><code>da_instance_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>DA instance ID.</dd>
+<dt><strong><code>state</code></strong> :&ensp;<code>str</code></dt>
+<dd>State.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_update_preferences_message(
+    self, dda_instance_id: str, da_instance_id: str, state: str
+) -&gt; ThirdParyDAPreferenceRecord:
+    &#34;&#34;&#34;Send update preferences message.
+
+    Args:
+        dda_instance_id (str): DDA instance ID.
+        da_instance_id (str): DA instance ID.
+        state (str): State.
+    &#34;&#34;&#34;
+
+    third_party_da_preference_record = (
+        await ThirdParyDAPreferenceRecord.add_preference(
+            self.context, dda_instance_id, da_instance_id, state
+        )
+    )
+
+    # Fetch data agreement instance.
+    da_instance_record: DataAgreementInstanceRecord = (
+        await DataAgreementInstanceRecord.retrieve_by_tag_filter(
+            self.context, {&#34;instance_id&#34;: da_instance_id}
+        )
+    )
+    connection_id = da_instance_record.connection_id
+
+    # Construct update preference message.
+    message = UpdatePreferencesMessage(
+        body=UpdatePreferencesBodyModel(
+            dda_instance_id=dda_instance_id,
+            da_instance_id=da_instance_id,
+            state=state,
+        )
+    )
+
+    # Send message.
+    await self.send_reply_message(message, connection_id)
+
+    return third_party_da_preference_record</code></pre>
+</details>
+</dd>
 <dt id="dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet"><code class="name flex">
 <span>async def <span class="ident">update_and_store_da_template_in_wallet</span></span>(<span>self, template_id: str, data_agreement: dict, *, publish_flag: bool = True, schema_id: str = None) ‑> <a title="dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord" href="../agreements/da/v1_0/records/da_template_record.html#dexa_sdk.agreements.da.v1_0.records.da_template_record.DataAgreementTemplateRecord">DataAgreementTemplateRecord</a></span>
 </code></dt>
@@ -8098,6 +8589,7 @@ Defaults to false.</dd>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_fetch_preference_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_fetch_preference_message">process_fetch_preference_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_fetch_preference_response_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_fetch_preference_response_message">process_fetch_preference_response_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_json_ld_processed_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_json_ld_processed_message">process_json_ld_processed_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.process_update_preferences_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.process_update_preferences_message">process_update_preferences_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.publish_da_template_in_wallet">publish_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_connections_and_categorise_results" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_connections_and_categorise_results">query_connections_and_categorise_results</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.query_da_templates_in_wallet">query_da_templates_in_wallet</a></code></li>
@@ -8115,6 +8607,7 @@ Defaults to false.</dd>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_problem_report_message">send_problem_report_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_qr_code_initiate_message">send_qr_code_initiate_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_reply_message">send_reply_message</a></code></li>
+<li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.send_update_preferences_message" href="#dexa_sdk.managers.ada_manager.V2ADAManager.send_update_preferences_message">send_update_preferences_message</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_and_store_da_template_in_wallet">update_and_store_da_template_in_wallet</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_controller_details" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_controller_details">update_controller_details</a></code></li>
 <li><code><a title="dexa_sdk.managers.ada_manager.V2ADAManager.update_personal_data_description" href="#dexa_sdk.managers.ada_manager.V2ADAManager.update_personal_data_description">update_personal_data_description</a></code></li>
