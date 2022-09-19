@@ -100,6 +100,12 @@ execute(args)
 
 and run by executing `python agent.py`.
 
+#### Using docker
+
+```sh
+docker run -it igrantio/dexa-sdk:0.1.8 -- -it http 0.0.0.0 8006 -ot http -e http://localhost:8006/ --label Data Source --admin 0.0.0.0 8005 --admin-insecure-mode --auto-accept-requests --auto-ping-connection --auto-respond-credential-proposal --auto-respond-credential-offer --auto-respond-credential-request --auto-store-credential --auto-respond-presentation-proposal --auto-respond-presentation-request --auto-verify-presentation --genesis-url https://indy.igrant.io/genesis --wallet-type indy --wallet-name Data Source --log-level info --wallet-key Data Source --webhook-url http://localhost:8005/webhooks --public-invites --plugin mydata_did --plugin dexa_protocol --eth-node-rpc <ethereum node rpc endpoint> --intermediary-eth-private-key <data intermediary ethereum private key>  --org-eth-private-key <org ethereum private key> --contract-address <contract address>
+```
+
 ## Contributing
 
 Feel free to improve the plugin and send us a pull request. If you found any problems, please create an issue in this repo.
