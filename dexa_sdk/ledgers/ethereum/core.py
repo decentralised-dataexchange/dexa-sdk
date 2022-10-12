@@ -162,7 +162,7 @@ class EthereumClient:
                 {
                     "from": org_account.address,
                     "nonce": self.client.eth.get_transaction_count(org_account.address),
-                    "maxFeePerGas": 2000000000,
+                    "maxFeePerGas": 5721831636100,
                     "maxPriorityFeePerGas": 1000000000,
                 }
             )
@@ -202,7 +202,7 @@ class EthereumClient:
                 {
                     "from": org_account.address,
                     "nonce": self.client.eth.get_transaction_count(org_account.address),
-                    "maxFeePerGas": 2000000000,
+                    "maxFeePerGas": 572183163610,
                     "maxPriorityFeePerGas": 1000000000,
                 }
             )
@@ -244,7 +244,7 @@ class EthereumClient:
                 {
                     "from": org_account.address,
                     "nonce": self.client.eth.get_transaction_count(org_account.address),
-                    "maxFeePerGas": 2000000000,
+                    "maxFeePerGas": 572183163610,
                     "maxPriorityFeePerGas": 1000000000,
                 }
             )
@@ -288,7 +288,7 @@ class EthereumClient:
                 {
                     "from": org_account.address,
                     "nonce": self.client.eth.get_transaction_count(org_account.address),
-                    "maxFeePerGas": 2000000000,
+                    "maxFeePerGas": 572183163610,
                     "maxPriorityFeePerGas": 1000000000,
                 }
             )
@@ -329,7 +329,7 @@ class EthereumClient:
                     "nonce": self.client.eth.get_transaction_count(
                         intermediary_account.address
                     ),
-                    "maxFeePerGas": 2000000000,
+                    "maxFeePerGas": 572183163610,
                     "maxPriorityFeePerGas": 1000000000,
                 }
             )
