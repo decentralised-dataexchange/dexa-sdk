@@ -89,21 +89,12 @@ class ConnectionControllerDetailsRecord(BaseRecord):
             ConnectionControllerDetailsRecord: Connection controller details record.
         """
 
-        tag_filter = {"organisation_did": controller_details.organisation_did}
-        records = await cls.query(context, tag_filter)
-
-        if records:
-            # Existing connection found.
-
-            # Delete the new connection.
-            await connection_record.delete_record(context)
-        else:
-            # Create marketplace connection record.
-            record = cls(
-                connection_id=connection_record.connection_id,
-                controller_details=controller_details.serialize(),
-                organisation_did=controller_details.organisation_did,
-            )
+        # Create marketplace connection record.
+        record = cls(
+            connection_id=connection_record.connection_id,
+            controller_details=controller_details.serialize(),
+            organisation_did=controller_details.organisation_did,
+        )
 
         await record.save(context)
 
