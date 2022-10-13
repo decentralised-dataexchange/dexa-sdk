@@ -147,7 +147,7 @@ class EthereumClient:
         """
         return self._contract
 
-    async def emit_da_did(self, did: str) -> typing.Tuple[typing.Any, typing.Any]:
+    def emit_da_did(self, did: str) -> typing.Tuple[typing.Any, typing.Any]:
         """Emit did:mydata identifier in the blockchain logs"""
         org_account = self.org_account
         org_balance = self.client.eth.get_balance(org_account.address)
@@ -173,9 +173,6 @@ class EthereumClient:
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
 
-            # Suspend execution and let other task run.
-            await asyncio.sleep(1)
-
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
             if tx_receipt.get("status") == 1:
@@ -187,7 +184,7 @@ class EthereumClient:
         except ContractLogicError as err:
             self.logger.info(f"Status (emitDADID): {err}")
 
-    async def emit_dda_did(self, did: str) -> typing.Tuple[typing.Any, typing.Any]:
+    def emit_dda_did(self, did: str) -> typing.Tuple[typing.Any, typing.Any]:
         """Emit did:mydata identifier in the blockchain logs"""
         org_account = self.org_account
         org_balance = self.client.eth.get_balance(org_account.address)
@@ -213,9 +210,6 @@ class EthereumClient:
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
 
-            # Suspend execution and let other task run.
-            await asyncio.sleep(1)
-
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
             if tx_receipt.get("status") == 1:
@@ -227,7 +221,7 @@ class EthereumClient:
         except ContractLogicError as err:
             self.logger.info(f"Status (emitDDADID): {err}")
 
-    async def add_access_token(
+    def add_access_token(
         self, nonce: str, accesstoken: str
     ) -> typing.Tuple[typing.Any, typing.Any]:
         """Add access token."""
@@ -254,10 +248,6 @@ class EthereumClient:
             )
 
             tx_hash = self.client.eth.send_raw_transaction(tx_create.rawTransaction)
-
-            # Suspend execution and let other task run.
-            await asyncio.sleep(1)
-
             tx_receipt = self.client.eth.wait_for_transaction_receipt(tx_hash)
 
             if tx_receipt.get("status") == 1:
@@ -357,4 +347,6 @@ class EthereumClient:
                     "Status (addOrganisation): Organisation is already present in whitelist."
                 )
         except ContractLogicError as err:
+            self.logger.info(f"Status (addOrganisation): {err}")
+        except ValueError as err:
             self.logger.info(f"Status (addOrganisation): {err}")
