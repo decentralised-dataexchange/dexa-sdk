@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dexa-sdk"
-version = "0.1.11"
+version = "0.1.12"
 description = "Store and manage Data Exchange Agreements (DEXA)"
 authors = ["George J Padayatti <george.padayatti@igrant.io>"]
 license = "License :: OSI Approved :: Apache Software License"
@@ -43,8 +43,8 @@ web3 = "^5.30.0"
 py-solc-x = "^1.1.1"
 validators = "^0.20.0"
 PyJWT = "^2.4.0"
-acapy-mydata-did-protocol = "0.1.13"
-dexa-protocol = "0.1.9"
+acapy-mydata-did-protocol = "0.1.14"
+dexa-protocol = "0.1.10"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"
