@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import json
 import time
 import typing
@@ -1062,8 +1063,9 @@ class DexaManager:
         pack_format: PackWireFormat = await context.inject(
             BaseWireFormat, required=False
         )
-        return pack_format.task_queue.put(
-            coro, lambda x: loop.create_task(task_complete(x)), ident
+        task = loop.create_task(coro)
+        return pack_format.task_queue.add_active(
+            task, lambda x: loop.create_task(task_complete(x)), ident
         )
 
     async def anchor_dda_instance_to_blockchain_async_task(self, instance_id: str):
@@ -1109,9 +1111,20 @@ class DexaManager:
 
         did_mydata_builder = DIDMyDataBuilder(artefact=dda_model)
 
-        (tx_hash, tx_receipt) = await eth_client.emit_dda_did(
-            did_mydata_builder.generate_did("DataDisclosureAgreement")
+        # (tx_hash, tx_receipt) = await eth_client.emit_dda_did(
+        #     did_mydata_builder.generate_did("DataDisclosureAgreement")
+        # )
+
+        task = asyncio.create_task(
+            self.long_running(
+                eth_client.emit_dda_did,
+                did_mydata_builder.generate_did("DataDisclosureAgreement"),
+            )
         )
+        while not task.done():
+            await asyncio.sleep(0.05)
+
+        (tx_hash, tx_receipt) = task.result()
 
         return (
             dda_instance_record.instance_id,
@@ -1417,6 +1430,10 @@ class DexaManager:
         )
         self._logger.info(pending_task)
 
+    async def long_running(self, blocking_func, *args):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, functools.partial(blocking_func, *args))
+
     async def add_token_to_blockchain(
         self, connection_record: ConnectionRecord, jwt: str, nonce: str
     ) -> None:
@@ -1424,7 +1441,15 @@ class DexaManager:
 
         eth_client: EthereumClient = await self.context.inject(EthereumClient)
 
-        (tx_hash, tx_receipt) = await eth_client.add_access_token(nonce, jwt)
+        task = asyncio.create_task(
+            self.long_running(eth_client.add_access_token, nonce, jwt)
+        )
+        while not task.done():
+            await asyncio.sleep(0.05)
+
+        (tx_hash, tx_receipt) = task.result()
+
+        # (tx_hash, tx_receipt) = eth_client.add_access_token(nonce, jwt)
 
         return (
             connection_record,

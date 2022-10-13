@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import functools
 import json
 import typing
 import uuid
@@ -1335,6 +1336,10 @@ class V2ADAManager:
         )
         self._logger.info(pending_task)
 
+    async def long_running(self, blocking_func, *args):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, functools.partial(blocking_func, *args))
+
     async def anchor_da_instance_to_blockchain(self, instance_id: str) -> None:
         """Anchor da instance to blockchain.
 
@@ -1361,9 +1366,17 @@ class V2ADAManager:
 
         did_mydata_builder = DIDMyDataBuilder(artefact=da_model)
 
-        (tx_hash, tx_receipt) = await eth_client.emit_da_did(
-            did_mydata_builder.mydata_did
+        # (tx_hash, tx_receipt) = await eth_client.emit_da_did(
+        #     did_mydata_builder.mydata_did
+        # )
+
+        task = asyncio.create_task(
+            self.long_running(eth_client.emit_da_did, did_mydata_builder.mydata_did)
         )
+        while not task.done():
+            await asyncio.sleep(0.05)
+
+        (tx_hash, tx_receipt) = task.result()
 
         return (
             da_instance_record.instance_id,
@@ -2072,8 +2085,9 @@ class V2ADAManager:
         pack_format: PackWireFormat = await context.inject(
             BaseWireFormat, required=False
         )
-        return pack_format.task_queue.put(
-            coro, lambda x: loop.create_task(task_complete(x)), ident
+        task = loop.create_task(coro)
+        return pack_format.task_queue.add_active(
+            task, lambda x: loop.create_task(task_complete(x)), ident
         )
 
     async def process_da_negotiation_receipt_message(
