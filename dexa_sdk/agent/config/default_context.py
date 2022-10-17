@@ -167,8 +167,9 @@ class DefaultContextBuilder(ContextBuilder):
             BaseIntroductionService, DemoIntroductionService(context)
         )
 
-        # Provide ethereum client.
-        context.injector.bind_instance(EthereumClient, EthereumClient(context))
+        # If audit mode is enabled provide ethereum client.
+        if context.settings.get("intermediary.audit_mode"):
+            context.injector.bind_instance(EthereumClient, EthereumClient(context))
 
     async def load_plugins(self, context: InjectionContext):
         """Set up plugin registry and load plugins."""
