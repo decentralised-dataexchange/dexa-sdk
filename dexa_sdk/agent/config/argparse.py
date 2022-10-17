@@ -42,6 +42,13 @@ class DexaGroup(ArgumentGroup):
         """Add dexa-specific command line arguments to the parser."""
 
         parser.add_argument(
+            "--audit-mode",
+            action="store_true",
+            env_var="AUDIT_MODE",
+            help="Audit mode",
+        )
+
+        parser.add_argument(
             "--eth-node-rpc",
             type=str,
             metavar="<eth-node-rpc>",
@@ -91,12 +98,21 @@ class DexaGroup(ArgumentGroup):
             "/main/abi/abi.json"
         )
 
+        # Ethereum node RPC endpoint
         settings["dexa.eth_node_rpc"] = args.eth_node_rpc
+
+        # Organisation ethereum private key
         settings["dexa.org_eth_private_key"] = args.org_eth_private_key
+
+        # Intermediary ethereum private key
         settings[
             "dexa.intermediary_eth_private_key"
         ] = args.intermediary_eth_private_key
+
+        # Smart contract address
         settings["dexa.contract_address"] = args.contract_address
+
+        # Smart contract ABI URL
         settings["dexa.contract_abi_url"] = (
             args.contract_abi_url if args.contract_abi_url else default_contract_abi_url
         )
@@ -105,6 +121,11 @@ class DexaGroup(ArgumentGroup):
         req = requests.get(settings["dexa.contract_abi_url"])
         abi = req.json()
         settings["dexa.contract_abi"] = abi
+
+        if args.audit_mode:
+            settings["intermediary.audit_mode"] = True
+        else:
+            settings["intermediary.audit_mode"] = False
 
         return settings
 
