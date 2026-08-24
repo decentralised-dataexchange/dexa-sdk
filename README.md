@@ -111,7 +111,7 @@ docker run -it igrantio/dexa-sdk:0.1.8 -- -it http 0.0.0.0 8006 -ot http -e http
 Feel free to improve the plugin and send us a pull request. If you found any problems, please create an issue in this repo.
 
 ## Licensing
-Copyright (c) 2022-25 LCubed AB (iGrant.io), Sweden
+Copyright (c) 2026 iGrant Technologies AB (iGrant.io), Sweden
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 
